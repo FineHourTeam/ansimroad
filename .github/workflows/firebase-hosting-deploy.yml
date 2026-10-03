@@ -21,6 +21,11 @@ jobs:
     # 포크 PR에는 시크릿이 없음 — 같은 레포 PR만 preview 배포
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    # preview URL을 PR 코멘트 · 체크로 남기려면 쓰기 권한이 필요하다 (저장소 기본 토큰이 읽기 전용이면 403)
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
     steps:
       - uses: actions/checkout@v4
 
