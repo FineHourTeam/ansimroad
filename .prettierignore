@@ -13,3 +13,6 @@ knowledge/
 
 # 폰트 등 정적 에셋
 public/fonts/
+
+# Functions 빌드 산출물
+functions/lib/

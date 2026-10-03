@@ -43,9 +43,9 @@ jobs:
         run: npm audit --audit-level=high
         continue-on-error: true # 도입 초기엔 경고만 — 안정화 후 이 줄 제거해 강제
 
-  # 스모크 — "렌더는 되는데 안 연결된 UI"(Potemkin) 탐지. build → preview → Playwright.
-  # e2e/smoke.spec.ts + playwright.config.ts가 설치돼 있어야 동작 (없으면 이 잡을 지운다).
-  smoke:
+  # E2E — 모든 화면(사용자 · 어르신 · 리포트 · 운영진)과 보안 규칙을 Firebase 에뮬레이터 위에서 확인한다.
+  # playwright webServer 가 에뮬레이터(auth · firestore · storage)와 vite(--mode e2e)를 띄운다. 실제 프로젝트 데이터는 건드리지 않는다.
+  e2e:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -53,27 +53,22 @@ jobs:
         with:
           node-version: "22"
           cache: npm
+      - uses: actions/setup-java@v4 # Firebase 에뮬레이터용
+        with:
+          distribution: temurin
+          java-version: "21"
       - run: npm ci
+      - name: Functions 단위 테스트
+        run: npm ci --prefix functions && npm test --prefix functions
       - name: Playwright 브라우저 설치
         run: npx playwright install --with-deps chromium
-      - name: 스모크 (build+preview는 playwright webServer가 기동)
-        run: npx playwright test e2e/
+      - name: E2E
+        run: npx playwright test
         env:
-          # 스모크는 에뮬레이터/스텁 대상 — 프로덕션 Firebase를 건드리지 않는다
-          VITE_FIREBASE_API_KEY: smoke
-          VITE_FIREBASE_AUTH_DOMAIN: smoke.local
-          VITE_FIREBASE_PROJECT_ID: smoke
-          VITE_FIREBASE_STORAGE_BUCKET: smoke
-          VITE_FIREBASE_MESSAGING_SENDER_ID: "0"
-          VITE_FIREBASE_APP_ID: smoke
-          VITE_USE_EMULATORS: "false"
-
-  # Firestore 보안규칙 테스트 — rules 테스트 suite가 생기면 주석 해제
-  # rules-test:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/setup-node@v4
-  #       with: { node-version: "22", cache: npm }
-  #     - run: npm ci
-  #     - run: npx firebase-tools emulators:exec --only firestore "npx vitest run tests/rules"
+          E2E_RESET: "1"
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-results
+          path: test-results/
+          retention-days: 7
