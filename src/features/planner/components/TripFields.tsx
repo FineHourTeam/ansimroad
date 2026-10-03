@@ -1,8 +1,9 @@
-// S1 ④~⑨ 조건 6가지. 미입력 강조는 제목 빨간색 + '선택해 주세요' (팝업 없음)
+// S1 ④~⑨ 조건 6가지 — 질문마다 흰 카드 하나. 미입력 강조는 제목 빨간색 + '선택해 주세요' (팝업 없음)
 import { useState, type ReactNode } from "react";
-import { CalendarIcon, InfoIcon } from "@/components/icons";
+import { CalendarIcon, ChevronRightIcon, InfoIcon } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -34,25 +35,26 @@ function Field({
 }) {
   const title = FIELD_TITLES[k];
   return (
-    <section
-      id={`field-${k}`}
-      aria-labelledby={`t-${k}`}
-      className="flex scroll-mt-20 flex-col gap-3"
-    >
-      <div className="flex min-h-12 flex-wrap items-center gap-2">
-        <h2 id={`t-${k}`} className={cn("text-lg font-bold", missing && "text-destructive")}>
-          {htmlFor ? (
-            <Label htmlFor={htmlFor} className="text-lg font-bold">
-              {title}
-            </Label>
-          ) : (
-            title
-          )}
-        </h2>
-        {missing && <Badge variant="destructive">선택해 주세요</Badge>}
-        {aside}
-      </div>
-      {children}
+    <section id={`field-${k}`} aria-labelledby={`t-${k}`} className="scroll-mt-4">
+      <Card className={cn("gap-4", missing && "border-destructive/50")}>
+        <CardContent className="flex min-h-7 flex-wrap items-center gap-x-2 gap-y-1">
+          <h2
+            id={`t-${k}`}
+            className={cn("text-lg font-bold tracking-tight", missing && "text-destructive")}
+          >
+            {htmlFor ? (
+              <Label htmlFor={htmlFor} className="text-lg font-bold tracking-tight">
+                {title}
+              </Label>
+            ) : (
+              title
+            )}
+          </h2>
+          {missing && <Badge variant="destructive">선택해 주세요</Badge>}
+          {aside}
+        </CardContent>
+        <CardContent className="flex flex-col gap-3">{children}</CardContent>
+      </Card>
     </section>
   );
 }
@@ -124,6 +126,7 @@ export function TripFields({
             type="button"
             variant="ghost"
             size="xl"
+            className="text-muted-foreground -my-2 -mr-3 ml-auto px-3"
             aria-expanded={helpOpen}
             aria-controls="walk-help"
             onClick={() => {
@@ -135,7 +138,11 @@ export function TripFields({
           </Button>
         }
       >
-        <p id="walk-help" className="text-muted-foreground text-base" hidden={!helpOpen}>
+        <p
+          id="walk-help"
+          className="bg-background-subtle rounded-lg px-3 py-2 text-base"
+          hidden={!helpOpen}
+        >
           쉬지 않고 천천히 걸을 수 있는 시간
         </p>
         <ChoiceGroup
@@ -152,17 +159,24 @@ export function TripFields({
         {/* 보이는 칸은 한국어 날짜, 실제 선택은 위에 투명하게 겹친 기본 날짜 입력 (휴대폰은 기본 달력이 열린다) */}
         <div
           className={cn(
-            "border-input focus-within:border-ring focus-within:ring-ring/50 relative flex h-12 items-center gap-2 rounded-lg border px-3 focus-within:ring-3",
+            "border-input bg-background hover:border-primary/40 focus-within:border-ring focus-within:ring-ring/50 relative flex h-16 items-center gap-3 rounded-xl border px-3 transition-colors focus-within:ring-3",
+            draft.date && "border-primary/60",
             dateError && "border-destructive",
           )}
         >
+          <span className="bg-accent text-accent-foreground grid size-10 shrink-0 place-items-center rounded-full">
+            <CalendarIcon />
+          </span>
           <span
             aria-hidden="true"
-            className={cn("flex-1 text-base", draft.date ? "font-bold" : "text-muted-foreground")}
+            className={cn(
+              "min-w-0 flex-1 text-base",
+              draft.date ? "text-lg font-bold" : "text-muted-foreground",
+            )}
           >
             {draft.date ? longDate(draft.date) : "날짜를 골라 주세요"}
           </span>
-          <CalendarIcon className="text-primary" />
+          <ChevronRightIcon className="text-muted-foreground shrink-0" />
           <Input
             id="trip-date"
             type="date"

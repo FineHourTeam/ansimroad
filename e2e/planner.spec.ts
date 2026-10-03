@@ -263,7 +263,10 @@ test("S2-1: 사진이 여러 장이면 옆으로 밀어 넘겨 본다", async ({
     const first = block.getByRole("img", { name: `${place.name} 1/2` });
     const second = block.getByRole("img", { name: `${place.name} 2/2` });
     const left = async (img: Locator) => (await img.boundingBox())?.x ?? Number.NaN;
-    await first.scrollIntoViewIfNeeded();
+    // 아래 고정 띠('이 코스로 확정하기')에 가리지 않게 사진을 화면 가운데로
+    await first.evaluate((el) => {
+      el.scrollIntoView({ block: "center" });
+    });
     const box = await first.boundingBox();
     if (!box) throw new Error("사진 자리를 찾지 못했어요");
     // 둘째 장은 첫 장 오른쪽에 숨어 있다 (가로 위치로 본다 — 세로 스크롤과 무관)

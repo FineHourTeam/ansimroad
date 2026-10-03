@@ -80,7 +80,7 @@ export function ResultDetailPage() {
         cta={
           <Button
             size="cta"
-            className="w-full"
+            className="w-full lg:ml-auto lg:w-96"
             disabled={busy || !confirmer.ready}
             aria-busy={busy}
             onClick={() => {

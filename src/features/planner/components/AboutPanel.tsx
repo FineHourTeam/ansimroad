@@ -1,14 +1,15 @@
 // S1 ⑪ 접힌 소개: 서비스 소개 · 데이터 출처 · 문의 (문구는 계약 후 발주자 제공 — 지금은 같은 구성의 임시 문구)
-import { ChevronDownIcon } from "@/components/icons";
+import { ChevronDownIcon, InfoIcon } from "@/components/icons";
 
 export function AboutPanel({ contactEmail }: { contactEmail: string | null }) {
   return (
-    <details className="group mt-8">
-      <summary className="bg-background hover:bg-muted flex min-h-14 cursor-pointer list-none items-center justify-center gap-1.5 rounded-lg border px-4 text-base font-semibold [&::-webkit-details-marker]:hidden">
-        서비스 소개 · 데이터 출처 · 문의
-        <ChevronDownIcon className="transition-transform group-open:rotate-180 motion-reduce:transition-none" />
+    <details className="group bg-card text-card-foreground border-border/80 mt-6 overflow-hidden rounded-2xl border shadow-sm">
+      <summary className="hover:bg-accent/50 flex min-h-14 cursor-pointer list-none items-center gap-3 px-5 text-base font-semibold transition-colors [&::-webkit-details-marker]:hidden">
+        <InfoIcon className="text-primary shrink-0" />
+        <span className="flex-1">서비스 소개 · 데이터 출처 · 문의</span>
+        <ChevronDownIcon className="text-muted-foreground shrink-0 transition-transform group-open:rotate-180 motion-reduce:transition-none" />
       </summary>
-      <div className="mt-3 flex flex-col divide-y rounded-lg border px-5 text-base">
+      <div className="flex flex-col divide-y border-t px-5 text-base">
         <section className="flex flex-col gap-1 py-4">
           <h3 className="text-primary font-extrabold">서비스 소개</h3>
           <p>부모님과 여행을 계획할 때 계단·걷는 거리·화장실 같은 정보는 미리 알기 어려워요.</p>

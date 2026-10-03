@@ -1,4 +1,4 @@
-// 다녀온 가족들의 공개 후기: 평균 별점 + 최근 한 줄 2개
+// 다녀온 가족들의 공개 후기: 평균 별점(모래빛 별 다섯 개) + 최근 한 줄 2개
 import { StarIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -27,20 +27,37 @@ export function PlaceReviews({ placeId }: { placeId: string }) {
   }
   const avg = averageRating(q.data);
   if (avg === null) {
-    return <p className="text-muted-foreground text-sm">아직 다녀온 가족의 후기가 없어요</p>;
+    return (
+      <p className="text-muted-foreground inline-flex items-center gap-1.5 text-sm">
+        <StarIcon size="sm" className="shrink-0" />
+        아직 다녀온 가족의 후기가 없어요
+      </p>
+    );
   }
+  const filled = Math.round(Number(avg));
   return (
-    <div className="bg-background-subtle flex flex-col gap-1 rounded-md px-3 py-2">
-      <p className="flex items-center gap-1 font-extrabold">
-        <StarIcon size="sm" fill="currentColor" className="text-warning" />
+    <div className="border-border/80 flex flex-col gap-1.5 rounded-xl border px-3.5 py-3">
+      <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 font-extrabold tabular-nums">
+        <span className="inline-flex" aria-hidden="true">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <StarIcon
+              key={n}
+              size="sm"
+              fill="currentColor"
+              className={n <= filled ? "text-highlight" : "text-border"}
+            />
+          ))}
+        </span>
         {avg}
-        <span className="text-muted-foreground font-normal">· 다녀온 가족 {q.data.length}명</span>
+        <span className="text-muted-foreground text-sm font-medium">
+          · 다녀온 가족 {q.data.length}명
+        </span>
       </p>
       {q.data
         .filter((r) => r.text)
         .slice(0, 2)
         .map((r) => (
-          <p key={`${r.at}-${r.text}`} className="text-sm">
+          <p key={`${r.at}-${r.text}`} className="text-sm leading-relaxed">
             “{r.text}”
           </p>
         ))}

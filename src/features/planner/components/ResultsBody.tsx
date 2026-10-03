@@ -2,7 +2,7 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router";
 import { paths } from "@/app/paths";
-import { MapPinIcon } from "@/components/icons";
+import { MapPinIcon, StarIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -69,11 +69,11 @@ export function ShortageCard({
   contactEmail: string;
 }) {
   return (
-    <Card className="mx-auto mt-4 max-w-xl items-center gap-4 px-5 pt-8 pb-5 text-center">
-      <span className="bg-background-subtle text-primary grid size-14 place-items-center rounded-full">
+    <Card className="mx-auto max-w-xl items-center gap-4 px-5 pt-8 text-center">
+      <span className="bg-accent text-primary grid size-14 place-items-center rounded-full">
         <MapPinIcon size="lg" />
       </span>
-      <h2 className="text-xl leading-snug font-extrabold text-balance">
+      <h2 className="text-xl leading-snug font-extrabold tracking-tight text-balance">
         {again
           ? "이 조건으로 만들 수 있는 코스는 모두 보여 드렸어요"
           : "조건에 맞는 확인된 장소가 아직 부족해요"}
@@ -110,18 +110,23 @@ export function CuratedSection({
   children: ReactNode;
 }) {
   return (
-    <section aria-labelledby="curated-title" className="mt-8 flex flex-col gap-3">
-      <div>
-        <h2 id="curated-title" className="text-xl font-extrabold">
-          모담팀 추천 코스
-        </h2>
-        <p className="text-muted-foreground text-sm">
-          운영진이 직접 짠 코스예요. 이동 조건은 장소마다 정보를 확인해 주세요.
-        </p>
+    <section aria-labelledby="curated-title" className="mt-10 flex flex-col gap-4">
+      <div className="flex items-start gap-3">
+        <span className="bg-highlight text-highlight-foreground grid size-10 shrink-0 place-items-center rounded-full">
+          <StarIcon fill="currentColor" />
+        </span>
+        <div className="flex flex-col gap-0.5">
+          <h2 id="curated-title" className="text-xl leading-snug font-extrabold tracking-tight">
+            모담팀 추천 코스
+          </h2>
+          <p className="text-muted-foreground text-sm">
+            운영진이 직접 짠 코스예요. 이동 조건은 장소마다 정보를 확인해 주세요.
+          </p>
+        </div>
       </div>
       {isError ? (
-        <div className="flex flex-wrap items-center gap-2 text-base">
-          <p>추천 코스를 불러오지 못했어요.</p>
+        <div className="bg-card border-border/80 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border px-5 py-4 text-base">
+          <p className="flex-1">추천 코스를 불러오지 못했어요.</p>
           <Button variant="outline" size="xl" onClick={onRetry}>
             다시 불러오기
           </Button>

@@ -18,17 +18,17 @@ export function MemoBox({ placeId, readOnly }: { placeId: string; readOnly: bool
 
   if (readOnly) {
     return memo.text ? (
-      <p className="bg-background-subtle rounded-md px-3 py-2 text-base">
-        메모{memo.priv ? " (나만 보기)" : ""}: {memo.text}
+      <p className="bg-background-subtle rounded-xl px-3.5 py-3 text-base">
+        <strong className="font-bold">메모{memo.priv ? " (나만 보기)" : ""}:</strong> {memo.text}
       </p>
     ) : null;
   }
   if (!open && !memo.text) {
     return (
       <Button
-        variant="link"
+        variant="outline"
         size="xl"
-        className="self-start px-0 font-bold"
+        className="w-full border-dashed"
         onClick={() => {
           setOpen(true);
         }}
@@ -39,8 +39,8 @@ export function MemoBox({ placeId, readOnly }: { placeId: string; readOnly: bool
     );
   }
   return (
-    <div className="flex flex-col gap-2">
-      <Label htmlFor={`${id}-memo`} className="text-base">
+    <div className="bg-background-subtle flex flex-col gap-2 rounded-xl p-3">
+      <Label htmlFor={`${id}-memo`} className="text-base font-bold">
         메모
       </Label>
       <Textarea

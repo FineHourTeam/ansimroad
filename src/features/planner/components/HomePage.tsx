@@ -7,7 +7,7 @@ import { LoadingIcon } from "@/components/icons";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { useSettings } from "@/features/places";
-import { LegalLinks } from "@/shared/components/common";
+import { LegalLinks, StickyActionBar } from "@/shared/components/common";
 import type { TripInputDraft } from "@/shared/domain/types";
 import { now } from "@/shared/lib/clock";
 import { toLocalYmd } from "@/shared/lib/date";
@@ -90,27 +90,50 @@ export function HomePage() {
 
   const contactEmail = settings?.contactEmail ?? null;
   return (
-    <div className="bg-background min-h-dvh sm:grid sm:grid-cols-5 sm:items-start lg:grid-cols-12">
+    <div className="min-h-dvh sm:grid sm:grid-cols-5 sm:items-start lg:grid-cols-12">
       <Seo
         title="자녀가 계획하고, 부모님은 사진만 찍는 목포 여행"
         description="조건 6가지만 고르면 모담팀이 직접 확인한 목포 장소로 부모님 여행 코스 3개를 만들어요."
       />
       <HomeIntro contactEmail={contactEmail} className="sm:col-span-2 lg:col-span-5" />
-      <main className="px-4 pt-6 pb-10 sm:col-span-3 sm:px-8 sm:pt-12 lg:col-span-7 lg:px-14 lg:pt-16">
-        <div className="mx-auto max-w-xl lg:max-w-2xl">
-          <form
-            id="trip-form"
-            aria-label="여행 조건 입력"
-            noValidate
-            onSubmit={submit}
-            className="flex scroll-mt-4 flex-col gap-7"
-          >
-            <TripFields draft={draft} set={set} missing={missingNow} today={today} />
-            {/* ⑩ disabled 대신 aria-disabled: 눌렀을 때 첫 미입력 항목으로 안내하려고 */}
+      {/* 오른쪽(휴대폰은 아래) 칸: 질문 카드 + 아래 고정 '코스 만들기' */}
+      <div className="flex min-h-dvh flex-col sm:col-span-3 lg:col-span-7">
+        {/* data-surface: 화면 바탕을 모래빛으로 (tokens.css body:has) — 흰 질문 카드를 띄운다 */}
+        <main
+          data-surface="subtle"
+          className="flex-1 px-4 pt-6 pb-10 sm:px-8 sm:pt-12 lg:px-14 lg:pt-16"
+        >
+          <div className="mx-auto max-w-xl lg:max-w-2xl">
+            <form
+              id="trip-form"
+              aria-label="여행 조건 입력"
+              noValidate
+              onSubmit={submit}
+              className="flex scroll-mt-4 flex-col gap-4"
+            >
+              <TripFields draft={draft} set={set} missing={missingNow} today={today} />
+              <p className="sr-only" aria-live="polite">
+                {missingNow ? `아직 고르지 않은 항목이 있어요: ${FIELD_TITLES[missingNow]}` : ""}
+              </p>
+            </form>
+
+            <AboutPanel contactEmail={contactEmail} />
+
+            {/* ⑫ 통계 안내 · 법적 고지 한 줄 (팝업·배너 없음) */}
+            <LegalLinks
+              locationOn={settings?.locationCollectionEnabled ?? false}
+              prefix="서비스 개선을 위해 개인을 알 수 없는 이용 통계(쿠키)를 수집해요"
+            />
+          </div>
+        </main>
+        <StickyActionBar>
+          <div className="mx-auto w-full max-w-xl lg:max-w-2xl">
+            {/* ⑩ disabled 대신 aria-disabled: 눌렀을 때 첫 미입력 항목으로 안내하려고. 띠는 폼 밖이라 form 속성으로 잇는다 */}
             <Button
               type="submit"
+              form="trip-form"
               size="cta"
-              className="mt-1 w-full aria-disabled:opacity-60"
+              className="w-full aria-disabled:opacity-60"
               aria-disabled={!isComplete(draft)}
               aria-busy={slow}
             >
@@ -123,20 +146,9 @@ export function HomePage() {
                 "코스 3개 만들기"
               )}
             </Button>
-            <p className="sr-only" aria-live="polite">
-              {missingNow ? `아직 고르지 않은 항목이 있어요: ${FIELD_TITLES[missingNow]}` : ""}
-            </p>
-          </form>
-
-          <AboutPanel contactEmail={contactEmail} />
-
-          {/* ⑫ 통계 안내 · 법적 고지 한 줄 (팝업·배너 없음) */}
-          <LegalLinks
-            locationOn={settings?.locationCollectionEnabled ?? false}
-            prefix="서비스 개선을 위해 개인을 알 수 없는 이용 통계(쿠키)를 수집해요"
-          />
-        </div>
-      </main>
+          </div>
+        </StickyActionBar>
+      </div>
     </div>
   );
 }
