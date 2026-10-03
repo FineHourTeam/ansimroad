@@ -33,6 +33,8 @@ export function PlacesSidePanel({
           </CardHeader>
           <CardContent>
             <MapView
+              // 네이버 지도 단추가 편집 시트 위로 올라오지 않게 쌓임 맥락을 가둔다
+              className="isolate rounded-xl"
               points={points}
               onSelect={(p) => {
                 const r = records.find((x) => x.ID === p.id);

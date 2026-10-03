@@ -54,7 +54,11 @@ export function PlaceField({
             set(v === EMPTY ? "" : v);
           }}
         >
-          <SelectTrigger id={id} aria-describedby={hintId} className="w-full">
+          <SelectTrigger
+            id={id}
+            aria-describedby={hintId}
+            className="w-full text-base data-[size=default]:h-10"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -72,6 +76,7 @@ export function PlaceField({
         <Textarea
           id={id}
           aria-describedby={hintId}
+          className="text-base md:text-base"
           rows={2}
           value={value}
           onChange={(e) => {
@@ -82,6 +87,7 @@ export function PlaceField({
         <Input
           id={id}
           aria-describedby={hintId}
+          className="h-10 text-base md:text-base"
           type={field.type === "date" ? "date" : numeric ? "number" : "text"}
           step={numeric ? "any" : undefined}
           inputMode={field.type === "num" ? "decimal" : undefined}

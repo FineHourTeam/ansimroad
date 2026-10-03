@@ -216,7 +216,7 @@ test("위도가 국내 범위를 벗어나면 이유를 보여 주고 저장하�
   await s.getByLabel("경도").fill("126.4");
   await s.getByRole("button", { name: "저장하기" }).click();
 
-  await expect(s.getByRole("alert")).toHaveText(/위도·경도가 국내 범위를 벗어남/);
+  await expect(s.getByRole("alert")).toHaveText(/위도·경도가 국내 범위를 벗어났어요/);
   await expect(s.getByRole("heading", { name: "새 장소" })).toBeVisible();
   expect(await exists(id)).toBe(false);
 
@@ -288,7 +288,9 @@ test("코스에서 빠진 장소는 이유와 함께 모이고, 보기로 걸러
   await choose(body, "보기", "코스에서 빠진 곳");
   await search(page, id);
   await expect(table(page).getByRole("button", { name: rec.장소명 })).toBeVisible();
-  await expect(table(page).getByText(`빠짐 · ${reason ?? ""}`)).toBeVisible();
+  const row = table(page).getByRole("row").filter({ hasText: rec.장소명 });
+  await expect(row.getByText("빠짐", { exact: true })).toBeVisible();
+  await expect(row.getByText(reason ?? "", { exact: true })).toBeVisible();
   await search(page, "A0018"); // 시드 장소는 코스에 들어가 있다
   await expect(page.getByText("찾는 장소가 없어요")).toBeVisible();
   await choose(body, "보기", "확인 안 된 곳");

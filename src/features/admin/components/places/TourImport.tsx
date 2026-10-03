@@ -47,7 +47,7 @@ export function TourImport({
   return (
     <div className="flex flex-col gap-3">
       <form
-        className="flex flex-wrap items-end gap-2"
+        className="flex flex-col gap-3"
         onSubmit={(e) => {
           e.preventDefault();
           const keyword = q.trim();
@@ -57,10 +57,13 @@ export function TourImport({
           else setSearch({ keyword, onlyMokpo });
         }}
       >
-        <div className="flex min-w-48 flex-1 flex-col gap-1">
-          <Label htmlFor={`${ids}-q`}>관광공사 검색어</Label>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor={`${ids}-q`} className="font-semibold">
+            관광공사 검색어
+          </Label>
           <Input
             id={`${ids}-q`}
+            className="h-10 text-base md:text-base"
             placeholder="장소명 (예: 갓바위, 케이블카)"
             value={q}
             onChange={(e) => {
@@ -68,20 +71,22 @@ export function TourImport({
             }}
           />
         </div>
-        <div className="flex h-8 items-center gap-2">
-          <Checkbox
-            id={`${ids}-mokpo`}
-            checked={onlyMokpo}
-            onCheckedChange={(v) => {
-              setOnlyMokpo(v === true);
-            }}
-          />
-          <Label htmlFor={`${ids}-mokpo`}>목포만</Label>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={`${ids}-mokpo`}
+              checked={onlyMokpo}
+              onCheckedChange={(v) => {
+                setOnlyMokpo(v === true);
+              }}
+            />
+            <Label htmlFor={`${ids}-mokpo`}>목포만</Label>
+          </div>
+          <Button type="submit" size="lg" disabled={result.isFetching || !q.trim()}>
+            <SearchIcon size="sm" />
+            {result.isFetching ? "찾는 중…" : "검색하기"}
+          </Button>
         </div>
-        <Button type="submit" disabled={result.isFetching || !q.trim()}>
-          <SearchIcon size="sm" />
-          {result.isFetching ? "찾는 중…" : "검색하기"}
-        </Button>
       </form>
 
       {result.isFetching && !result.data && (
@@ -116,17 +121,17 @@ export function TourImport({
           {result.data.map((it) => (
             <li
               key={it.contentid}
-              className="bg-background-subtle flex items-center gap-3 rounded-lg p-2"
+              className="bg-background-subtle flex items-center gap-3 rounded-xl p-2"
             >
               {thumb(it) ? (
                 <img
                   src={thumb(it)}
                   alt=""
                   referrerPolicy="no-referrer"
-                  className="bg-muted h-12 w-16 shrink-0 rounded-md object-cover"
+                  className="bg-muted h-12 w-16 shrink-0 rounded-lg object-cover"
                 />
               ) : (
-                <span className="bg-muted text-muted-foreground grid h-12 w-16 shrink-0 place-items-center rounded-md">
+                <span className="bg-muted text-muted-foreground grid h-12 w-16 shrink-0 place-items-center rounded-lg">
                   <ImageIcon size="sm" />
                 </span>
               )}

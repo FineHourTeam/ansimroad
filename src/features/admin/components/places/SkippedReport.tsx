@@ -16,26 +16,31 @@ export function SkippedReport({
 }) {
   if (skipped.length === 0) return null;
   return (
-    <Card className="border-destructive/40">
+    <Card className="border-destructive/30">
       <CardHeader>
-        <CardTitle className="text-destructive flex items-center gap-2">
-          <WarningIcon size="sm" />
-          코스 생성에서 빠진 장소 {skipped.length}곳
+        <CardTitle className="flex items-center gap-3">
+          <span className="bg-destructive/10 text-destructive grid size-9 shrink-0 place-items-center rounded-full">
+            <WarningIcon size="sm" />
+          </span>
+          <h2>코스 생성에서 빠진 장소 {skipped.length}곳</h2>
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="pl-12">
           시트와 같은 규칙에 걸려 코스에 나오지 않아요. 눌러서 고치고 저장하면 바로 들어가요.
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ul className="flex flex-col gap-1">
+        <ul className="divide-border/80 ml-12 flex flex-col divide-y">
           {skipped.map((s) => {
             const rec = records.find((r) => r.ID === s.id);
             return (
-              <li key={`${s.id}-${String(s.row)}`} className="flex flex-wrap items-center gap-x-2">
+              <li
+                key={`${s.id}-${String(s.row)}`}
+                className="flex flex-wrap items-center gap-x-3 py-2"
+              >
                 {rec ? (
                   <Button
                     variant="link"
-                    size="sm"
+                    className="h-auto px-0 font-bold"
                     onClick={() => {
                       onOpen(rec);
                     }}

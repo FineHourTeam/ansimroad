@@ -9,6 +9,7 @@ import {
   ChevronUpIcon,
   DeleteIcon,
   DragHandleIcon,
+  ImageIcon,
   MinusIcon,
 } from "@/components/icons";
 import { Button } from "@/components/ui/button";
@@ -69,39 +70,41 @@ export function StopCard({
       style={{ transform: CSS.Transform.toString(transform), transition }}
       aria-label={`${n}번 장소`}
       className={cn(
-        "bg-card text-card-foreground flex flex-col gap-2 rounded-lg border p-3",
-        open && "border-primary",
-        isDragging && "relative z-10 shadow-md",
+        "bg-card text-card-foreground border-border/80 flex flex-col rounded-2xl border shadow-sm",
+        open && "border-primary ring-primary/15 ring-2",
+        isDragging && "relative z-10 shadow-lg",
       )}
     >
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-center gap-3 p-3 pr-4">
         <Button
           ref={setActivatorNodeRef}
           variant="ghost"
           size="icon-sm"
-          className="cursor-grab touch-none"
+          className="text-muted-foreground cursor-grab touch-none"
           {...attributes}
           {...listeners}
           aria-label="끌어서 순서 바꾸기"
         >
           <DragHandleIcon />
         </Button>
-        <span className="bg-primary text-primary-foreground grid size-7 shrink-0 place-items-center rounded-full text-sm font-bold">
+        <span className="bg-primary text-primary-foreground grid size-8 shrink-0 place-items-center rounded-full text-sm font-bold tabular-nums">
           {n}
         </span>
-        <Label htmlFor={`${id}-name`} className="sr-only">
-          {n}번 장소 이름
-        </Label>
-        <Input
-          id={`${id}-name`}
-          className="min-w-40 flex-1 font-semibold"
-          maxLength={30}
-          value={stop.name}
-          onChange={(e) => {
-            const name = e.target.value;
-            onPatch(() => ({ name }));
-          }}
-        />
+        <div className="flex min-w-40 flex-1 flex-col gap-1">
+          <Label htmlFor={`${id}-name`} className="sr-only">
+            {n}번 장소 이름
+          </Label>
+          <Input
+            id={`${id}-name`}
+            className="h-10 text-base font-semibold md:text-base"
+            maxLength={30}
+            value={stop.name}
+            onChange={(e) => {
+              const name = e.target.value;
+              onPatch(() => ({ name }));
+            }}
+          />
+        </div>
         <Label htmlFor={`${id}-role`} className="sr-only">
           {n}번 장소 구분
         </Label>
@@ -111,7 +114,7 @@ export function StopCard({
             onPatch(() => ({ role: v as StopRole }));
           }}
         >
-          <SelectTrigger id={`${id}-role`} className="w-28">
+          <SelectTrigger id={`${id}-role`} className="w-28 data-[size=default]:h-10">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -122,9 +125,9 @@ export function StopCard({
             ))}
           </SelectContent>
         </Select>
-        <span className="flex items-center gap-1 font-semibold whitespace-nowrap">
+        <span className="border-input bg-background flex h-10 items-center rounded-lg border px-1 font-semibold whitespace-nowrap">
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon-sm"
             aria-label="10분 줄이기"
             disabled={stop.stayMin <= STAY_MIN}
@@ -134,9 +137,11 @@ export function StopCard({
           >
             <MinusIcon />
           </Button>
-          <span aria-live="polite">{stop.stayMin}분</span>
+          <span aria-live="polite" className="w-12 text-center tabular-nums">
+            {stop.stayMin}분
+          </span>
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon-sm"
             aria-label="10분 늘리기"
             disabled={stop.stayMin >= STAY_MAX}
@@ -147,9 +152,9 @@ export function StopCard({
             <AddIcon />
           </Button>
         </span>
-        <span className="ml-auto flex items-center gap-1">
+        <span className="text-muted-foreground flex items-center">
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon-sm"
             aria-label="위로 옮기기"
             disabled={index === 0}
@@ -160,7 +165,7 @@ export function StopCard({
             <ChevronUpIcon />
           </Button>
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon-sm"
             aria-label="아래로 옮기기"
             disabled={index === count - 1}
@@ -170,30 +175,42 @@ export function StopCard({
           >
             <ChevronDownIcon />
           </Button>
-          <Button variant="outline" size="icon-sm" aria-label="코스에서 빼기" onClick={onRemove}>
+          <Button variant="ghost" size="icon-sm" aria-label="코스에서 빼기" onClick={onRemove}>
             <DeleteIcon />
           </Button>
-          <Button
-            variant="link"
-            aria-expanded={open}
-            aria-controls={`${id}-body`}
-            onClick={onToggle}
-          >
-            {open
-              ? "접기"
-              : `사진 · 설명${stop.photos.length > 0 ? ` (${String(stop.photos.length)}장)` : ""}`}
-          </Button>
         </span>
+        {/* 폭을 고정해 펼침 · 사진 수와 상관없이 모든 줄의 칸이 같은 자리에 선다 */}
+        <Button
+          variant={open ? "secondary" : "outline"}
+          className="ml-auto w-40"
+          aria-expanded={open}
+          aria-controls={`${id}-body`}
+          onClick={onToggle}
+        >
+          <ImageIcon />
+          사진 · 설명
+          {stop.photos.length > 0 && (
+            <span className="text-primary text-xs font-bold tabular-nums">
+              {stop.photos.length}장
+            </span>
+          )}
+          <ChevronDownIcon className={cn("ml-auto transition-transform", open && "rotate-180")} />
+        </Button>
       </div>
       {!stop.placeId && (
-        <p className="text-muted-foreground text-xs">
+        <p className="text-muted-foreground -mt-1 pr-4 pb-3 pl-24 text-sm">
           지도에서 찍은 새 위치 · 접근성 정보 없음 (확인 배지 없음)
         </p>
       )}
       {open && (
-        <div id={`${id}-body`} className="flex flex-col gap-3 pt-1">
-          <div className="flex flex-col gap-1">
-            <Label htmlFor={`${id}-desc`}>설명</Label>
+        <div
+          id={`${id}-body`}
+          className="bg-background-subtle/60 flex flex-col gap-4 rounded-b-2xl border-t p-4 pl-24"
+        >
+          <div className="flex flex-col gap-2">
+            <Label htmlFor={`${id}-desc`} className="font-semibold">
+              설명
+            </Label>
             <Textarea
               id={`${id}-desc`}
               rows={3}

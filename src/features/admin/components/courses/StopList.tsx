@@ -79,7 +79,7 @@ export function StopList({
 
   if (stops.length === 0) {
     return (
-      <p className="bg-background text-muted-foreground rounded-lg border border-dashed px-4 py-6 text-center text-sm">
+      <p className="text-muted-foreground border-input rounded-2xl border border-dashed px-4 py-8 text-center text-sm">
         아직 고른 장소가 없어요. 지도에서 회색 + 점이나 빈 곳을 눌러 장소를 넣어 주세요.
       </p>
     );

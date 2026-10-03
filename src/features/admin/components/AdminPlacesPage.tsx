@@ -9,9 +9,9 @@ import { PlaceTable } from "./places/PlaceTable";
 import { filterRecords, nextId, type View } from "./places/placeForm";
 import { PlacesSidePanel } from "./places/PlacesSidePanel";
 import { SkippedReport } from "./places/SkippedReport";
-import { AddIcon, DownloadIcon } from "@/components/icons";
+import { AddIcon, DownloadIcon, SearchIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -77,6 +77,7 @@ export function AdminPlacesPage() {
       <CsvImport existing={records} />
       <Button
         variant="outline"
+        size="lg"
         title="시트에 붙여 넣을 CSV"
         disabled={records.length === 0}
         onClick={() => {
@@ -87,6 +88,7 @@ export function AdminPlacesPage() {
         CSV 내보내기
       </Button>
       <Button
+        size="lg"
         onClick={() => {
           openNew({ ...emptyRecord(), ID: nextId(records), 지역: "목포", 확인상태: "미확인" });
         }}
@@ -101,7 +103,7 @@ export function AdminPlacesPage() {
       {data.isPending ? (
         <div role="status" aria-label="장소 데이터를 불러오는 중" className="flex flex-col gap-2">
           {SKELETON_ROWS.map((k) => (
-            <Skeleton key={k} className="h-10 w-full" />
+            <Skeleton key={k} className="h-12 w-full rounded-xl" />
           ))}
         </div>
       ) : !loaded ? (
@@ -118,7 +120,7 @@ export function AdminPlacesPage() {
           </StateMessage>
         </Card>
       ) : (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-6">
           {data.isError && (
             <div role="alert" className="flex flex-wrap items-center gap-2">
               <p className="text-destructive text-sm font-semibold">
@@ -135,69 +137,74 @@ export function AdminPlacesPage() {
               </Button>
             </div>
           )}
-          <p className="text-muted-foreground text-sm">
+          <p className="text-muted-foreground -mt-3 text-sm">
             {hasMap
               ? "표에서 장소를 고르거나 지도에서 새 위치를 눌러 주세요."
               : "표에서 장소를 고르거나 새 장소를 만들어 주세요."}{" "}
             조사표 35칸을 모두 고칠 수 있어요.
           </p>
           <SkippedReport skipped={loaded.skipped} records={records} onOpen={open} />
-          <div className="grid items-start gap-4 lg:grid-cols-3">
-            <Card className="lg:col-span-2">
-              <CardContent className="flex flex-col gap-3">
-                <div className="flex flex-wrap items-end gap-2">
-                  <div className="flex min-w-48 flex-1 flex-col gap-1">
-                    <Label htmlFor={`${ids}-q`}>검색</Label>
-                    <Input
-                      id={`${ids}-q`}
-                      type="search"
-                      placeholder="장소 · ID · 권역"
-                      value={q}
-                      onChange={(e) => {
-                        setQ(e.target.value);
-                      }}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <Label htmlFor={`${ids}-view`}>보기</Label>
-                    <Select
-                      value={view}
-                      onValueChange={(v) => {
-                        setView(v as View);
-                      }}
-                    >
-                      <SelectTrigger id={`${ids}-view`} className="w-44">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {VIEWS.map((v) => (
-                          <SelectItem key={v.value} value={v.value}>
-                            {v.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+          <div className="grid items-start gap-6 lg:grid-cols-3">
+            <Card className="gap-0 py-0 lg:col-span-2">
+              <div className="flex flex-wrap items-center gap-3 border-b p-4">
+                <div className="relative min-w-48 flex-1">
+                  <Label htmlFor={`${ids}-q`} className="sr-only">
+                    검색
+                  </Label>
+                  <SearchIcon
+                    size="sm"
+                    className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 -translate-y-1/2"
+                  />
+                  <Input
+                    id={`${ids}-q`}
+                    type="search"
+                    className="h-10 pl-9"
+                    placeholder="장소명 · ID · 권역으로 찾기"
+                    value={q}
+                    onChange={(e) => {
+                      setQ(e.target.value);
+                    }}
+                  />
                 </div>
-                <p className="text-muted-foreground text-sm" aria-live="polite">
+                <Label htmlFor={`${ids}-view`} className="sr-only">
+                  보기
+                </Label>
+                <Select
+                  value={view}
+                  onValueChange={(v) => {
+                    setView(v as View);
+                  }}
+                >
+                  <SelectTrigger id={`${ids}-view`} className="w-44 data-[size=default]:h-10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VIEWS.map((v) => (
+                      <SelectItem key={v.value} value={v.value}>
+                        {v.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-muted-foreground text-sm tabular-nums" aria-live="polite">
                   {rows.length}곳 보는 중 · 전체 {records.length}곳
                 </p>
-                {records.length === 0 ? (
-                  <StateMessage title="아직 장소가 없어요">
-                    <p className="text-muted-foreground">
-                      새 장소를 만들거나 조사표 CSV · 관광공사 정보를 가져와 주세요
-                    </p>
-                  </StateMessage>
-                ) : rows.length === 0 ? (
-                  <StateMessage title="찾는 장소가 없어요">
-                    <p className="text-muted-foreground">
-                      검색어를 짧게 바꾸거나 보기를 전체로 바꿔 보세요
-                    </p>
-                  </StateMessage>
-                ) : (
-                  <PlaceTable rows={rows} skipped={skipped} onOpen={open} />
-                )}
-              </CardContent>
+              </div>
+              {records.length === 0 ? (
+                <StateMessage title="아직 장소가 없어요">
+                  <p className="text-muted-foreground">
+                    새 장소를 만들거나 조사표 CSV · 관광공사 정보를 가져와 주세요
+                  </p>
+                </StateMessage>
+              ) : rows.length === 0 ? (
+                <StateMessage title="찾는 장소가 없어요">
+                  <p className="text-muted-foreground">
+                    검색어를 짧게 바꾸거나 보기를 전체로 바꿔 보세요
+                  </p>
+                </StateMessage>
+              ) : (
+                <PlaceTable rows={rows} skipped={skipped} onOpen={open} />
+              )}
             </Card>
 
             <PlacesSidePanel records={records} onOpen={open} onNew={openNew} />

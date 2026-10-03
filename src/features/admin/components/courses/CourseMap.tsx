@@ -54,10 +54,10 @@ export function CourseMap({
     [pinsKey, places],
   );
 
-  if (placeData.isPending) return <Skeleton className="aspect-video w-full" />;
+  if (placeData.isPending) return <Skeleton className="aspect-video w-full rounded-xl" />;
   if (placeData.isError) {
     return (
-      <div className="bg-background flex flex-col items-center gap-2 rounded-lg border px-4 py-10 text-center">
+      <div className="bg-background-subtle flex flex-col items-center gap-3 rounded-xl px-4 py-12 text-center">
         <p className="text-destructive text-sm">
           장소 데이터를 불러오지 못했어요. 인터넷 연결을 확인해 주세요
         </p>
@@ -69,7 +69,7 @@ export function CourseMap({
   }
   if (points.length === 0) {
     return (
-      <div className="bg-background flex flex-col items-center gap-2 rounded-lg border px-4 py-10 text-center">
+      <div className="bg-background-subtle flex flex-col items-center gap-3 rounded-xl px-4 py-12 text-center">
         <p className="text-sm">지도에 넣을 장소가 아직 없어요. 장소 데이터를 먼저 넣어 주세요.</p>
         <Button variant="outline" size="sm" asChild>
           <Link to={paths.adminPlaces}>장소 데이터로 가기</Link>
@@ -101,7 +101,7 @@ export function CourseMap({
   return (
     <>
       <MapView
-        className="bg-background"
+        className="bg-background isolate rounded-xl"
         points={points}
         selectedId={selectedId}
         onSelect={(p) => {

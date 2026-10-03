@@ -12,10 +12,11 @@ export interface Field {
   type?: "num" | "date" | "long";
 }
 
-/** 조사표 35칸 (ID 제외 34칸) — 시트와 같은 순서 · 같은 묶음 */
-export const GROUPS: { title: string; fields: Field[] }[] = [
+/** 조사표 35칸 (ID 제외 34칸) — 시트와 같은 묶음 (순서는 시트와 거의 같다). desc = 편집 시트의 묶음 제목 옆 한 줄 */
+export const GROUPS: { title: string; desc: string; fields: Field[] }[] = [
   {
     title: "기본",
+    desc: "이름 · 유형 · 주소 · 좌표",
     fields: [
       { col: "장소명" },
       { col: "유형" },
@@ -23,14 +24,16 @@ export const GROUPS: { title: string; fields: Field[] }[] = [
       { col: "권역", hint: "예: 유달산케이블카권" },
       { col: "주테마" },
       { col: "부테마" },
-      { col: "주소", type: "long" },
+      // 전화를 주소 앞에 둬 위도 · 경도가 한 줄에서 지도 바로 위에 선다
       { col: "전화", hint: "번호가 둘이면 / 로 구분" },
+      { col: "주소", type: "long" },
       { col: "위도", type: "num", hint: "지도를 눌러 정할 수 있어요" },
       { col: "경도", type: "num" },
     ],
   },
   {
     title: "접근성",
+    desc: "휠체어 · 계단 · 걷는 시간 · 화장실",
     fields: [
       { col: "휠체어접근" },
       { col: "계단" },
@@ -49,6 +52,7 @@ export const GROUPS: { title: string; fields: Field[] }[] = [
   },
   {
     title: "운영",
+    desc: "쉬는 날 · 여는 시간",
     fields: [
       { col: "휴무요일", hint: "없음 / 월 / 화·수 / 일(2·4째)" },
       { col: "운영시간", hint: "09:00-18:00" },
@@ -56,6 +60,7 @@ export const GROUPS: { title: string; fields: Field[] }[] = [
   },
   {
     title: "안전",
+    desc: "가까운 응급실 · 약국",
     fields: [
       { col: "최근접응급실" },
       { col: "응급실전화" },
@@ -64,7 +69,8 @@ export const GROUPS: { title: string; fields: Field[] }[] = [
     ],
   },
   {
-    title: "확인 · 사진 · 비고",
+    title: "확인",
+    desc: "확인 상태 · 사진 · 비고",
     fields: [
       { col: "확인상태", hint: "현장 · 전화면 사용자 화면에 확인 배지" },
       { col: "확인일", type: "date" },

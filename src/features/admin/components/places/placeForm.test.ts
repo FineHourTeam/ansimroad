@@ -48,7 +48,7 @@ describe("장소 데이터 편집 로직", () => {
     expect(draftProblem(valid, [valid], true)).toContain("같은 ID");
     expect(draftProblem(valid, [valid], false)).toBeNull();
     expect(draftProblem({ ...valid, 위도: "999" }, [], true)).toBe(
-      "위도·경도가 국내 범위를 벗어남",
+      "위도·경도가 국내 범위를 벗어났어요",
     );
     expect(draftProblem({ ...valid, 권역: "" }, [], true)).toContain("권역");
   });

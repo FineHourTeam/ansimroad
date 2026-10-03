@@ -118,7 +118,7 @@ export function AdminCoursesPage() {
 
   return (
     <AdminShell title="추천 코스 만들기" confirmLeave={unsaved}>
-      <div className="grid gap-4 lg:grid-cols-4 lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-4 lg:items-start">
         <CourseList
           currentId={draft.id}
           onOpen={open}

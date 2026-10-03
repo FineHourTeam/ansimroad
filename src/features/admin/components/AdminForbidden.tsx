@@ -15,6 +15,8 @@ export function AdminForbidden({ email }: { email: string }) {
         </p>
         <Button
           variant="outline"
+          size="xl"
+          className="mt-2"
           disabled={signOut.isPending}
           onClick={() => {
             signOut.mutate();

@@ -7,6 +7,7 @@ import { PhotoField } from "./PhotoField";
 import { PlaceField } from "./PlaceField";
 import { draftProblem, fillBlanks, GROUPS, placePoints } from "./placeForm";
 import { TourImport } from "./TourImport";
+import { ChevronDownIcon, ErrorIcon, SearchIcon } from "@/components/icons";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -90,6 +91,8 @@ export function PlaceEditor({
     });
   };
 
+  const sectionId = (i: number) => `${idField}-g${String(i)}`;
+
   return (
     <Sheet
       open
@@ -101,65 +104,44 @@ export function PlaceEditor({
         side="right"
         className="gap-0 data-[side=right]:w-full data-[side=right]:sm:max-w-2xl"
       >
-        <SheetHeader className="border-b pr-12">
-          <SheetTitle className="text-lg font-bold">
+        <SheetHeader className="gap-1 px-6 pt-5 pr-14 pb-3">
+          <SheetTitle className="text-xl font-extrabold tracking-tight">
             {isNew ? "새 장소" : draft.장소명 || "(이름 없음)"}
           </SheetTitle>
           <SheetDescription>
             {isNew ? "조사표 35칸을 모두 여기서 고칠 수 있어요" : `ID ${draft.ID}`}
           </SheetDescription>
         </SheetHeader>
+        {/* 35칸이 길어 묶음으로 바로 간다 */}
+        <nav aria-label="칸 묶음" className="flex flex-wrap gap-1 border-b px-5 pb-3">
+          {GROUPS.map((g, i) => (
+            <Button
+              key={g.title}
+              variant="ghost"
+              size="sm"
+              className="rounded-full px-3"
+              onClick={() => {
+                document
+                  .getElementById(sectionId(i))
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            >
+              {g.title}
+            </Button>
+          ))}
+        </nav>
 
-        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4">
-          {isNew && (
-            <div className="flex flex-col gap-1">
-              <Label htmlFor={idField}>
-                ID
-                <span aria-hidden="true" className="text-destructive">
-                  *
-                </span>
-                <span className="sr-only">(필수)</span>
-              </Label>
-              <Input
-                id={idField}
-                value={draft.ID}
-                onChange={(e) => {
-                  set("ID", e.target.value.trim());
-                }}
+        <div className="bg-background-subtle flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-5">
+          <details className="group bg-card text-card-foreground border-border/80 rounded-2xl border shadow-sm">
+            <summary className="flex cursor-pointer list-none items-center gap-2 px-5 py-4 font-semibold [&::-webkit-details-marker]:hidden">
+              <SearchIcon size="sm" className="text-primary" />
+              관광공사 정보로 빈 칸 채우기
+              <ChevronDownIcon
+                size="sm"
+                className="text-muted-foreground ml-auto transition-transform group-open:rotate-180"
               />
-              <p className="text-muted-foreground text-xs">
-                저장한 뒤에는 바꿀 수 없어요. &apos;/&apos;와 공백은 쓸 수 없어요
-              </p>
-            </div>
-          )}
-
-          {points.length > 0 && (
-            <section className="flex flex-col gap-2" aria-label="위치 정하기">
-              <p className="text-muted-foreground text-sm">
-                지도 빈 곳을 누르면 이 장소의 위치가 그곳으로 바뀌어요 · 회색 점을 누르면 그 장소를
-                열어요
-              </p>
-              <MapView
-                points={points}
-                selectedId={draft.ID}
-                onSelect={(p) => {
-                  const r = p.id === draft.ID ? undefined : records.find((x) => x.ID === p.id);
-                  if (r) {
-                    guard(() => {
-                      onOpen(r);
-                    });
-                  }
-                }}
-                onMapClick={(lat, lng) => {
-                  setDraft((d) => ({ ...d, 위도: lat.toFixed(6), 경도: lng.toFixed(6) }));
-                }}
-              />
-            </section>
-          )}
-
-          <details className="rounded-lg border p-3">
-            <summary className="cursor-pointer font-semibold">관광공사 정보로 빈 칸 채우기</summary>
-            <div className="pt-3">
+            </summary>
+            <div className="px-5 pb-5">
               <TourImport
                 records={records}
                 mode="fill"
@@ -171,14 +153,74 @@ export function PlaceEditor({
             </div>
           </details>
 
-          {GROUPS.map((g) => (
-            <fieldset key={g.title} className="flex flex-col gap-3 rounded-lg border p-4">
-              <legend className="text-primary px-1 font-bold">{g.title}</legend>
-              <div className="grid gap-3 sm:grid-cols-2">
+          {GROUPS.map((g, i) => (
+            <div
+              key={g.title}
+              id={sectionId(i)}
+              role="group"
+              aria-labelledby={`${sectionId(i)}-h`}
+              className="bg-card text-card-foreground border-border/80 flex scroll-mt-5 flex-col gap-4 rounded-2xl border p-5 shadow-sm"
+            >
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <h3
+                  id={`${sectionId(i)}-h`}
+                  className="text-primary text-lg font-bold tracking-tight"
+                >
+                  {g.title}
+                </h3>
+                <p className="text-muted-foreground text-sm">{g.desc}</p>
+              </div>
+              {i === 0 && isNew && (
+                <div className="flex flex-col gap-1">
+                  <Label htmlFor={idField}>
+                    ID
+                    <span aria-hidden="true" className="text-destructive">
+                      *
+                    </span>
+                    <span className="sr-only">(필수)</span>
+                  </Label>
+                  <Input
+                    id={idField}
+                    className="h-10 text-base md:text-base"
+                    value={draft.ID}
+                    onChange={(e) => {
+                      set("ID", e.target.value.trim());
+                    }}
+                  />
+                  <p className="text-muted-foreground text-xs">
+                    저장한 뒤에는 바꿀 수 없어요. &apos;/&apos;와 공백은 쓸 수 없어요
+                  </p>
+                </div>
+              )}
+              <div className="grid gap-x-4 gap-y-3 sm:grid-cols-2">
                 {g.fields.map((f) => (
                   <PlaceField key={f.col} field={f} value={draft[f.col]} onChange={set} />
                 ))}
               </div>
+              {i === 0 && points.length > 0 && (
+                <section className="flex flex-col gap-2" aria-label="위치 정하기">
+                  <p className="text-muted-foreground text-sm">
+                    지도 빈 곳을 누르면 이 장소의 위치가 그곳으로 바뀌어요 · 회색 점을 누르면 그
+                    장소를 열어요
+                  </p>
+                  <MapView
+                    className="isolate rounded-xl"
+                    points={points}
+                    selectedId={draft.ID}
+                    onSelect={(p) => {
+                      const r = p.id === draft.ID ? undefined : records.find((x) => x.ID === p.id);
+                      if (r) {
+                        guard(() => {
+                          onOpen(r);
+                        });
+                      }
+                    }}
+                    onMapClick={(lat, lng) => {
+                      setDraft((d) => ({ ...d, 위도: lat.toFixed(6), 경도: lng.toFixed(6) }));
+                    }}
+                  />
+                </section>
+              )}
               {g.fields.some((f) => f.col === "사진URL") && (
                 <PhotoField
                   placeId={draft.ID}
@@ -188,23 +230,28 @@ export function PlaceEditor({
                   }}
                 />
               )}
-            </fieldset>
+            </div>
           ))}
         </div>
 
-        <SheetFooter className="border-t">
+        <SheetFooter className="gap-3 border-t px-6 py-4">
           {problem && (
-            <p role="alert" className="text-destructive text-sm font-semibold">
+            <p
+              role="alert"
+              className="bg-destructive/10 border-destructive/30 text-foreground flex items-start gap-2 rounded-lg border px-3 py-2.5 text-sm font-semibold"
+            >
+              <ErrorIcon size="sm" className="text-destructive mt-0.5 shrink-0" />
               저장하지 못했어요: {problem}
             </p>
           )}
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <span className="text-muted-foreground text-xs sm:mr-auto">
-              저장하면 시트와 같은 규칙으로 검사해요
+            <span className="text-muted-foreground flex items-center gap-2 text-sm sm:mr-auto">
+              {dirty && <span aria-hidden="true" className="bg-highlight size-2 rounded-full" />}
+              {dirty ? "저장하지 않은 칸이 있어요" : "저장하면 시트와 같은 규칙으로 검사해요"}
             </span>
             <div className="flex justify-end gap-2">
               {!isNew && <DeletePlaceButton record={draft} onDeleted={onClose} />}
-              <Button size="lg" disabled={save.isPending} onClick={submit}>
+              <Button size="lg" className="px-5" disabled={save.isPending} onClick={submit}>
                 {save.isPending ? "저장하는 중…" : "저장하기"}
               </Button>
             </div>

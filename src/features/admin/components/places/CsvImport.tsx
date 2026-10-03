@@ -67,6 +67,7 @@ export function CsvImport({ existing }: { existing: PlaceRecord[] }) {
       />
       <Button
         variant="outline"
+        size="lg"
         onClick={() => {
           fileRef.current?.click();
         }}

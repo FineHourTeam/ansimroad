@@ -69,10 +69,7 @@ export function StopPhotos({
     <div className="flex flex-col gap-3">
       <ul className="flex flex-wrap gap-2" aria-label="사진">
         {photos.map((p, k) => (
-          <li
-            key={p}
-            className="bg-background-subtle relative h-20 w-28 overflow-hidden rounded-md border"
-          >
+          <li key={p} className="bg-muted relative h-24 w-32 overflow-hidden rounded-xl border">
             <img
               src={p}
               alt={`${stopName} 사진 ${String(k + 1)}`}
@@ -104,7 +101,7 @@ export function StopPhotos({
           />
           <Button
             variant="outline"
-            className="h-20 w-28 flex-col"
+            className="h-24 w-32 flex-col rounded-xl border-dashed"
             disabled={busy}
             onClick={() => fileRef.current?.click()}
           >
@@ -121,11 +118,12 @@ export function StopPhotos({
         }}
       >
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <Label htmlFor={`photo-url-${stopId}`} className="text-muted-foreground text-xs">
+          <Label htmlFor={`photo-url-${stopId}`} className="text-muted-foreground text-sm">
             또는 사진 주소 붙여 넣기
           </Label>
           <Input
             id={`photo-url-${stopId}`}
+            className="h-10"
             placeholder="https://…"
             value={url}
             onChange={(e) => {
@@ -133,7 +131,7 @@ export function StopPhotos({
             }}
           />
         </div>
-        <Button type="submit" variant="outline">
+        <Button type="submit" variant="outline" size="lg" className="h-10">
           추가하기
         </Button>
       </form>
