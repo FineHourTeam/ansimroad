@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      @font-face {
+        font-family: "Pretendard Variable";
+        src: url("../../public/fonts/PretendardVariable.woff2") format("woff2-variations");
+        font-weight: 45 920;
+      }
+      * {
+        margin: 0;
+        box-sizing: border-box;
+      }
+      body {
+        width: 1200px;
+        height: 630px;
+        font-family: "Pretendard Variable", sans-serif;
+        background: #0f766e; /* tokens.css --primary */
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        padding: 0 96px;
+        gap: 56px;
+        word-break: keep-all; /* 한국어는 어절 단위로 줄바꿈 */
+      }
+      img {
+        width: 220px;
+        height: 220px;
+        border-radius: 48px;
+        box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.18);
+      }
+      h1 {
+        font-size: 96px;
+        font-weight: 800;
+        letter-spacing: -2px;
+      }
+      p {
+        margin-top: 18px;
+        font-size: 40px;
+        font-weight: 600;
+        line-height: 1.35;
+      }
+      small {
+        display: block;
+        margin-top: 28px;
+        font-size: 28px;
+        font-weight: 500;
+        opacity: 0.85;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="../logo-source/logo.svg" alt="" />
+    <div>
+      <h1 id="name"></h1>
+      <p id="tagline"></p>
+      <small id="sub"></small>
+    </div>
+  </body>
+</html>
