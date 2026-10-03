@@ -7,6 +7,7 @@ import {
   erDisplayName,
   keepDaysOf,
   locate,
+  tripDayLabel,
   withTimeout,
 } from "./seniorView";
 import type { PhotoRecord, TripInput } from "@/shared/domain/types";
@@ -29,6 +30,10 @@ describe("여행일 계산", () => {
     expect(dayGapOf(new Date(2026, 9, 18, 12, 20), "2026-10-18")).toBe(0);
     expect(dayGapOf(new Date(2026, 9, 17, 23, 59), "2026-10-18")).toBe(-1);
     expect(dayGapOf(new Date(2026, 9, 19, 0, 1), "2026-10-18")).toBe(1);
+  });
+
+  it("머리 날짜 줄은 월 · 일 · 요일", () => {
+    expect(tripDayLabel("2026-10-18")).toBe("10월 18일 (일)");
   });
 
   it("사진은 여행일 ±1일만", () => {

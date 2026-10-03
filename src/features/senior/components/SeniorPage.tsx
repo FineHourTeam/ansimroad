@@ -79,7 +79,7 @@ function SeniorScreen({ token }: { token: string }) {
   if (!consent) {
     return (
       <ConsentScreen
-        title={title}
+        trip={trip.data}
         keepDays={keepDaysOf(trip.data, cfg.tripExpiryDays)}
         locationOn={locationOn}
         onChoose={(c) => {

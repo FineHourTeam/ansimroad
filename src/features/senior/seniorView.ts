@@ -1,11 +1,16 @@
 // 어르신 화면(S4) 계산: 제목 · 여행일과의 거리 · 오늘 보낸 사진 수 · 사진에 붙일 위치 · 보내기 시간 제한
 import type { ConsentChoice, NewPhoto, PhotoRecord, TripSnapshot } from "@/shared/domain/types";
-import { diffDays, koreanMonthDay, toLocalYmd } from "@/shared/lib/date";
+import { diffDays, koreanMonthDay, toLocalYmd, WEEKDAYS, weekdayOf } from "@/shared/lib/date";
 import { getPosition } from "@/shared/lib/location";
 
 /** ① 제목: '10월 18일 바다 코스' */
 export function tripTitle(trip: Pick<TripSnapshot, "input" | "course">): string {
   return `${koreanMonthDay(trip.input.date)} ${trip.course.title}`;
+}
+
+/** 머리 날짜 줄: '10월 18일 (일)' */
+export function tripDayLabel(ymd: string): string {
+  return `${koreanMonthDay(ymd)} (${WEEKDAYS[weekdayOf(ymd)] ?? ""})`;
 }
 
 /** 오늘(기기 시각)이 여행일에서 며칠 떨어졌는지. 0 = 여행 당일, 음수 = 여행 전 */

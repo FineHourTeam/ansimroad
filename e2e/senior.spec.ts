@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { expect, test, type Page } from "@playwright/test";
 import { paths } from "../src/app/paths";
 import { erDisplayName } from "../src/features/senior/seniorView";
+import { hhmm } from "../src/shared/lib/date";
 import { telHref } from "../src/shared/lib/format";
 import { listDocs } from "./support/emulator";
 import {
@@ -94,6 +95,14 @@ test("동의 화면 → 오늘 일정 · 메모 · 지금 상태와 지금 시�
   if (!here || !lineBox || !pillBox) throw new Error("지금 선이 화면에 없어요");
   expect(lineBox.y).toBeGreaterThanOrEqual(here.y + here.height);
   expect(pillBox.y).toBeGreaterThanOrEqual(here.y + here.height);
+  // 일정이 주인공: 아래 고정 띠(사진 남기기 + 응급실)는 화면 높이의 1/4 안, 지금 장소는 띠에 가리지 않는다.
+  // 사진 버튼은 높이 120px 이상 (F-17)
+  const shootBox = await page.getByRole("button", { name: "사진 남기기" }).boundingBox();
+  const vh = page.viewportSize()?.height ?? 0;
+  if (!shootBox) throw new Error("사진 남기기 버튼이 화면에 없어요");
+  expect(vh - shootBox.y).toBeLessThanOrEqual(vh / 4);
+  expect(shootBox.height).toBeGreaterThanOrEqual(120);
+  expect(here.y + here.height).toBeLessThanOrEqual(shootBox.y);
   // 본 화면에는 법적 링크가 없다 (F-27)
   await expect(page.getByRole("link", { name: "개인정보 처리방침" })).toHaveCount(0);
 
@@ -111,6 +120,23 @@ test("동의 화면 → 오늘 일정 · 메모 · 지금 상태와 지금 시�
   await page.reload();
   await expect(page.getByRole("list", { name: "오늘 일정" })).toBeVisible();
   await expect(page.getByRole("button", { name: "동의하고 시작" })).toHaveCount(0);
+
+  // 오후에 낮은 화면으로 열어도(지난 장소가 위에 쌓여도) 지금 장소가 아래 띠에 가리지 않게 올라온다
+  const last = course.stops.at(-1);
+  if (!last) throw new Error("코스에 장소가 없어요");
+  await page.setViewportSize({ width: 390, height: 664 });
+  await page.goto(
+    `${paths.senior(trip.seniorToken)}?now=${encodeURIComponent(demoNow(TRIP_DATE, hhmm(last.arriveMin + 5)))}`,
+  );
+  const lastHere = stopItem(page, last.place.name).getByText("지금 여기");
+  await expect(lastHere).toBeVisible();
+  const shoot = page.getByRole("button", { name: "사진 남기기" });
+  await expect
+    .poll(async () => {
+      const [a, b] = [await lastHere.boundingBox(), await shoot.boundingBox()];
+      return !!a && !!b && a.y >= 0 && a.y + a.height <= b.y;
+    })
+    .toBe(true);
 });
 
 test("사진 남기기 → 자녀에게 보냈어요 + 오늘 보낸 수, 사진 문서가 어르신 이름으로 저장", async ({
@@ -121,10 +147,13 @@ test("사진 남기기 → 자녀에게 보냈어요 + 오늘 보낸 수, 사진
 
   await shoot(page);
 
-  const sent = page.getByRole("button", { name: /자녀에게 보냈어요 · 12:2\d/ });
+  // 보낸 시각은 아랫줄 맨 앞에 오늘 보낸 수와 함께
+  const sent = page.getByRole("button", { name: /자녀에게 보냈어요/ });
   await expect(sent).toBeVisible();
   await expect(sent).toHaveClass(/bg-success/); // 보낸 뒤에는 초록
-  await expect(page.getByText("오늘 사진 1장 보냈어요")).toBeVisible();
+  await expect(sent.getByText(/^12:2\d · 오늘 사진 1장$/)).toBeVisible();
+  // 사진 버튼은 보낸 뒤에도 120px 한 줄 배치 그대로 (아래 띠가 들썩이지 않게)
+  expect((await sent.boundingBox())?.height ?? 0).toBeLessThanOrEqual(121);
 
   const docs = await photoDocs(trip.tripId);
   expect(docs).toHaveLength(1);
@@ -137,6 +166,7 @@ test("사진 남기기 → 자녀에게 보냈어요 + 오늘 보낸 수, 사진
 
   // 3초 뒤 버튼은 다시 '사진 남기기'
   await expect(page.getByRole("button", { name: "사진 남기기" })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText("오늘 사진 1장 보냈어요")).toBeVisible();
 });
 
 test("자녀가 코스를 고치면 새로 고치지 않아도 바로 바뀐다", async ({ page, browser }) => {
@@ -304,7 +334,7 @@ test("사진을 못 보내면 '다시 눌러 주세요'", async ({ page }) => {
   await expect(page.getByRole("button", { name: "다시 눌러 주세요" })).toBeVisible({
     timeout: 45_000,
   });
-  await expect(page.getByText(/오늘 사진 \d+장 보냈어요/)).toHaveCount(0);
+  await expect(page.getByText(/오늘 사진 \d+장/)).toHaveCount(0);
   expect(await photoDocs(trip.tripId)).toHaveLength(0);
 
   // 다시 누르면 사진 고르기 창이 다시 열린다

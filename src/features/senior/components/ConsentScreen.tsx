@@ -1,11 +1,14 @@
 // ⓪ 첫 진입 동의 화면 (F-28): 이 기기에서 /t 링크를 처음 열 때 1회, 본 화면 앞에 화면 전체로 (팝업 아님).
 // 위치 수집 설정 OFF(기본): 사진·시각 안내 + 버튼 1개. ON: 위치 안내 + 버튼 2개 + 위치정보 이용약관 링크.
 // 안내 항목: 개인정보 보호법 제15조 ② 고지 사항. 문구 확정은 발주자(계약 후).
-import { SeniorDock, SeniorFrame } from "./SeniorMessage";
+import { tripTitle } from "../seniorView";
+import { SeniorDock, SeniorFrame, SeniorHeader } from "./SeniorMessage";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Seo } from "@/components/Seo";
+import { CameraIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { LegalLinks } from "@/shared/components/common";
-import type { ConsentChoice } from "@/shared/domain/types";
+import type { ConsentChoice, TripSnapshot } from "@/shared/domain/types";
 
 function consentCopy(
   locationOn: boolean,
@@ -41,12 +44,12 @@ function consentCopy(
 }
 
 export function ConsentScreen({
-  title,
+  trip,
   keepDays,
   locationOn,
   onChoose,
 }: {
-  title: string;
+  trip: Pick<TripSnapshot, "input" | "course">;
   keepDays: number;
   locationOn: boolean;
   onChoose: (c: ConsentChoice) => void;
@@ -54,18 +57,21 @@ export function ConsentScreen({
   const { lead, items } = consentCopy(locationOn, keepDays);
   return (
     <SeniorFrame>
-      <Seo title={title} noindex />
-      <header className="border-b-2 px-4 pt-6 pb-4">
-        <h1 className="text-3xl leading-snug font-extrabold text-balance">{title}</h1>
-      </header>
-      <main className="flex-1 px-4 pt-5 pb-6">
-        <p className="bg-background-subtle rounded-xl p-4 text-2xl leading-relaxed font-semibold text-pretty">
+      <Seo title={tripTitle(trip)} noindex />
+      {/* 누가 묻는지 알 수 있게 로고는 이 화면에만 (본 화면은 F-16 로고 없음) */}
+      <SeniorHeader trip={trip} top={<BrandLogo height={30} />} />
+      <main className="flex-1 px-4 pt-4 pb-6">
+        {/* 아이콘은 첫 줄 왼쪽에 (따로 한 줄을 쓰지 않게): 낮은 화면에서도 안내 전체가 아래 버튼 위에 들어온다 */}
+        <p className="bg-accent text-accent-foreground rounded-2xl p-4 text-2xl leading-normal font-semibold text-pretty">
+          <span className="bg-primary text-primary-foreground float-left mr-3 grid size-9 place-items-center rounded-full">
+            <CameraIcon className="size-5" />
+          </span>
           {lead}
         </p>
-        <dl className="mt-5 divide-y">
+        <dl className="border-border mt-4 divide-y-2 rounded-2xl border-2 px-4">
           {items.map(([k, v]) => (
-            <div key={k} className="py-3">
-              <dt className="text-primary text-2xl font-extrabold">{k}</dt>
+            <div key={k} className="py-4">
+              <dt className="text-primary text-xl font-extrabold">{k}</dt>
               <dd className="mt-1 text-2xl leading-relaxed">{v}</dd>
             </div>
           ))}
@@ -86,7 +92,7 @@ export function ConsentScreen({
           <Button
             size="senior"
             variant="outline"
-            className="w-full"
+            className="w-full border-2"
             onClick={() => {
               onChoose("no_location");
             }}
