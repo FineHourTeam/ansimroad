@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Link, useParams } from "react-router";
 import { paths } from "@/app/paths";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
 import { DEFAULT_SETTINGS, useSettings } from "@/features/places";
@@ -21,7 +22,7 @@ export function ReportPage() {
   const reviews = useReviews(tripId, true);
   const locationOn = settings.locationCollectionEnabled;
 
-  if (access.isPending || settingsQuery.isPending) return <Loading />;
+  if (access.isPending || settingsQuery.isPending) return <LoadingPage />;
   if (access.isError) {
     return (
       <LoadError
@@ -52,7 +53,7 @@ export function ReportPage() {
     );
   }
 
-  if (trip.isPending || photos.isPending || reviews.isPending) return <Loading />;
+  if (trip.isPending || photos.isPending || reviews.isPending) return <LoadingPage />;
   if (trip.isError || photos.isError || reviews.isError) {
     return (
       <LoadError
@@ -85,22 +86,37 @@ export function ReportPage() {
   );
 }
 
+/** 불러오는 동안에도 리포트와 같은 모래빛 바탕 */
+function LoadingPage() {
+  return (
+    <PageBody>
+      <Loading />
+    </PageBody>
+  );
+}
+
 function StateShell({ locationOn, children }: { locationOn: boolean; children: ReactNode }) {
   return (
-    <div className="bg-background min-h-svh">
+    <>
       <Seo title="여행 리포트" noindex />
+      {/* 길 잃은 화면 위쪽의 로고 (누르면 첫 화면) — 404 화면과 같은 머리 */}
+      <header className="mx-auto flex h-14 max-w-3xl items-center px-4">
+        <Link to={paths.home} className="inline-flex min-h-11 items-center">
+          <BrandLogo height={28} />
+        </Link>
+      </header>
       <PageBody>
         {children}
         <LegalLinks locationOn={locationOn} />
       </PageBody>
-    </div>
+    </>
   );
 }
 
 function Guide({ title, children }: { title: string; children: ReactNode }) {
   return (
     <StateMessage title={title}>
-      <p className="text-muted-foreground">{children}</p>
+      <p className="text-muted-foreground text-balance">{children}</p>
       <Button asChild size="xl" className="mt-2 px-6">
         <Link to={paths.home}>안심로드 둘러보기</Link>
       </Button>
@@ -125,7 +141,9 @@ function LoadError({
   return (
     <StateShell locationOn={locationOn}>
       <StateMessage title="리포트를 불러오지 못했어요">
-        <p className="text-muted-foreground">인터넷 연결을 확인하고 다시 불러와 주세요.</p>
+        <p className="text-muted-foreground text-balance">
+          인터넷 연결을 확인하고 다시 불러와 주세요.
+        </p>
         <Button size="xl" className="mt-2 px-6" disabled={busy} onClick={onRetry}>
           {busy ? "불러오는 중이에요" : "다시 불러오기"}
         </Button>

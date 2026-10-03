@@ -7,7 +7,7 @@ import type { PhotoRecord, TripInput } from "@/shared/domain/types";
 import { generateCourses } from "@/shared/engine/generate";
 import { photosBySlot } from "@/shared/engine/timeline";
 import { hhmm } from "@/shared/lib/date";
-import { averageRating } from "./report";
+import { averageRating, heroPhoto } from "./report";
 
 const places = parsePlaceRows(
   parseCsv(readFileSync(resolve(__dirname, "../../../public/data/places.demo.csv"), "utf8")),
@@ -78,5 +78,23 @@ describe("averageRating", () => {
   it("공개 후기가 없으면 null", () => {
     expect(averageRating({})).toBeNull();
     expect(averageRating({ a: { rating: 3, text: "", priv: true, at: "" } })).toBeNull();
+  });
+});
+
+describe("heroPhoto", () => {
+  const review = (rating: number, priv = false) => ({ rating, text: "", priv, at: "" });
+  const groups = [[photo("a", 600)], [], [photo("c", 700), photo("d", 701)], []];
+
+  it("공개 별점이 가장 높은 장소의 첫 사진을 고른다 (나만 보기 별점은 0으로 센다)", () => {
+    const reviews = {
+      [stopAt(0).place.id]: review(5, true),
+      [stopAt(2).place.id]: review(4),
+    };
+    expect(heroPhoto(course, groups, reviews)?.id).toBe("c");
+  });
+
+  it("별점이 같거나 없으면 앞 장소, 사진이 없으면 null", () => {
+    expect(heroPhoto(course, groups, {})?.id).toBe("a");
+    expect(heroPhoto(course, [[], [], [], []], {})).toBeNull();
   });
 });

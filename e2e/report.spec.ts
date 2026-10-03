@@ -142,6 +142,8 @@ test("리포트: 제목 · 공개 후기 · 평균 별점 · 장소별 사진을
   await expect(page.getByText(PRIVATE_TEXT)).toHaveCount(0);
   await expect(stopCard(page, s1).getByRole("img", { name: /별점/ })).toHaveCount(0);
 
+  // 히어로: 공개 별점이 가장 높은 장소(첫 장소 5점)의 사진을 앨범 표지로 깐다
+  await expect(userPhotos(page.getByRole("banner"))).toHaveCount(1);
   await expect(userPhotos(stopCard(page, s0))).toHaveCount(1);
   await expect(userPhotos(stopCard(page, s1))).toHaveCount(0);
   await expect(userPhotos(stopCard(page, s2))).toHaveCount(1);
@@ -168,6 +170,7 @@ test("사진 · 공개 후기가 없으면 빈 안내를 보여 주고, 사진�
 
   await writeDocs([photoDoc(r, takenAt(stopAt(r, 0), 1))]);
   await expect(userPhotos(stopCard(page, stopAt(r, 0)))).toHaveCount(1);
+  await expect(userPhotos(page.getByRole("banner"))).toHaveCount(1); // 청록 표지가 사진 표지로 바뀐다
   await expect(page.getByText("아직 남긴 사진이 없어요")).toHaveCount(0);
 });
 
@@ -183,7 +186,10 @@ test("공유 시트가 없으면 '리포트 링크 복사하기'가 리포트 �
   const r = await seedReport();
   await page.goto(`/r/${r.reportToken}?utm_source=x`);
 
-  await page.getByRole("button", { name: "리포트 링크 복사하기" }).click();
+  // 공유 버튼은 위 요약과 맨 아래 두 곳 — 위쪽 버튼으로 확인한다
+  const copyButtons = page.getByRole("button", { name: "리포트 링크 복사하기" });
+  await expect(copyButtons).toHaveCount(2);
+  await copyButtons.first().click();
   await expect(page.getByText("리포트 링크를 복사했어요")).toBeVisible();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
   expect(copied).toBe(`${String(baseURL)}/r/${r.reportToken}`); // 쿼리는 빼고 리포트 주소만
@@ -211,7 +217,10 @@ test("공유 시트가 있으면 '카카오톡으로 공유하기'가 리포트 
   const r = await seedReport();
   await page.goto(`/r/${r.reportToken}`);
 
-  await page.getByRole("button", { name: "카카오톡으로 공유하기" }).click();
+  // 공유 버튼은 위 요약과 맨 아래 두 곳 — 다 보고 내려온 사람이 누르는 아래쪽 버튼으로 확인한다
+  const shareButtons = page.getByRole("button", { name: "카카오톡으로 공유하기" });
+  await expect(shareButtons).toHaveCount(2);
+  await shareButtons.last().click();
   await expect
     .poll(() => page.evaluate(() => (window as unknown as { __shared: ShareData[] }).__shared))
     .toEqual([expect.objectContaining({ url: `${String(baseURL)}/r/${r.reportToken}` })]);
@@ -227,6 +236,24 @@ test("'안심로드로 코스 만들기'를 누르면 처음 화면으로 간다
   await expect(page).toHaveURL(/\/\?utm_source=report&utm_medium=share$/);
   await expect(page.getByRole("form", { name: "여행 조건 입력" })).toBeVisible(); // 처음 화면의 조건 입력
   await expect(page.getByText("안심로드 여행 리포트")).toHaveCount(0);
+});
+
+test("글 없이 별점만 남긴 공개 후기는 도착 시각 옆 별점만 보이고 인용 상자는 그리지 않는다", async ({
+  page,
+}) => {
+  const r = await seedReport({ reviews: false });
+  const s2 = stopAt(r, 2);
+  await writeDocs([
+    {
+      path: `trips/${r.tripId}/reviews/${s2.place.id}`,
+      data: { rating: 4, text: "", priv: false, at: new Date().toISOString() },
+    },
+  ]);
+  await page.goto(`/r/${r.reportToken}`);
+
+  await expect(stopCard(page, s2).getByRole("img", { name: "별점 4점" })).toBeVisible();
+  await expect(stopCard(page, s2).locator("blockquote")).toHaveCount(0);
+  await expect(statTile(page, "장소 별점")).toContainText("4.0");
 });
 
 test("한 장소에 사진이 3장보다 많으면 3장만 보이고 마지막 칸에 남은 장 수를 얹는다", async ({
