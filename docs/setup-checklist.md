@@ -65,11 +65,11 @@
 - [ ] **F7** CORS — Storage 파일을 fetch·canvas로 쓸 때만 `cors.json` 적용 (`docs/CORS.md`)
 - [-] **F8** 프로덕션 QA 계정(앱스토어 심사 등) — 웹 서비스라 해당없음
 - [ ] **F9** App Check — 배포가 안정된 뒤 모니터링 모드부터
-- [ ] **F10** Authentication → 로그인 방법 → **익명** 사용 설정 — 링크(/t · /f · /r) 화면이 익명 로그인 후 토큰으로 합류한다 (안 켜면 프로덕션에서 링크 화면이 안 열림)
+- [x] **F10** Authentication → 로그인 방법 → **익명** 사용 설정 (2026-10-03 CLI로 켬) — 링크(/t · /f · /r) 화면이 익명 로그인 후 토큰으로 합류한다 (안 켜면 프로덕션에서 링크 화면이 안 열림)
 - [ ] **F11** 운영진 계정: 콘솔 Authentication → 사용자 추가(이메일) → `node scripts/add-admin.mjs <이메일>` 로 admins 명단 등록
-- [ ] **F12** 장소 데이터 첫 적재: 운영진 페이지 /admin/places → CSV 가져오기 (`public/data/places.demo.csv` 또는 모담 조사표 CSV)
-- [ ] **F13** Functions 배포: TourAPI 키 받은 뒤 `npx firebase functions:secrets:set TOURAPI_KEY` → `npx firebase deploy --only functions` (tourapi · cleanupExpiredTrips). Storage 규칙이 Firestore를 읽으므로 첫 `deploy --only storage` 때 권한 부여 확인창에 동의
-- [ ] **F14** Firestore 색인 배포: `npx firebase deploy --only firestore` (curated: published + updatedAt)
+- [x] **F12** 장소 데이터 첫 적재 (2026-10-03 `node scripts/seed-places.mjs`로 데모 10곳 — 모담 조사표 받으면 다시): 운영진 페이지 /admin/places → CSV 가져오기 (`public/data/places.demo.csv` 또는 모담 조사표 CSV)
+- [x] **F13** Functions 배포 (2026-10-03 tourapi · cleanupExpiredTrips, TOURAPI_KEY 는 PENDING 자리값 — 키 받으면 교체 후 재배포): TourAPI 키 받은 뒤 `npx firebase functions:secrets:set TOURAPI_KEY` → `npx firebase deploy --only functions` (tourapi · cleanupExpiredTrips). Storage 규칙이 Firestore를 읽으므로 첫 `deploy --only storage` 때 권한 부여 확인창에 동의
+- [x] **F14** Firestore 색인 · 보안 규칙 배포 (2026-10-03): `npx firebase deploy --only firestore` (curated: published + updatedAt)
 
 ## 5. 배포 (Hosting · 도메인)
 

@@ -15,13 +15,19 @@ const file = args.find((a) => !a.startsWith("--")) ?? "public/data/places.demo.c
 const project = JSON.parse(readFileSync(".firebaserc", "utf8")).projects.default;
 
 // 앱 코드(@/ 별칭 · TS)를 vite 로 불러온다
-const vite = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
+const vite = await createServer({
+  server: { middlewareMode: true },
+  appType: "custom",
+  logLevel: "error",
+});
 let records;
 let places;
 let skipped;
 try {
   const { parseCsv } = await vite.ssrLoadModule("/src/shared/data/csv.ts");
-  const { toRecords, recordsToPlaces } = await vite.ssrLoadModule("/src/shared/data/placeRecords.ts");
+  const { toRecords, recordsToPlaces } = await vite.ssrLoadModule(
+    "/src/shared/data/placeRecords.ts",
+  );
   records = toRecords(parseCsv(readFileSync(file, "utf8")));
   ({ places, skipped } = recordsToPlaces(records));
 } finally {
@@ -30,8 +36,11 @@ try {
 
 const valid = new Set(places.map((p) => p.id));
 const toWrite = records.filter((r) => valid.has(r.ID));
-console.log(`${file}: ${String(records.length)}행 → 넣을 장소 ${String(toWrite.length)}곳, 빠진 행 ${String(skipped.length)}개`);
-for (const s of skipped) console.log(`  빠짐: ${String(s.row)}행 ${s.id || "(ID 없음)"} — ${s.reason}`);
+console.log(
+  `${file}: ${String(records.length)}행 → 넣을 장소 ${String(toWrite.length)}곳, 빠진 행 ${String(skipped.length)}개`,
+);
+for (const s of skipped)
+  console.log(`  빠짐: ${String(s.row)}행 ${s.id || "(ID 없음)"} — ${s.reason}`);
 if (dryRun || toWrite.length === 0) process.exit(0);
 
 const base = emulator
@@ -52,7 +61,11 @@ for (let i = 0; i < toWrite.length; i += 400) {
       fields: Object.fromEntries(Object.entries(r).map(([k, v]) => [k, { stringValue: v }])),
     },
   }));
-  const res = await fetch(`${base}:batchWrite`, { method: "POST", headers, body: JSON.stringify({ writes }) });
+  const res = await fetch(`${base}:batchWrite`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ writes }),
+  });
   if (!res.ok) throw new Error(`쓰기 실패 (${String(res.status)}): ${await res.text()}`);
 }
 console.log(`${emulator ? "에뮬레이터" : project}에 장소 ${String(toWrite.length)}곳을 넣었어요.`);

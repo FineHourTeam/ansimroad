@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => ({
     // E2E 서버는 루트 파일을 지켜보지 않는다. Windows 에서 에뮬레이터가 루트 firestore-debug.log 에 로그를 쏟으면
     // fs.watch 버퍼가 넘쳐 루트 파일이 모두 '바뀜'으로 잡히고(마지막 접근 시각을 끈 PC 는 chokidar 가 못 거른다),
     // 서버가 재시작·전체 새로고침돼 돌던 테스트가 빈 화면이 된다. 이 파일들을 고쳤으면 E2E 서버를 다시 띄운다.
-    watch: mode === "e2e" ? { ignored: isRootFile } : undefined,
+    watch: { ignored: (p: string) => p.endsWith(".log") || (mode === "e2e" && isRootFile(p)) },
     // 관리자 TourAPI 가져오기: 개발 중에는 Functions 에뮬레이터(npx firebase emulators:start)로 보낸다.
     // 배포에서는 Hosting rewrite(/api/tourapi/** → 함수 tourapi)가 같은 일을 한다.
     proxy: {
