@@ -14,6 +14,16 @@ const envSchema = z.object({
   VITE_FIREBASE_MESSAGING_SENDER_ID: z.string().min(1),
   VITE_FIREBASE_APP_ID: z.string().min(1),
   VITE_SENTRY_DSN: z.string().optional(), // DSN은 공개 가능 값 — 미설정이면 Sentry 비활성
+  // 네이버 지도 Client ID(공개 값, 콘솔에 등록한 도메인에서만 동작). 비우면 좌표로 그린 약도를 보여 준다
+  VITE_NAVER_MAP_CLIENT_ID: z.string().optional().default(""),
+  VITE_NAVER_MAP_KEY_PARAM: z.string().optional().default("ncpKeyId"),
+  VITE_GA4_ID: z.string().optional().default(""), // 비우면 통계 비활성
+  // ?now=2026-10-18T12:20 시연 시계 — 프로덕션 시연·검수 때만 "true"
+  VITE_ALLOW_DEMO_CLOCK: z
+    .string()
+    .optional()
+    .default("false")
+    .transform((v) => v === "true"),
   VITE_USE_EMULATORS: z
     .string()
     .optional()

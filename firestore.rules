@@ -1,9 +1,221 @@
 rules_version = '2';
-// 전부 막힘으로 시작한다. 기능을 만들 때 그 경로만 연다 (knowledge/rules.md § Firebase 보안규칙).
+
+// 안심로드 Firestore 보안 규칙
+// 권한 모델: 로그인 없이 링크 토큰이 곧 권한이다. 화면을 열면 익명 로그인 → links/{token} 을 읽고
+// trips/{tripId}/members/{uid}_{role} 문서를 만들어 "합류"한다. 이후 읽기·쓰기는 그 멤버 문서로 판단한다.
+//  - family(자녀): 코스 수정 · 후기 · 여행 완료 · 사진 올리기 · 사진 보기
+//  - senior(어르신): 코스 보기 · 사진 올리기
+//  - report(리포트 공유): 코스 · 사진 · 공개 후기 읽기만
+// 운영진은 이메일 로그인 + admins/{uid} 문서 (콘솔·스크립트로만 만든다).
+// 검증: e2e/rules.spec.ts
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return signedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    function tripPath(tripId) {
+      return /databases/$(database)/documents/trips/$(tripId);
+    }
+    function memberPath(tripId, role) {
+      return /databases/$(database)/documents/trips/$(tripId)/members/$(request.auth.uid + '_' + role);
+    }
+    function isMember(tripId, role) {
+      return signedIn() && exists(memberPath(tripId, role));
+    }
+    function isFamily(tripId) {
+      return isMember(tripId, 'family');
+    }
+    function canUpload(tripId) {
+      return isMember(tripId, 'family') || isMember(tripId, 'senior');
+    }
+    function anyMember(tripId) {
+      return isMember(tripId, 'family') || isMember(tripId, 'senior') || isMember(tripId, 'report');
+    }
+    // 여행을 만드는 같은 배치 안인가 (만들기 전엔 없고, 배치 뒤엔 내가 주인)
+    function creatingTrip(tripId) {
+      return !exists(tripPath(tripId)) && getAfter(tripPath(tripId)).data.ownerUid == request.auth.uid;
+    }
+    function notExpired(tripId) {
+      return request.time < get(tripPath(tripId)).data.expiresAt;
+    }
+    function keysOnly(keys) {
+      return request.resource.data.keys().hasOnly(keys);
+    }
+    function changedOnly(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+    function shortText(v, max) {
+      return v is string && v.size() <= max;
+    }
+    // 코스 모양이 깨지면 모든 화면이 오류 화면으로 간다 — 최소 구조만 확인
+    function validCourse(c) {
+      return c is map && c.stops is list && c.stops.size() <= 10 && shortText(c.title, 100);
+    }
+    // 이 여행 · 이 사진 ID 로 올린 Storage 파일의 다운로드 주소만 (외부 추적 이미지 금지)
+    function storagePhotoUrl(url, tripId, photoId) {
+      return url is string && url.matches(
+        '^(https://firebasestorage[.]googleapis[.]com|http://127[.]0[.]0[.]1:9199)/v0/b/[^/]+/o/trips%2F'
+          + tripId + '%2Fphotos%2F' + photoId + '[.]jpg[?]alt=media&token=[-0-9a-f]+$');
+    }
+
+    // ── 장소 데이터 (조사표 35칸): 누구나 읽기, 운영진만 쓰기 ──
+    match /places/{placeId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // ── 운영진 추천 코스: 공개한 것만 누구나, 운영진은 전부 ──
+    match /curated/{courseId} {
+      allow read: if resource.data.published == true || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ── 운영진 명단: 본인 확인용 get만. 추가는 콘솔·스크립트(Admin SDK)로만 ──
+    match /admins/{uid} {
+      allow get: if signedIn() && request.auth.uid == uid;
+      allow list, write: if false;
+    }
+
+    // ── 링크 토큰: 토큰을 아는 사람만 get. 목록 조회·수정 금지 ──
+    match /links/{token} {
+      allow get: if signedIn();
+      allow list, update, delete: if false;
+      allow create: if signedIn()
+        && token.size() >= 10
+        && keysOnly(['tripId', 'role', 'expiresAt', 'seniorToken'])
+        && request.resource.data.tripId is string
+        && request.resource.data.expiresAt == getAfter(tripPath(request.resource.data.tripId)).data.expiresAt
+        && (
+          // 확정: 어르신·자녀 링크는 여행을 만드는 배치에서만
+          (request.resource.data.role in ['senior', 'family'] && creatingTrip(request.resource.data.tripId))
+          // 여행 완료: 리포트 링크는 자녀만, 여행 문서의 reportToken 과 같이
+          || (request.resource.data.role == 'report'
+              && isFamily(request.resource.data.tripId)
+              && getAfter(tripPath(request.resource.data.tripId)).data.reportToken == token)
+        );
+    }
+
+    // ── 확정한 여행 ──
+    match /trips/{tripId} {
+      // 리포트 링크(report)는 여행 문서를 읽지 않는다 — 메모 · 조건(나이대 · 이동 불편)이 들어 있어서. public/report 만 읽는다
+      allow get: if (canUpload(tripId) && request.time < resource.data.expiresAt) || isAdmin();
+      allow list: if false;
+      allow create: if signedIn()
+        && request.resource.data.ownerUid == request.auth.uid
+        && keysOnly(['ownerUid', 'createdAt', 'input', 'course', 'memos', 'expiresOn', 'expiresAt'])
+        && validCourse(request.resource.data.course)
+        && request.resource.data.input is map
+        && request.resource.data.memos is map
+        && shortText(request.resource.data.expiresOn, 10)
+        && request.resource.data.expiresAt is timestamp
+        // 만료가 없거나 아주 먼 여행으로 사진 저장소를 계속 쓰지 못하게 (여행일 + 30일)
+        && request.resource.data.expiresAt > request.time
+        && request.resource.data.expiresAt < request.time + duration.value(400, 'd')
+        && existsAfter(memberPath(tripId, 'family'));
+      // 자녀: 코스 수정(F-13 이후 실시간) · 여행 완료(한 번만, 같은 배치에서 만든 리포트 링크와 함께)
+      allow update: if isFamily(tripId)
+        && notExpired(tripId)
+        && changedOnly(['course', 'completedAt', 'reportToken'])
+        && validCourse(request.resource.data.course)
+        && (('reportToken' in resource.data && request.resource.data.reportToken == resource.data.reportToken)
+            || (!('reportToken' in resource.data)
+                && (!('reportToken' in request.resource.data)
+                    || (shortText(request.resource.data.reportToken, 40)
+                        && existsAfter(/databases/$(database)/documents/links/$(request.resource.data.reportToken))))));
+      allow delete: if false;
+
+      // 합류 기록: 문서 ID = {uid}_{role}. 본인만 읽는다
+      match /members/{memberId} {
+        allow get: if signedIn() && memberId.split('_')[0] == request.auth.uid;
+        allow list, delete: if false;
+        allow create, update: if signedIn()
+          && memberId == request.auth.uid + '_' + request.resource.data.role
+          && keysOnly(['role', 'token'])
+          && request.resource.data.role in ['family', 'senior', 'report']
+          && request.resource.data.token is string
+          && (
+            (request.resource.data.role == 'family' && creatingTrip(tripId))
+            || (exists(/databases/$(database)/documents/links/$(request.resource.data.token))
+                && get(/databases/$(database)/documents/links/$(request.resource.data.token)).data.tripId == tripId
+                && get(/databases/$(database)/documents/links/$(request.resource.data.token)).data.role == request.resource.data.role
+                && request.time < get(/databases/$(database)/documents/links/$(request.resource.data.token)).data.expiresAt)
+          );
+      }
+
+      // 리포트 공개본: 여행 완료 때 자녀가 쓴다 (날짜 · 코스 · 보관 기한 · 완료 시각만)
+      match /public/{docId} {
+        allow get: if docId == 'report' && anyMember(tripId) && notExpired(tripId);
+        allow list, delete: if false;
+        allow create, update: if docId == 'report'
+          && isFamily(tripId)
+          && notExpired(tripId)
+          && keysOnly(['date', 'course', 'expiresOn', 'completedAt'])
+          && shortText(request.resource.data.date, 10)
+          && validCourse(request.resource.data.course)
+          && shortText(request.resource.data.expiresOn, 10)
+          && shortText(request.resource.data.completedAt, 40);
+      }
+
+      // 자녀가 남긴 장소별 후기. 리포트에는 공개(priv=false)만. 시각은 서버 시각
+      match /reviews/{placeId} {
+        allow read: if isFamily(tripId) || (isMember(tripId, 'report') && resource.data.priv == false);
+        allow create, update: if isFamily(tripId)
+          && notExpired(tripId)
+          && keysOnly(['rating', 'text', 'priv', 'at'])
+          && request.resource.data.rating is int
+          && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
+          && shortText(request.resource.data.text, 200)
+          && request.resource.data.priv is bool
+          && request.resource.data.at == request.time;
+        allow delete: if isFamily(tripId) && notExpired(tripId);
+      }
+
+      // 사진 메타 (파일은 Storage trips/{tripId}/photos/{photoId}.jpg)
+      match /photos/{photoId} {
+        allow read: if anyMember(tripId) && notExpired(tripId);
+        allow create: if canUpload(tripId)
+          && notExpired(tripId)
+          && keysOnly(['takenAt', 'url', 'width', 'height', 'lat', 'lng', 'locationStatus', 'stopIndex', 'by'])
+          && storagePhotoUrl(request.resource.data.url, tripId, photoId)
+          && shortText(request.resource.data.takenAt, 40)
+          && request.resource.data.width is int && request.resource.data.width > 0 && request.resource.data.width <= 10000
+          && request.resource.data.height is int && request.resource.data.height > 0 && request.resource.data.height <= 10000
+          && (request.resource.data.lat == null || request.resource.data.lat is number)
+          && (request.resource.data.lng == null || request.resource.data.lng is number)
+          && request.resource.data.get('stopIndex', 0) is int
+          && request.resource.data.locationStatus in ['off', 'ok', 'skipped', 'denied']
+          // 올린 사람 표시는 실제 역할과 같아야 한다
+          && ((request.resource.data.by == 'family' && isFamily(tripId))
+              || (request.resource.data.by == 'senior' && isMember(tripId, 'senior')));
+        allow update, delete: if false;
+      }
+
+      // 위치 수집·제공 사실 기록 (D-08, 좌표 없음). 쓰기만
+      match /locationLog/{logId} {
+        allow create: if canUpload(tripId)
+          && notExpired(tripId)
+          && keysOnly(['at', 'action'])
+          && request.resource.data.action in ['collect', 'provide']
+          && shortText(request.resource.data.at, 40);
+        allow read, update, delete: if false;
+      }
+    }
+
+    // ── 장소별 공개 후기 모음 (누가 썼는지 남기지 않는다). 다른 가족 · 운영진이 본다 ──
+    match /placeReviews/{placeId}/items/{tripId} {
+      allow read: if true;
+      allow create, update: if isFamily(tripId)
+        && notExpired(tripId)
+        && keysOnly(['rating', 'text', 'at'])
+        && request.resource.data.rating is int
+        && request.resource.data.rating >= 1 && request.resource.data.rating <= 5
+        && shortText(request.resource.data.text, 200)
+        // 서버 시각만 — 먼 미래 날짜로 최신 후기 자리를 차지하지 못하게
+        && request.resource.data.at == request.time;
+      allow delete: if isFamily(tripId);
     }
   }
 }
