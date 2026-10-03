@@ -197,7 +197,7 @@ export function MapView({
   const useNaver = !!env.VITE_NAVER_MAP_CLIENT_ID && !failed;
   return (
     <div
-      className={cn("relative overflow-hidden rounded-lg border", className)}
+      className={cn("relative isolate overflow-hidden rounded-lg border", className)}
       data-testid="map-view"
     >
       {useNaver ? (

@@ -18,8 +18,8 @@ function Frame({ url, alt, square }: { url: string | null; alt: string; square: 
   return (
     <div
       className={cn(
-        "bg-background-subtle grid w-full place-items-center overflow-hidden rounded-lg",
-        square ? "aspect-square" : empty ? "h-20" : "aspect-[4/3]",
+        "bg-background-subtle grid w-full place-items-center overflow-hidden rounded-2xl",
+        square ? "aspect-square" : empty ? "h-28" : "aspect-[4/3]",
       )}
     >
       {url && !failed ? (
@@ -35,8 +35,10 @@ function Frame({ url, alt, square }: { url: string | null; alt: string; square: 
           }}
         />
       ) : (
-        <span className="text-muted-foreground flex flex-col items-center gap-1 text-sm">
-          <ImageIcon />
+        <span className="text-muted-foreground flex flex-col items-center gap-2 text-sm font-medium">
+          <span className="bg-background text-primary grid size-10 place-items-center rounded-full shadow-sm">
+            <ImageIcon />
+          </span>
           사진 준비 중
         </span>
       )}
@@ -89,11 +91,11 @@ export function PlacePhoto({
             ))}
           </CarouselContent>
           {/* 버튼으로도 넘긴다 (키보드 · 화면 읽기 사용자) */}
-          <CarouselPrevious className="bg-background/90 left-2" />
-          <CarouselNext className="bg-background/90 right-2" />
+          <CarouselPrevious className="bg-background/90 left-2 shadow-sm" />
+          <CarouselNext className="bg-background/90 right-2 shadow-sm" />
           <span
             aria-hidden="true"
-            className="bg-foreground/70 text-background absolute right-2 bottom-2 rounded-full px-2 py-0.5 text-xs font-semibold"
+            className="bg-foreground/70 text-background absolute right-3 bottom-3 rounded-full px-2.5 py-0.5 text-xs font-semibold tabular-nums backdrop-blur-sm"
           >
             {idx + 1} / {list.length}
           </span>
@@ -102,7 +104,7 @@ export function PlacePhoto({
         <Frame url={current} alt={alt} square={square} />
       )}
       {isTourApiPhoto(current) && (
-        <figcaption className="text-muted-foreground mt-1 text-xs">사진: 한국관광공사</figcaption>
+        <figcaption className="text-muted-foreground mt-1.5 text-xs">사진: 한국관광공사</figcaption>
       )}
     </figure>
   );
