@@ -6,6 +6,7 @@ import { useLegalDoc } from "../hooks/useLegalDoc";
 import { paths } from "@/app/paths";
 import { Seo } from "@/components/Seo";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Loading, PageBody, StateMessage, TopBar } from "@/shared/components/common";
 
 const DOCS = {
@@ -20,7 +21,10 @@ function renderMarkdown(src: string): ReactNode[] {
     if (list.length === 0) return;
     const items = list;
     out.push(
-      <ul key={`ul-${String(out.length)}`} className="my-3 list-disc space-y-1 pl-5">
+      <ul
+        key={`ul-${String(out.length)}`}
+        className="marker:text-primary my-3 list-disc space-y-1.5 pl-5"
+      >
         {items.map((li, i) => (
           <li key={i}>{li}</li>
         ))}
@@ -39,7 +43,7 @@ function renderMarkdown(src: string): ReactNode[] {
     const key = String(out.length);
     if (line.startsWith("## "))
       out.push(
-        <h2 key={key} className="mt-8 mb-2 text-lg font-bold">
+        <h2 key={key} className="mt-8 mb-2 text-lg font-bold tracking-tight first:mt-0">
           {line.slice(3)}
         </h2>,
       );
@@ -47,7 +51,7 @@ function renderMarkdown(src: string): ReactNode[] {
       out.push(
         <p
           key={key}
-          className="bg-background-subtle text-muted-foreground my-3 rounded-lg p-3 text-sm"
+          className="bg-background-subtle text-muted-foreground my-4 rounded-xl p-4 text-sm"
         >
           {line.slice(2)}
         </p>,
@@ -88,7 +92,11 @@ export function LegalPage({ doc }: { doc: keyof typeof DOCS }) {
             </Button>
           </StateMessage>
         ) : (
-          <article data-testid="legal-doc">{renderMarkdown(q.data)}</article>
+          <Card className="px-5 py-6 sm:px-8 sm:py-8">
+            <article data-testid="legal-doc" className="leading-relaxed">
+              {renderMarkdown(q.data)}
+            </article>
+          </Card>
         )}
       </PageBody>
     </>
