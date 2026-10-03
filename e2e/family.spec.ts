@@ -1,4 +1,5 @@
 // S5 자녀 현황 · S3 링크 모아 보기 · 인쇄용 — 시드한 여행(seedTrip)으로 화면 동작과 저장 결과를 함께 확인한다.
+import { readFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 import { hhmm } from "../src/shared/lib/date";
 import { getDoc, listDocs, writeDocs } from "./support/emulator";
@@ -171,7 +172,11 @@ test("여행 전: 보내기 카드와 링크 모아 보기에 부모님 링크�
   await expect(card.getByText(`/t/${trip.seniorToken}`)).toBeVisible();
   await expect(card.getByRole("button", { name: "부모님 링크 복사" })).toBeVisible();
 
-  await card.getByRole("link", { name: "링크 모아 보기" }).click();
+  // 바로가기 한 줄(코스 보기·수정 · 링크 모아 보기 · 인쇄 · 이미지)은 보내기 카드 바로 아래
+  await page
+    .getByRole("navigation", { name: "코스 바로가기" })
+    .getByRole("link", { name: "링크 모아 보기" })
+    .click();
   await expect(page).toHaveURL(new RegExp(`/f/${trip.familyToken}/share$`));
   await expect(page.getByText(`/t/${trip.seniorToken}`)).toBeVisible();
   await expect(page.getByRole("button", { name: /부모님.*링크.*복사/ })).toHaveCount(1);
@@ -184,7 +189,7 @@ test("여행 전: 보내기 카드와 링크 모아 보기에 부모님 링크�
     "href",
     `/result?p=2&a=70&m=none&w=20&d=${TRIP_DATE}&t=car`,
   );
-  await page.getByRole("link", { name: "이 코스 인쇄용으로 보기" }).click();
+  await page.getByRole("link", { name: "인쇄 · 이미지로 보기" }).click();
   await expect(page).toHaveURL(new RegExp(`/f/${trip.familyToken}/print$`));
 });
 
@@ -196,20 +201,22 @@ test("인쇄용: 코스 · 시각 · 메모 · 두 링크와 QR을 싣고 인쇄
   const trip = await seedTrip({ memos: { [first.place.id]: "무릎 담요 챙기기" } });
   await page.goto(`/f/${trip.familyToken}/print`);
   await expect(page.getByRole("heading", { level: 1, name: trip.course.title })).toBeVisible();
+  // 화면 밖 이미지 카드(같은 내용)와 섞이지 않게 인쇄 종이 안에서 찾는다
+  const sheet = page.getByRole("article");
   for (const s of trip.course.stops) {
     await expect(
-      page.getByRole("listitem").filter({ hasText: s.place.name }).first(),
+      sheet.getByRole("listitem").filter({ hasText: s.place.name }).first(),
     ).toBeVisible();
-    await expect(page.getByText(hhmm(s.arriveMin), { exact: true }).first()).toBeVisible();
+    await expect(sheet.getByText(hhmm(s.arriveMin), { exact: true }).first()).toBeVisible();
   }
-  await expect(page.getByText("메모: 무릎 담요 챙기기")).toBeVisible();
+  await expect(sheet.getByText("메모: 무릎 담요 챙기기")).toBeVisible();
   // 휴대폰 폭에서도 전화번호가 '061-' 에서 끊기지 않는다 (한 줄)
   const phone = trip.course.stops.flatMap((s) => s.place.phones)[0] ?? "전화번호 없음";
-  expect((await page.getByText(phone, { exact: true }).first().boundingBox())?.height).toBeLessThan(
-    30,
-  );
-  await expect(page.getByText(`/t/${trip.seniorToken}`)).toBeVisible();
-  await expect(page.getByText(`/f/${trip.familyToken}`)).toBeVisible();
+  expect(
+    (await sheet.getByText(phone, { exact: true }).first().boundingBox())?.height,
+  ).toBeLessThan(30);
+  await expect(sheet.getByText(`/t/${trip.seniorToken}`)).toBeVisible();
+  await expect(sheet.getByText(`/f/${trip.familyToken}`)).toBeVisible();
   // 두 링크마다 휴대폰으로 찍어 여는 QR
   const links = page.getByRole("region", { name: "링크 주소" });
   await expect(links.getByRole("img", { name: /링크 QR 코드$/ })).toHaveCount(2);
@@ -224,6 +231,51 @@ test("인쇄용: 코스 · 시각 · 메모 · 두 링크와 QR을 싣고 인쇄
   // A4 한 장: 화면의 @page(A4 · 여백 12mm)대로 뽑은 PDF 가 1쪽
   const pdf = (await page.pdf({ preferCSSPageSize: true })).toString("latin1");
   expect(pdf.match(/\/Type\s*\/Page(?!s)/g) ?? []).toHaveLength(1);
+});
+
+test("인쇄용: 이미지로 저장하면 가로 1080px PNG 를 받고, 공유하면 PNG 한 장을 넘긴다", async ({
+  page,
+}) => {
+  // 공유 창 대신 넘긴 값만 기록한다 (헤드리스 브라우저에는 파일 공유 창이 없다)
+  await page.addInitScript(() => {
+    const w = window as unknown as { __shared: unknown[] };
+    w.__shared = [];
+    Object.defineProperty(navigator, "canShare", { configurable: true, value: () => true });
+    Object.defineProperty(navigator, "share", {
+      configurable: true,
+      value: (data: { files?: File[]; title?: string }) => {
+        w.__shared.push({
+          title: data.title,
+          files: (data.files ?? []).map((f) => ({ name: f.name, type: f.type, size: f.size })),
+        });
+        return Promise.resolve();
+      },
+    });
+  });
+  const trip = await seedTrip();
+  await page.goto(`/f/${trip.familyToken}/print`);
+  await expect(page.getByRole("heading", { level: 1, name: trip.course.title })).toBeVisible();
+  const name = `안심로드-${TRIP_DATE}-${trip.course.title.replace(/\s+/g, "-")}.png`;
+
+  const download = page.waitForEvent("download");
+  await page.getByRole("button", { name: "이미지로 저장하기" }).click();
+  const file = await download;
+  expect(file.suggestedFilename()).toBe(name);
+  const png = await readFile(await file.path());
+  // PNG 서명 + IHDR 가로(16~19바이트) = 1080
+  expect([...png.subarray(0, 8)]).toEqual([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  expect(png.readUInt32BE(16)).toBe(1080);
+  await expect(page.getByText("일정표 이미지를 저장했어요")).toBeVisible();
+
+  await page.getByRole("button", { name: "이미지로 공유하기" }).click();
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { __shared: unknown[] }).__shared))
+    .toEqual([
+      {
+        title: expect.stringContaining(trip.course.title) as unknown,
+        files: [{ name, type: "image/png", size: expect.any(Number) as unknown }],
+      },
+    ]);
 });
 
 test("여행 완료: 별점 · 후기 저장 → 리포트로 이동", async ({ page }) => {

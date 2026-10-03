@@ -1,6 +1,5 @@
-// ③ 타임라인 한 줄: 왼쪽 예정(시각 · 장소 · 머무는 시간 조정) | 가운데 점 | 오른쪽 실제 사진 칸
+// ③ 타임라인 한 줄: 왼쪽 예정(번호 · 시각 · 장소 · 머무는 시간 조정) | 가운데 점 | 오른쪽 실제 사진 칸
 import { AddIcon, CameraIcon } from "@/components/icons";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PlacePhoto } from "@/shared/components/PlacePhoto";
@@ -34,13 +33,13 @@ export interface StopRowProps {
 function StayAdjust({ stop, index, onStay }: Pick<StopRowProps, "stop" | "index" | "onStay">) {
   const name = stop.place.name;
   return (
-    <div className="flex flex-wrap items-center justify-between gap-1.5">
-      <p className="text-sm font-bold">머무는 시간 {stop.stayMin}분</p>
-      <div className="flex gap-1.5">
+    <div className="flex flex-col gap-1.5">
+      <p className="text-sm font-semibold">머무는 시간 {stop.stayMin}분</p>
+      <div className="grid grid-cols-2 gap-1.5">
         <Button
           variant="outline"
           size="xl"
-          className="px-3"
+          className="px-1"
           aria-label={`${name} 10분 줄이기`}
           onClick={() => {
             onStay(index, -10);
@@ -51,7 +50,7 @@ function StayAdjust({ stop, index, onStay }: Pick<StopRowProps, "stop" | "index"
         <Button
           variant="outline"
           size="xl"
-          className="px-3"
+          className="px-1"
           aria-label={`${name} 10분 늘리기`}
           onClick={() => {
             onStay(index, 10);
@@ -79,7 +78,7 @@ function PhotoSlot(p: StopRowProps) {
           <Button
             variant="outline"
             size="xl"
-            className="self-start"
+            className="w-full border-dashed"
             disabled={p.busy}
             aria-label={`${name} 사진 더 올리기`}
             onClick={pick}
@@ -91,19 +90,18 @@ function PhotoSlot(p: StopRowProps) {
       ) : (
         <Button
           variant="outline"
-          size="xl"
-          className="h-auto min-h-24 w-full flex-1 flex-col gap-1 border-dashed px-2 py-3 whitespace-normal"
+          className="bg-card/60 h-auto min-h-36 w-full flex-1 flex-col gap-2 rounded-2xl border-dashed px-2 py-4 whitespace-normal"
           disabled={p.busy}
           aria-label={`${name} 사진 올리기`}
           onClick={pick}
         >
-          <span className="text-muted-foreground">
+          <span className="bg-accent text-primary grid size-11 place-items-center rounded-full">
+            <CameraIcon />
+          </span>
+          <span className="text-muted-foreground text-sm font-medium">
             {p.past ? "아직 사진이 없어요" : "아직 도착 전"}
           </span>
-          <span className="text-primary flex items-center gap-1 font-bold">
-            <CameraIcon size="sm" />
-            눌러서 사진 올리기
-          </span>
+          <span className="text-primary text-sm font-bold">눌러서 사진 올리기</span>
         </Button>
       )}
       {p.upload === "sending" && (
@@ -125,13 +123,28 @@ export function StopRow(p: StopRowProps) {
   const has = p.photos.length > 0;
   return (
     <li className={ROW_GRID}>
-      <div className="bg-card text-card-foreground flex flex-col gap-1.5 rounded-lg border p-3 shadow-sm sm:p-4">
-        <p className="flex flex-wrap items-center gap-1.5">
-          <strong className="text-lg font-extrabold tabular-nums">{hhmm(stop.arriveMin)}</strong>
-          <Badge variant="secondary">{ROLE_LABEL[stop.role]}</Badge>
+      {/* self-start: 사진이 여러 장이어도 예정 카드는 제 내용 높이만 */}
+      <div className="bg-card text-card-foreground border-border/80 flex flex-col gap-2 self-start rounded-2xl border p-3 shadow-sm sm:p-4">
+        <p className="flex items-center gap-1.5">
+          <span className="bg-primary text-primary-foreground grid size-6 shrink-0 place-items-center rounded-full text-xs font-bold">
+            {p.index + 1}
+          </span>
+          <strong className="text-lg leading-none font-extrabold tabular-nums">
+            {hhmm(stop.arriveMin)}
+          </strong>
         </p>
-        <p className="text-base leading-snug font-bold">{stop.place.name}</p>
-        {p.memo && <p className="text-muted-foreground text-sm">메모: {p.memo}</p>}
+        {/* 역할(오전 · 점심 · 쉬어 가기)은 늘 이름 위 한 줄 — 좁은 칸에서도 네 카드의 머리 모양이 같다 */}
+        <p className="flex flex-col gap-0.5">
+          <span className="text-muted-foreground text-sm font-semibold">
+            {ROLE_LABEL[stop.role]}
+          </span>
+          <span className="text-base leading-snug font-bold">{stop.place.name}</span>
+        </p>
+        {p.memo && (
+          <p className="bg-highlight/25 text-highlight-foreground dark:bg-highlight/15 dark:text-highlight rounded-lg px-2 py-1 text-sm font-medium">
+            메모: {p.memo}
+          </p>
+        )}
         <StayAdjust stop={stop} index={p.index} onStay={p.onStay} />
         {/* 지금 선은 제 줄을 따로 둔다: 글자 · 버튼 · 장소 사진을 가로지르지 않게 */}
         {p.nowHere && (
@@ -143,11 +156,12 @@ export function StopRow(p: StopRowProps) {
           <PlacePhoto url={stop.place.photoUrl} urls={stop.place.photoUrls} alt={stop.place.name} />
         )}
       </div>
-      <span aria-hidden="true" className={cn("flex items-center justify-center", DOT_COL)}>
+      {/* 점은 번호 · 시각 줄 높이에 (가운데에 두면 사진이 많은 줄에서 떠 보인다) */}
+      <span aria-hidden="true" className={cn("flex justify-center pt-4 sm:pt-5", DOT_COL)}>
         <span
           className={cn(
-            "ring-background z-10 size-3.5 rounded-full ring-4",
-            has ? "bg-success text-success-foreground" : "bg-border",
+            "ring-background-subtle z-10 size-3.5 rounded-full ring-4",
+            has ? "bg-success text-success-foreground" : "bg-input",
           )}
         />
       </span>

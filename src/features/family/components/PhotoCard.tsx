@@ -66,10 +66,10 @@ export function PhotoCard({
   const [open, setOpen] = useState(false);
   const time = isoToHhmm(photo.takenAt);
   return (
-    <article className="border-success bg-card text-card-foreground flex flex-col gap-2 rounded-lg border-2 p-2">
+    <article className="bg-card text-card-foreground border-border/80 flex flex-col gap-2 rounded-2xl border p-1.5 shadow-sm">
       <button
         type="button"
-        className="bg-background-subtle block aspect-4/3 w-full cursor-zoom-in overflow-hidden rounded-md"
+        className="bg-background-subtle relative block aspect-4/3 w-full cursor-zoom-in overflow-hidden rounded-xl"
         aria-label={`${time} 사진 크게 보기`}
         onClick={() => {
           setOpen(true);
@@ -82,8 +82,11 @@ export function PhotoCard({
           decoding="async"
           className="size-full object-cover"
         />
+        <span className="bg-success text-success-foreground absolute top-1.5 left-1.5 grid size-6 place-items-center rounded-full shadow-sm">
+          <CheckIcon size="sm" />
+        </span>
       </button>
-      <div className="flex flex-col gap-0.5 px-1">
+      <div className="flex flex-col gap-0.5 px-1.5 pb-1">
         <p className="text-base font-bold tabular-nums">{time} 사진</p>
         <p className="text-muted-foreground text-sm">{BY_LABEL[photo.by]}</p>
         <Where course={course} photo={photo} locationOn={locationOn} />

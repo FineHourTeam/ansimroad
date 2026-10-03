@@ -1,6 +1,6 @@
 // 링크 보내기(F-15): 부모님 링크 · 자녀 링크 주소, 카카오톡(웹 공유) · 복사.
 import { toast } from "sonner";
-import type { Course, TripSnapshot } from "@/shared/domain/types";
+import type { TripSnapshot } from "@/shared/domain/types";
 import { track } from "@/shared/lib/analytics";
 import { koreanMonthDay } from "@/shared/lib/date";
 import { copyText, shareLink } from "@/shared/lib/share";
@@ -10,13 +10,6 @@ export const absoluteUrl = (path: string) => `${window.location.origin}${path}`;
 
 /** 'https://ansimroad.web.app/t/AB12' → 'ansimroad.web.app/t/AB12' */
 export const displayUrl = (url: string) => url.replace(/^https?:\/\//, "");
-
-/** '갓바위 → 점심(독천식당) → 평화광장 → 코롬방제과점' */
-export function routeLine(course: Course): string {
-  return course.stops
-    .map((s) => (s.role === "lunch" ? `점심(${s.place.name})` : s.place.name))
-    .join(" → ");
-}
 
 export async function copyLink(url: string, doneText: string): Promise<void> {
   if (await copyText(url)) toast.success(doneText);

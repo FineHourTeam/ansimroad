@@ -1,7 +1,7 @@
 // 자녀 화면(S5) 계산: 예정 시각 지남 · 현황 배너 문구 · 사진 위치 줄 (F-21 · F-22)
 import type { Course, PhotoRecord } from "@/shared/domain/types";
 import { matchLocation, scheduledStopIndex } from "@/shared/engine/timeline";
-import { hhmm, isoToHhmm, koreanMonthDay, minutesOfDay, shortDate } from "@/shared/lib/date";
+import { diffDays, hhmm, isoToHhmm, koreanMonthDay, minutesOfDay } from "@/shared/lib/date";
 
 export const photoMin = (p: PhotoRecord) => minutesOfDay(new Date(p.takenAt));
 
@@ -40,20 +40,28 @@ export function bannerText(a: {
       sub: `사진을 볼 수 있는 마지막 날 · ${koreanMonthDay(a.expiresOn)}`,
     };
   }
+  // 여행 전: 늦은 것처럼 들리지 않게 앞을 보는 말로 (전날 미리 온 사진이 있어도)
+  if (today < date) {
+    const days = diffDays(date, today);
+    return {
+      tone: "calm",
+      main: days === 1 ? "내일이 여행 날이에요" : `여행까지 ${String(days)}일 남았어요`,
+      sub: `${hhmm(course.startMin)} 출발 · 부모님께 링크를 보내 두세요`,
+    };
+  }
   const last = photos[photos.length - 1];
   if (!last) {
-    if (today === date && nowMin >= course.startMin) {
+    if (nowMin >= course.startMin) {
       return {
         tone: "calm",
         main: `지금쯤 ${stopName(course, scheduledStopIndex(course, nowMin))} 일정`,
         sub: "아직 사진은 없어요",
       };
     }
-    const day = today === date ? "" : `${shortDate(date)} `;
     return {
       tone: "calm",
       main: "아직 첫 사진이 오지 않았어요",
-      sub: `${day}${hhmm(course.startMin)} 출발 예정`,
+      sub: `${hhmm(course.startMin)} 출발 예정`,
     };
   }
   const time = isoToHhmm(last.takenAt);

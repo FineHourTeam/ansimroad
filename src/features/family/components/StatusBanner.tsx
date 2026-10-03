@@ -1,20 +1,45 @@
-// ② 현황 배너 (F-22): 지금 어디쯤인지 3초 안에. 불안을 주지 않도록 경고 색은 쓰지 않는다.
+// ② 현황 카드 (F-22): 지금 어디쯤인지 3초 안에 — 자녀 화면의 주인공. 불안을 주지 않도록 경고 색은 쓰지 않는다.
+import { CameraIcon, CheckIcon, ClockIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import type { BannerText } from "../lib/familyView";
 
-export function StatusBanner({ banner }: { banner: BannerText }) {
+export type TripPhase = "before" | "today" | "done";
+const PHASE_LABEL: Record<TripPhase, string> = {
+  before: "여행 전",
+  today: "오늘 여행 중",
+  done: "여행 끝",
+};
+
+export function StatusBanner({ banner, phase }: { banner: BannerText; phase: TripPhase }) {
   return (
     <div
       role="status"
-      className={cn(
-        "rounded-xl border-2 px-4 py-3 text-center",
-        banner.tone === "ok"
-          ? "border-success/40 bg-success/5 text-success"
-          : "border-primary/30 bg-primary/5 text-primary",
-      )}
+      className="bg-primary text-primary-foreground dark:bg-accent dark:text-accent-foreground relative rounded-2xl px-5 pt-4 pb-5 shadow-sm"
     >
-      <p className="text-lg leading-snug font-bold text-balance">{banner.main}</p>
-      <p className="mt-0.5 text-base font-semibold">{banner.sub}</p>
+      {/* 끝났으면 체크, 사진이 왔으면 카메라, 아직이면 시계 */}
+      <span className="bg-primary-foreground/15 absolute top-4 right-4 grid size-12 place-items-center rounded-full">
+        {phase === "done" ? (
+          <CheckIcon size="lg" />
+        ) : banner.tone === "ok" ? (
+          <CameraIcon size="lg" />
+        ) : (
+          <ClockIcon size="lg" />
+        )}
+      </span>
+      <span className="bg-primary-foreground/15 inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-sm font-semibold">
+        <span
+          aria-hidden="true"
+          className={cn(
+            "size-2 rounded-full",
+            phase === "today" ? "bg-highlight animate-pulse" : "bg-primary-foreground/70",
+          )}
+        />
+        {PHASE_LABEL[phase]}
+      </span>
+      <p className="mt-3 pr-14 text-2xl leading-tight font-extrabold tracking-tight text-balance">
+        {banner.main}
+      </p>
+      <p className="mt-1.5 text-base font-semibold">{banner.sub}</p>
     </div>
   );
 }

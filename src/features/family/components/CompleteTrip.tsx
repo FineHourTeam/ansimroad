@@ -145,9 +145,9 @@ function CompleteSheet({
   return (
     <section
       aria-labelledby="complete-title"
-      className="border-primary bg-card text-card-foreground flex flex-col gap-3 rounded-xl border-2 p-4"
+      className="bg-card text-card-foreground border-primary/40 flex flex-col gap-3 rounded-2xl border p-5 shadow-sm"
     >
-      <h2 id="complete-title" className="text-lg font-bold">
+      <h2 id="complete-title" className="text-lg font-bold tracking-tight">
         오늘 다녀온 곳은 어떠셨어요?
       </h2>
       <p className="text-muted-foreground">별점만 눌러도 돼요. 리포트에 함께 담겨요.</p>
@@ -184,15 +184,31 @@ export function CompleteTrip({
   const [open, setOpen] = useState(false);
   if (open) return <CompleteSheet trip={trip} initial={reviews} />;
   return (
-    <Button
-      size="xl"
-      className="w-full"
-      disabled={!reviewsReady}
-      onClick={() => {
-        setOpen(true);
-      }}
+    <section
+      aria-label="여행 마치기"
+      className="bg-card text-card-foreground flex flex-col gap-3 rounded-2xl border p-5 shadow-sm"
     >
-      여행 완료
-    </Button>
+      <div className="flex items-center gap-3">
+        <span className="bg-highlight text-highlight-foreground grid size-11 shrink-0 place-items-center rounded-full">
+          <StarIcon fill="currentColor" />
+        </span>
+        <div className="flex flex-col">
+          <p className="text-lg font-bold tracking-tight">여행을 마치셨나요?</p>
+          <p className="text-muted-foreground text-sm">
+            별점을 남기면 사진을 모아 여행 리포트를 만들어 드려요.
+          </p>
+        </div>
+      </div>
+      <Button
+        size="xl"
+        className="w-full"
+        disabled={!reviewsReady}
+        onClick={() => {
+          setOpen(true);
+        }}
+      >
+        여행 완료
+      </Button>
+    </section>
   );
 }

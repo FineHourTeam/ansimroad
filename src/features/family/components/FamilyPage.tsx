@@ -10,9 +10,9 @@ export function FamilyPage() {
   const { token = "" } = useParams();
   const state = useFamilyTrip(token);
   return (
-    <div className="bg-background text-foreground min-h-dvh">
+    <div className="text-foreground min-h-dvh">
       <Seo title="부모님 여행 현황" noindex />
-      <TopBar title="부모님 여행 현황" />
+      <TopBar title="부모님 여행 현황" brand />
       <PageBody>
         {state.status === "ready" ? (
           <FamilyDashboard trip={state.trip} access={state.access} settings={state.settings} />

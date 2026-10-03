@@ -1,5 +1,6 @@
 // S5 자녀 현황: 예정 vs 실제(사진)를 나란히 보고 '지금 어디쯤인지' 3초 안에 안다.
-// F-21 타임라인 · F-22 배너(실시간) · F-24 위치 설정(기본 OFF) · D-08 위치 제공 기록
+// F-21 타임라인 · F-22 현황 카드(실시간) · F-24 위치 설정(기본 OFF) · D-08 위치 제공 기록
+// 순서: 코스 이름 → 현황 카드 → (여행 전) 보내기 카드 → 바로가기 한 줄 → 지도 → 출발 시각 → 일정 · 사진 → 여행 완료
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -18,7 +19,7 @@ import { CompleteTrip } from "./CompleteTrip";
 import { CourseHeader, StartAdjust } from "./CourseControls";
 import { PhotoPicker } from "./PhotoPicker";
 import { FamilyLinks, ReportCard, SendCard } from "./SendCard";
-import { StatusBanner } from "./StatusBanner";
+import { StatusBanner, type TripPhase } from "./StatusBanner";
 import { Timeline } from "./Timeline";
 
 export function FamilyDashboard({
@@ -65,29 +66,22 @@ export function FamilyDashboard({
     });
   };
 
+  const ended = !!trip.completedAt || today > date || (today === date && nowMin >= course.endMin);
+  const phase: TripPhase = ended ? "done" : today < date ? "before" : "today";
   const showComplete = !trip.completedAt && (today >= date || photos.length > 0);
 
   return (
     <div className="flex flex-col gap-4">
-      <CourseHeader date={date} course={course} onChange={apply} />
       {trip.reportToken && <ReportCard reportToken={trip.reportToken} />}
-      {!trip.reportToken && today < date && access.seniorToken ? (
-        <SendCard
-          trip={trip}
-          seniorToken={access.seniorToken}
-          token={token}
-          printOn={settings.printViewEnabled}
-        />
-      ) : (
-        <FamilyLinks token={token} printOn={settings.printViewEnabled} />
-      )}
-
-      <MapView points={points} />
+      <CourseHeader date={date} course={course} onChange={apply} />
 
       {photosQ.isPending ? (
         <Loading text="사진을 확인하는 중이에요" />
       ) : photosQ.isError ? (
-        <div role="alert" className="flex flex-col items-center gap-2 py-4 text-center">
+        <div
+          role="alert"
+          className="bg-card flex flex-col items-center gap-2 rounded-2xl border px-4 py-5 text-center"
+        >
           <p className="font-bold">사진을 불러오지 못했어요</p>
           <Button variant="outline" size="xl" onClick={() => void photosQ.refetch()}>
             다시 불러오기
@@ -95,6 +89,7 @@ export function FamilyDashboard({
         </div>
       ) : (
         <StatusBanner
+          phase={phase}
           banner={bannerText({
             course,
             date,
@@ -108,16 +103,23 @@ export function FamilyDashboard({
         />
       )}
 
+      {!trip.reportToken && today < date && access.seniorToken && (
+        <SendCard trip={trip} seniorToken={access.seniorToken} />
+      )}
+      <FamilyLinks token={token} printOn={settings.printViewEnabled} />
+
+      {/* isolate: 지도 안 네이버 로고 · 확대 단추의 z-index 가 위 고정 막대를 넘지 않게 */}
+      <MapView points={points} className="border-border/80 isolate rounded-2xl shadow-sm" />
       <StartAdjust course={course} onChange={apply} />
 
       {photosQ.isSuccess && (
-        <div className="flex items-baseline justify-between gap-2">
-          <h2 className="text-lg font-bold">사진 {photos.length}장</h2>
+        <div className="mt-2 flex items-baseline justify-between gap-2">
+          <h2 className="text-lg font-bold tracking-tight">사진 {photos.length}장</h2>
           <p className="text-muted-foreground text-sm">새 사진은 바로 보여요</p>
         </div>
       )}
       {photosQ.isSuccess && photos.length === 0 && (
-        <p className="bg-background-subtle rounded-lg px-4 py-3 text-center">
+        <p className="bg-card text-muted-foreground rounded-xl border border-dashed px-4 py-3 text-center text-sm">
           아직 올라온 사진이 없어요. 장소 칸을 눌러 사진을 올려 보세요.
         </p>
       )}
@@ -157,8 +159,8 @@ export function FamilyDashboard({
         />
       )}
 
-      <EmergencyLine er={course.er} prefix="응급 시: 응급실" />
-      <LegalLinks locationOn={locationOn} />
+      <EmergencyLine er={course.er} prefix="가까운 응급실" />
+      <LegalLinks locationOn={locationOn} className="mt-6" />
     </div>
   );
 }

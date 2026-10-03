@@ -1,6 +1,6 @@
 // 당일에도 보면서 바로 고친다: 코스 이름 · 출발 시각 (부모님 화면에 바로 반영, 저장 버튼 없음)
 import { useId } from "react";
-import { EditIcon } from "@/components/icons";
+import { CalendarIcon, ClockIcon, EditIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,6 +8,7 @@ import type { Course } from "@/shared/domain/types";
 import { renameCourse, shiftStart } from "@/shared/lib/courseEdit";
 import { hhmm, shortDate } from "@/shared/lib/date";
 
+/** 화면 머리: 날짜 줄 + 코스 이름(제목처럼 보이고, 누르면 그 자리에서 고친다) */
 export function CourseHeader({
   date,
   course,
@@ -19,18 +20,18 @@ export function CourseHeader({
 }) {
   const id = useId();
   return (
-    <div className="flex flex-col items-center gap-1 text-center">
-      <p className="text-muted-foreground text-base font-semibold">{shortDate(date)}</p>
-      <Label htmlFor={id} className="sr-only">
-        코스 이름 (눌러서 고치기)
-      </Label>
-      <div className="flex w-full max-w-sm items-center gap-1">
+    <div className="flex flex-col gap-0.5">
+      <p className="text-muted-foreground flex items-center gap-1.5 text-sm font-semibold tabular-nums">
+        <CalendarIcon size="sm" />
+        {shortDate(date)} · {hhmm(course.startMin)} ~ {hhmm(course.endMin)}
+      </p>
+      <div className="-mx-2 flex items-center">
         <Input
           id={id}
           key={course.title}
           defaultValue={course.title}
           maxLength={30}
-          className="h-12 border-dashed text-center text-xl font-bold md:text-xl"
+          className="hover:border-input focus-visible:bg-card h-12 border-transparent bg-transparent px-2 text-2xl font-extrabold tracking-tight md:text-2xl dark:bg-transparent"
           onBlur={(e) => {
             const next = renameCourse(course, e.target.value);
             if (next !== course && next.title !== course.title) onChange(next);
@@ -40,12 +41,20 @@ export function CourseHeader({
             if (e.key === "Enter") e.currentTarget.blur();
           }}
         />
-        <EditIcon className="text-muted-foreground shrink-0" />
+        {/* 연필을 눌러도 이름 칸으로 간다 */}
+        <Label
+          htmlFor={id}
+          className="text-muted-foreground hover:text-primary grid size-11 shrink-0 cursor-pointer place-items-center rounded-full"
+        >
+          <span className="sr-only">코스 이름 (눌러서 고치기)</span>
+          <EditIcon />
+        </Label>
       </div>
     </div>
   );
 }
 
+/** 출발 시각 ±10분 */
 export function StartAdjust({
   course,
   onChange,
@@ -54,12 +63,19 @@ export function StartAdjust({
   onChange: (next: Course) => void;
 }) {
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center gap-2">
-        <p className="flex-1 text-lg font-bold">출발 {hhmm(course.startMin)}</p>
+    <section
+      aria-label="출발 시각"
+      className="bg-card text-card-foreground flex flex-col gap-2 rounded-2xl border px-4 py-3.5 shadow-sm"
+    >
+      <div className="flex items-center gap-3">
+        <span className="bg-accent text-primary grid size-10 shrink-0 place-items-center rounded-full">
+          <ClockIcon />
+        </span>
+        <p className="flex-1 text-lg font-extrabold tabular-nums">출발 {hhmm(course.startMin)}</p>
         <Button
           variant="outline"
           size="xl"
+          className="px-3"
           aria-label="출발 10분 앞당기기"
           onClick={() => {
             onChange(shiftStart(course, -10));
@@ -70,6 +86,7 @@ export function StartAdjust({
         <Button
           variant="outline"
           size="xl"
+          className="px-3"
           aria-label="출발 10분 늦추기"
           onClick={() => {
             onChange(shiftStart(course, 10));
@@ -79,6 +96,6 @@ export function StartAdjust({
         </Button>
       </div>
       <p className="text-muted-foreground text-sm">바꾸면 부모님 화면에도 바로 반영돼요.</p>
-    </div>
+    </section>
   );
 }

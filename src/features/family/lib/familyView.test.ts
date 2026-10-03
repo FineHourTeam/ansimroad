@@ -83,10 +83,18 @@ describe("bannerText", () => {
     locationOn: false,
     completed: false,
   };
-  it("여행 전: 출발 예정 안내", () => {
+  it("여행 전: 남은 날과 출발 시각 (전날 미리 온 사진이 있어도)", () => {
     const b = bannerText({ ...base, photos: [], today: "2026-10-11", nowMin: 0 });
+    expect(b.main).toBe("여행까지 7일 남았어요");
+    expect(b.sub).toMatch(/^\d{2}:\d{2} 출발 · 부모님께 링크를 보내 두세요$/);
+    const eve = bannerText({ ...base, photos: [photo(600)], today: "2026-10-17", nowMin: 0 });
+    expect(eve.main).toBe("내일이 여행 날이에요");
+  });
+
+  it("당일 출발 전 사진 없음: 첫 사진을 기다리는 중", () => {
+    const b = bannerText({ ...base, photos: [], today: DATE, nowMin: course.startMin - 1 });
     expect(b.main).toBe("아직 첫 사진이 오지 않았어요");
-    expect(b.sub).toMatch(/^10\/18\(일\) \d{2}:\d{2} 출발 예정$/);
+    expect(b.sub).toMatch(/^\d{2}:\d{2} 출발 예정$/);
   });
 
   it("당일 사진 없음: 지금쯤 예정 장소", () => {
