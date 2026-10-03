@@ -181,19 +181,19 @@ export function parsePlaceRows(rows: string[][]): ParseResult {
     const fail = (reason: string) => skipped.push({ row: rowNo, id, reason });
 
     for (const c of REQUIRED) {
-      if (get(c) === "") return fail(`필수 칸 '${c}'이(가) 비어 있음`);
+      if (get(c) === "") return fail(`'${c}' 칸이 비어 있어요`);
     }
-    if (seen.has(id)) return fail("ID 중복");
+    if (seen.has(id)) return fail("ID가 겹쳐요");
 
     for (const [col, allowed] of Object.entries(ENUMS) as [Column, readonly string[]][]) {
       const v = get(col);
-      if (v !== "" && !allowed.includes(v)) return fail(`'${col}' 값 '${v}'이(가) 목록에 없음`);
+      if (v !== "" && !allowed.includes(v)) return fail(`'${col}'에 넣을 수 없는 값이에요: '${v}'`);
     }
 
     const nums: Partial<Record<Column, number | null>> = {};
     for (const c of NUMERIC) {
       const n = toNumber(get(c));
-      if (n === "invalid") return fail(`'${c}' 값이 숫자가 아님`);
+      if (n === "invalid") return fail(`'${c}' 값이 숫자가 아니에요`);
       nums[c] = n;
     }
     const lat = Number(get("위도"));
@@ -206,11 +206,11 @@ export function parsePlaceRows(rows: string[][]): ParseResult {
       lng < 124 ||
       lng > 132
     ) {
-      return fail("위도·경도가 국내 범위를 벗어남");
+      return fail("위도·경도가 국내 범위를 벗어났어요");
     }
 
     const closed = parseClosedDays(get("휴무요일"));
-    if (closed === null) return fail(`'휴무요일' 값 '${get("휴무요일")}'을(를) 해석할 수 없음`);
+    if (closed === null) return fail(`'휴무요일' 값을 읽을 수 없어요: '${get("휴무요일")}'`);
 
     const hours = parseHours(get("운영시간"));
     const walkMin = nums["필수보행(분)"] ?? null;
