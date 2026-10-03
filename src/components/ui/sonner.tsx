@@ -9,6 +9,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
+      containerAriaLabel="알림"
       icons={{
         success: <SuccessIcon size="sm" />,
         info: <InfoIcon size="sm" />,
@@ -22,6 +23,8 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--normal-text": "var(--popover-foreground)",
           "--normal-border": "var(--border)",
           "--border-radius": "var(--radius)",
+          // sonner 기본 CSS 가 시스템 글꼴을 박아 둬서, 인라인으로 앱 글꼴을 이어 받는다
+          fontFamily: "var(--font-sans)",
         } as React.CSSProperties
       }
       toastOptions={{

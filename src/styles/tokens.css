@@ -14,6 +14,16 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/* shadcn radix-nova 스타일은 data-open · data-checked 같은 속성을 기대하지만, radix-ui 는 data-state="…" ·
+ * data-orientation="…" 을 단다. 두 표기를 모두 받도록 이름이 같은 변형을 정의한다 (스위치 · 탭 · 열림 애니메이션). */
+@custom-variant data-open (&:is([data-state="open"], [data-open]));
+@custom-variant data-closed (&:is([data-state="closed"], [data-closed]));
+@custom-variant data-active (&:is([data-state="active"], [data-active]));
+@custom-variant data-checked (&:is([data-state="checked"], [data-checked]));
+@custom-variant data-unchecked (&:is([data-state="unchecked"], [data-unchecked]));
+@custom-variant data-horizontal (&:is([data-orientation="horizontal"], [data-horizontal]));
+@custom-variant data-vertical (&:is([data-orientation="vertical"], [data-vertical]));
+
 :root {
   /* ── 브랜드 ──
    * 기본값은 의도적 무채색 플레이스홀더 — 설치 H단계에서 반드시 브랜드색으로 치환한다
@@ -48,6 +58,15 @@
   --success-foreground: oklch(0.985 0 0);
   --warning: oklch(0.795 0.16 86);
   --warning-foreground: oklch(0.205 0 0);
+  --kakao: oklch(0.918 0.188 101.6); /* #FEE500 카카오톡 공유 버튼 (카카오 브랜드 가이드 고정색) */
+  --kakao-foreground: oklch(0.2 0.03 101.6); /* #191600 */
+  --now-line: oklch(0.577 0.245 27.3); /* 일정 위의 '지금' 빨간 선 */
+  --now-line-foreground: oklch(0.985 0 0);
+  /* 응급실(전화 버튼·안내 줄·지도 마커) — '지금' 빨간 선·오류색과 섞이지 않게 차분한 벽돌색 */
+  --emergency: oklch(0.537 0.144 40.6); /* #B04A21 테두리·아이콘·마커 */
+  --emergency-foreground: oklch(0.985 0 0);
+  --emergency-soft: oklch(0.946 0.024 51.2); /* #FBE9DF 응급실 버튼·줄 바탕 */
+  --emergency-soft-foreground: oklch(0.406 0.114 40.6); /* #7A2E0E */
 
   /* ── 경계 ── */
   --border: oklch(0.922 0 0);
@@ -99,6 +118,14 @@
   --success-foreground: oklch(0.145 0 0);
   --warning: oklch(0.828 0.155 86);
   --warning-foreground: oklch(0.145 0 0);
+  --kakao: oklch(0.918 0.188 101.6);
+  --kakao-foreground: oklch(0.2 0.03 101.6);
+  --now-line: oklch(0.704 0.191 22.2);
+  --now-line-foreground: oklch(0.145 0 0);
+  --emergency: oklch(0.719 0.131 43.2);
+  --emergency-foreground: oklch(0.145 0 0);
+  --emergency-soft: oklch(0.274 0.048 42);
+  --emergency-soft-foreground: oklch(0.88 0.057 48.6);
 
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
@@ -133,6 +160,14 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-kakao: var(--kakao);
+  --color-kakao-foreground: var(--kakao-foreground);
+  --color-now-line: var(--now-line);
+  --color-now-line-foreground: var(--now-line-foreground);
+  --color-emergency: var(--emergency);
+  --color-emergency-foreground: var(--emergency-foreground);
+  --color-emergency-soft: var(--emergency-soft);
+  --color-emergency-soft-foreground: var(--emergency-soft-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);

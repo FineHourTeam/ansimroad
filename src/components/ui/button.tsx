@@ -18,6 +18,11 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
+        // 카카오톡 공유 (카카오 브랜드 가이드 노란색)
+        kakao: "bg-kakao text-kakao-foreground hover:bg-kakao/85",
+        // 어르신 화면 응급실 전화 — 눈에 띄는 테두리. '지금' 빨간 선과 헷갈리지 않게 벽돌색 (tokens --emergency)
+        emergency:
+          "border-2 border-emergency bg-emergency-soft text-emergency-soft-foreground hover:bg-emergency/15",
       },
       size: {
         default:
@@ -31,6 +36,16 @@ const buttonVariants = cva(
         "icon-sm":
           "size-7 rounded-[min(var(--radius-md),12px)] in-data-[slot=button-group]:rounded-lg",
         "icon-lg": "size-9",
+        // 자녀·코스 화면 손가락 탭 기준 48px
+        xl: "h-12 gap-2 px-4 text-base has-data-[icon=inline-end]:pr-3 has-data-[icon=inline-start]:pl-3 [&_svg:not([class*='size-'])]:size-5",
+        // 화면의 주 행동 (확정하기 등) 56px
+        cta: "h-14 gap-2 px-5 text-lg font-bold [&_svg:not([class*='size-'])]:size-5",
+        // 어르신 화면 64px · 큰 글씨
+        senior:
+          "h-16 touch-manipulation gap-3 rounded-xl px-5 text-2xl font-bold [&_svg:not([class*='size-'])]:size-7",
+        // 어르신 화면의 가장 큰 버튼 (사진 남기기)
+        "senior-hero":
+          "h-36 touch-manipulation flex-col gap-2 rounded-xl px-4 text-3xl leading-tight font-extrabold whitespace-normal [&_svg:not([class*='size-'])]:size-9",
       },
     },
     defaultVariants: {

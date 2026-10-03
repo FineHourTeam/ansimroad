@@ -69,3 +69,23 @@ import { DeleteIcon } from "@/components/icons";
 | DeleteIcon | 삭제 | 2026-10-03 |
 | EditIcon | 수정 | 2026-10-03 |
 | SearchIcon | 검색 | 2026-10-03 |
+| ChevronUpIcon | 접기 · 위로 | 2026-10-03 |
+| ChevronLeftIcon | 이전 (캐러셀) | 2026-10-03 |
+| PhoneIcon | 전화 걸기 (응급실·장소) | 2026-10-03 |
+| CameraIcon | 사진 찍기 | 2026-10-03 |
+| ImageIcon | 갤러리에서 사진 고르기 · 사진 | 2026-10-03 |
+| MapPinIcon | 장소 · 위치 | 2026-10-03 |
+| ShareIcon | 공유 | 2026-10-03 |
+| PrintIcon | 인쇄 | 2026-10-03 |
+| StarIcon | 별점 (채울 땐 fill="currentColor") | 2026-10-03 |
+| ClockIcon | 시간 · 일정 | 2026-10-03 |
+| CopyIcon | 링크 복사 | 2026-10-03 |
+| DragHandleIcon | 끌어서 순서 바꾸기 | 2026-10-03 |
+| UploadIcon | 파일 올리기 · 가져오기 | 2026-10-03 |
+| DownloadIcon | 내려받기 (CSV) | 2026-10-03 |
+| HospitalIcon | 응급실 · 약국 | 2026-10-03 |
+| WalkIcon | 걷는 시간 | 2026-10-03 |
+| ArrowLeftIcon | 뒤로 가기 (상단 바) | 2026-10-03 |
+| LogoutIcon | 로그아웃 | 2026-10-03 |
+| MinusIcon | 빼기 · 줄이기 (머무는 시간 −10분) | 2026-10-03 |
+| CalendarIcon | 날짜 고르기 칸 (S1 여행 날짜) | 2026-10-03 |

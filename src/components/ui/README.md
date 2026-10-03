@@ -23,6 +23,26 @@ npx shadcn@latest add button dialog input card sonner
 | Sonner(Toast) | sonner.tsx | 알림 토스트 | 알림 UI 자작 금지. `<Toaster />`는 App 최상단에 1개(bootstrap이 마운트), 호출은 `toast("…")` |
 | Form | form.tsx | RHF + zod 배선 | FormField/FormMessage 포함 |
 | Skeleton | skeleton.tsx | 로딩 상태 | 스피너보다 스켈레톤 우선 |
+| Badge · Label · Separator · Progress | badge.tsx · label.tsx · separator.tsx · progress.tsx | 표시 · 입력 이름 · 구분선 · 진행 | |
+| Tabs · Table | tabs.tsx · table.tsx | 탭 · 표 (운영진 장소 목록) | |
+| Select · Switch · Checkbox | select.tsx · switch.tsx · checkbox.tsx | 고르기 · 켜고 끄기 · 체크 | |
+| Toggle · ToggleGroup | toggle.tsx · toggle-group.tsx | 단일 선택 칩 (S1 조건 입력) | `variant="choice" size="xl"` |
+| Sheet | sheet.tsx | 옆에서 열리는 편집 패널 (운영진 장소 편집) | |
+| Carousel | carousel.tsx | 사진 넘겨 보기 (shared/components/PlacePhoto) | embla |
+
+### 이 프로젝트에서 추가한 variant · size
+
+| 컴포넌트 | 이름 | 용도 |
+|---|---|---|
+| Button | `size="xl"` (48px) | 자녀 · 코스 화면 버튼 (손가락 탭 기준) |
+| Button | `size="cta"` (56px) | 화면의 주 행동 (이 코스로 확정하기 등) |
+| Button | `size="senior"` (64px) · `size="senior-hero"` (144px) | 어르신 화면 버튼 · 사진 남기기 |
+| Button | `variant="kakao"` | 카카오톡 공유 (브랜드 노란색) |
+| Button | `variant="emergency"` | 어르신 화면 응급실 전화 |
+| Toggle(Group) | `variant="choice"` · `size="xl"` | 고른 칩을 주조색으로 |
+
+radix-nova 스타일의 `data-open` · `data-checked` · `data-active` 같은 변형은 radix-ui 가 다는 `data-state` 와도 맞도록
+`src/styles/tokens.css` 맨 위 `@custom-variant` 로 이어 두었다 (스위치 · 탭 · 열림 애니메이션이 이것에 기대고 있다).
 
 ## 규칙
 

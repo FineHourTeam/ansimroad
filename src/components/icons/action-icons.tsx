@@ -50,3 +50,10 @@ export const SearchIcon = createIcon(
     <path d="M15.5 15.5L20 20" />
   </>,
 );
+
+export const ChevronUpIcon = createIcon("ChevronUpIcon", <path d="M6.5 14.5l5.5-5.5 5.5 5.5" />);
+
+export const ChevronLeftIcon = createIcon(
+  "ChevronLeftIcon",
+  <path d="M14.5 6.5l-5.5 5.5 5.5 5.5" />,
+);
