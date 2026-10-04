@@ -1,0 +1,59 @@
+{
+  "_설명": "코드 수정 없이 바꿀 수 있는 설정값(요구사항 F-24). 이 파일만 고쳐 다시 올리면 반영됩니다.",
+  "otherCoursesEnabled": true,
+  "locationCollectionEnabled": false,
+  "contactEmail": "team@example.com",
+  "emergencyByRegion": {
+    "원도심권": {
+      "name": "목포시의료원",
+      "phone": "061-260-6400",
+      "driveMin": 10
+    },
+    "유달산케이블카권": {
+      "name": "의료법인해민의료재단세안종합병원",
+      "phone": "061-260-6666",
+      "driveMin": 10
+    },
+    "갓바위권": {
+      "name": "목포기독병원",
+      "phone": "061-280-7119",
+      "driveMin": 8
+    },
+    "평화광장권": {
+      "name": "목포기독병원",
+      "phone": "061-280-7119",
+      "driveMin": 9
+    }
+  },
+  "_응급실좌표": "시연용 임시 좌표입니다. 발주자 응급실 목록(4곳)을 받으면 교체합니다.",
+  "emergencyRooms": [
+    {
+      "name": "목포시의료원",
+      "phone": "061-260-6400",
+      "lat": 34.80398,
+      "lng": 126.40536
+    },
+    {
+      "name": "목포기독병원",
+      "phone": "061-280-7119",
+      "lat": 34.8052,
+      "lng": 126.4301
+    },
+    {
+      "name": "의료법인해민의료재단세안종합병원",
+      "phone": "061-260-6666",
+      "lat": 34.8127,
+      "lng": 126.3914
+    }
+  ],
+  "representativeCourseEnabled": true,
+  "printViewEnabled": true,
+  "autoRefreshEnabled": true,
+  "autoRefreshSeconds": 60,
+  "tripExpiryDays": 30,
+  "photoMaxPx": 1600,
+  "rules": {
+    "allowP3Swap": true,
+    "fallbackOnInfeasible": true
+  }
+}

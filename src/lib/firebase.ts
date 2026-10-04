@@ -23,6 +23,9 @@ export const db = initializeFirestore(app, {
   // (unknown-unknowns #3). 멀티탭이면 persistentMultipleTabManager까지.
 });
 export const storage = getStorage(app);
+// 사진 업로드 재시도 상한 (기본 10분). 어르신 화면은 30초 뒤 '다시 눌러 주세요'를 띄우므로
+// 버려진 업로드가 나중에 따로 올라가 사진이 두 장 되지 않게 맞춘다.
+storage.maxUploadRetryTime = 30_000;
 
 // 로컬 개발은 에뮬레이터가 기본 — 실 프로젝트 데이터를 건드리지 않는다.
 // VITE_USE_EMULATORS=false 로 끌 수 있다 (예: 스테이징 데이터 확인 시).

@@ -1,21 +1,23 @@
 // 웹 에셋 생성 — /generate-web-assets 스킬의 Step 1~3을 ImageMagick 없이 Playwright로 수행한다.
-// 입력: web-assets/logo-source/logo.svg · web-assets/og.json · web-assets/og-template/og.html
+// 입력: web-assets/logo-source/logo.svg(앱 아이콘) · public/brand/mark.svg(심볼 — 탭 파비콘) · og.json · og-template/og.html
 // 출력: public/favicon.ico(16·32·48) · apple-touch-icon.png · icons/icon-192·512·maskable-512.png · og-image.png
-// 실행: node web-assets/generate.mjs
+// 실행: python web-assets/logo-source/build.py (로고를 바꿨을 때만) → node web-assets/generate.mjs
 import { chromium } from "@playwright/test";
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { join } from "node:path";
 
 const ROOT = fileURLToPath(new URL("..", import.meta.url));
-const svg = readFileSync(join(ROOT, "web-assets/logo-source/logo.svg"), "utf8");
+const appIcon = readFileSync(join(ROOT, "web-assets/logo-source/logo.svg"), "utf8");
+// 브라우저 탭(16~48px)은 둥근 사각형 없이 심볼만 — 작은 크기에서 핀이 가장 크게 보인다
+const mark = readFileSync(join(ROOT, "public/brand/mark.svg"), "utf8");
 const BRAND = "#0F766E"; // tokens.css --primary
 const og = JSON.parse(readFileSync(join(ROOT, "web-assets/og.json"), "utf8"));
 
 const browser = await chromium.launch();
 const page = await browser.newPage();
 
-async function renderLogo(size, padRatio = 0, bg = "transparent") {
+async function renderLogo(size, padRatio = 0, bg = "transparent", svg = appIcon) {
   const inner = Math.round(size * (1 - padRatio));
   await page.setViewportSize({ width: size, height: size });
   await page.setContent(
@@ -28,7 +30,8 @@ async function renderLogo(size, padRatio = 0, bg = "transparent") {
 mkdirSync(join(ROOT, "public/icons"), { recursive: true });
 const out = (p, buf) => writeFileSync(join(ROOT, "public", p), buf);
 
-out("apple-touch-icon.png", await renderLogo(180));
+// iOS는 투명한 모서리를 검게 채우므로 바탕을 꽉 채운다 (모서리는 iOS가 직접 둥글린다)
+out("apple-touch-icon.png", await renderLogo(180, 0, BRAND));
 out("icons/icon-192.png", await renderLogo(192));
 out("icons/icon-512.png", await renderLogo(512));
 // maskable: 로고를 80%로 줄이고 브랜드색 바탕 (Android 원형 마스크 안전영역)
@@ -37,7 +40,7 @@ out("icons/icon-maskable-512.png", await renderLogo(512, 0.2, BRAND));
 // favicon.ico — PNG 엔트리 3개(16·32·48)를 ICO 컨테이너로 묶는다
 const pngs = [16, 32, 48];
 const images = [];
-for (const s of pngs) images.push(await renderLogo(s));
+for (const s of pngs) images.push(await renderLogo(s, 0, "transparent", mark));
 const header = Buffer.alloc(6);
 header.writeUInt16LE(0, 0);
 header.writeUInt16LE(1, 2);

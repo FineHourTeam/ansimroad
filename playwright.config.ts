@@ -1,26 +1,50 @@
-// Playwright 설정 표준 예시 — 프로젝트 루트 playwright.config.ts로 복사.
-// build → preview를 자동 기동해 프로덕션 번들을 대상으로 스모크를 돌린다 (dev 서버 아님 —
-// 배포될 코드 그대로 검증). CI에서도 동일 config 재사용.
+// E2E: Firebase 에뮬레이터(auth · firestore · storage) + vite dev(--mode e2e: 에뮬레이터 연결 · 약도 · 시연 시계)
+// 실행 전 global-setup 이 에뮬레이터를 비우고 장소 데이터 · 운영진 계정 · 추천 코스를 넣는다.
+// 실행: npm run e2e (사전: npx playwright install chromium, Java 21 — 에뮬레이터용)
 import { defineConfig, devices } from "@playwright/test";
 
-const PORT = 4173; // vite preview 기본 포트
+const PORT = 5174;
+const PROJECT = "modam-5eb63"; // 에뮬레이터는 실제 프로젝트 데이터를 건드리지 않는다
 
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
+  timeout: 60_000,
+  expect: { timeout: 15_000 },
   reporter: process.env.CI ? "github" : "list",
+  globalSetup: "./e2e/global-setup.ts",
   use: {
     baseURL: `http://localhost:${String(PORT)}`,
-    trace: "on-first-retry",
+    trace: "retain-on-failure",
+    locale: "ko-KR",
+    timezoneId: "Asia/Seoul",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  // 스모크는 프로덕션 프리뷰 대상 — 로컬 4종 게이트가 통과한 build 산출물을 그대로 띄운다
-  webServer: {
-    command: "npm run build && npm run preview",
-    port: PORT,
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  projects: [
+    // 사용자 화면은 휴대폰 크기로
+    { name: "mobile", use: { ...devices["Pixel 7"] }, testIgnore: /admin.*\.spec\.ts/ },
+    // 운영진 페이지는 PC. 장소 데이터를 바꾸므로 사용자 화면 테스트가 끝난 뒤에 돈다
+    {
+      name: "admin",
+      use: { ...devices["Desktop Chrome"] },
+      testMatch: /admin.*\.spec\.ts/,
+      dependencies: ["mobile"],
+    },
+  ],
+  webServer: [
+    {
+      command: `npx firebase emulators:start --only auth,firestore,storage --project ${PROJECT}`,
+      url: "http://127.0.0.1:9099",
+      reuseExistingServer: !process.env.CI,
+      timeout: 180_000,
+      stdout: "ignore",
+    },
+    {
+      command: `npx vite --mode e2e --port ${String(PORT)} --strictPort`,
+      url: `http://localhost:${String(PORT)}`,
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+  ],
 });

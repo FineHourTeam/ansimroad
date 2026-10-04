@@ -59,12 +59,17 @@
 - [x] **F1** Authentication(이메일/비밀번호 — 운영진 로그인용) · Firestore(리전 `asia-northeast3`, `(default)`) · Storage(`modam-5eb63.firebasestorage.app`, 서울) 활성화 — 전부 CLI/REST
 - [x] **F2** 웹 앱 등록(`com.finehour.ansimroad`) → config를 `.env`의 `VITE_FIREBASE_*` 6종으로 + GitHub 저장소 Variables 등록
 - [x] **F3** Firestore·Storage 보안 규칙이 테스트 모드(`allow if true`) 아님 — 전부 막힘으로 배포됨
-- [ ] **F4** 에뮬레이터(`firebase.json`에 auth·firestore·storage 포트 설정) — 실행 · 로컬 개발 연결 확인은 아직
+- [x] **F4** 에뮬레이터(auth 9099 · firestore 8080 · storage 9199 · functions 5001) — dev(.env)·E2E(.env.e2e, `npm run e2e`)가 연결해 씀. 보안 규칙 대조는 `e2e/rules.spec.ts`
 - [ ] **F5** 테스트 계정 규약(`docs/TEST_ACCOUNTS.md`) — dev·에뮬레이터 전용, `npm run seed:test`, 로그인 UI 배선: `[아니오 — 운영진 로그인 만들 때]`
 - [ ] **F6** 승인 도메인에 preview 채널 도메인 추가 — 등록됨: localhost · modam-5eb63.web.app/firebaseapp.com · ansimroad.web.app/firebaseapp.com (preview 채널 도메인은 PR 첫 배포 뒤 추가)
 - [ ] **F7** CORS — Storage 파일을 fetch·canvas로 쓸 때만 `cors.json` 적용 (`docs/CORS.md`)
 - [-] **F8** 프로덕션 QA 계정(앱스토어 심사 등) — 웹 서비스라 해당없음
 - [ ] **F9** App Check — 배포가 안정된 뒤 모니터링 모드부터
+- [x] **F10** Authentication → 로그인 방법 → **익명** 사용 설정 (2026-10-03 CLI로 켬) — 링크(/t · /f · /r) 화면이 익명 로그인 후 토큰으로 합류한다 (안 켜면 프로덕션에서 링크 화면이 안 열림)
+- [ ] **F11** 운영진 계정: 콘솔 Authentication → 사용자 추가(이메일) → `node scripts/add-admin.mjs <이메일>` 로 admins 명단 등록
+- [x] **F12** 장소 데이터 첫 적재 (2026-10-03 `node scripts/seed-places.mjs`로 데모 10곳 — 모담 조사표 받으면 다시): 운영진 페이지 /admin/places → CSV 가져오기 (`public/data/places.demo.csv` 또는 모담 조사표 CSV)
+- [x] **F13** Functions 배포 (2026-10-03 tourapi · cleanupExpiredTrips, TOURAPI_KEY 는 PENDING 자리값 — 키 받으면 교체 후 재배포): TourAPI 키 받은 뒤 `npx firebase functions:secrets:set TOURAPI_KEY` → `npx firebase deploy --only functions` (tourapi · cleanupExpiredTrips). Storage 규칙이 Firestore를 읽으므로 첫 `deploy --only storage` 때 권한 부여 확인창에 동의
+- [x] **F14** Firestore 색인 · 보안 규칙 배포 (2026-10-03): `npx firebase deploy --only firestore` (curated: published + updatedAt)
 
 ## 5. 배포 (Hosting · 도메인)
 
@@ -74,6 +79,7 @@
 - [ ] **P3** GitHub Actions Secret `FIREBASE_SERVICE_ACCOUNT` 등록 ✅ + preview 채널 1회 배포 (첫 PR 때)
       — 서비스 계정 firebase-adminsdk-fbsvc에 firebasehosting.admin · serviceusage.apiKeysViewer · run.viewer 부여, 키는 `.secrets/`
 - [ ] **P4** 프로덕션 도메인 연결 — `[미정]`
+- [ ] **P5** 네이버 지도 콘솔 Web 서비스 URL에 `https://ansimroad.web.app` 과 현재 PC IP(`http://192.168.123.107:5173`) 추가 — 등록 전엔 약도로 보인다
 
 ## 6. 웹 에셋 · SEO
 

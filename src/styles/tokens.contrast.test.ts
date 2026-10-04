@@ -56,14 +56,21 @@ const PAIRS: [string, string][] = [
   ["background-subtle", "foreground"],
   ["background", "muted-foreground"],
   ["background-subtle", "muted-foreground"],
+  ["background-subtle", "primary"],
+  ["card", "muted-foreground"],
   ["muted", "muted-foreground"],
   ["card", "card-foreground"],
   ["primary", "primary-foreground"],
   ["secondary", "secondary-foreground"],
   ["accent", "accent-foreground"],
+  ["highlight", "highlight-foreground"],
   ["destructive", "destructive-foreground"],
   ["success", "success-foreground"],
   ["warning", "warning-foreground"],
+  ["emergency", "emergency-foreground"],
+  ["emergency-soft", "emergency-soft-foreground"],
+  ["emergency-soft", "emergency"],
+  ["background", "emergency"],
 ];
 
 describe.each([

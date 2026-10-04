@@ -1,9 +1,40 @@
 rules_version = '2';
-// 전부 막힘으로 시작한다. 사진 업로드 경로는 기능을 만들 때 연다.
+
+// 안심로드 Storage 보안 규칙 — 권한 판단은 Firestore 멤버 문서(firestore.rules 와 같은 모델)를 본다.
 service firebase.storage {
   match /b/{bucket}/o {
-    match /{allPaths=**} {
-      allow read, write: if false;
+    function member(tripId, role) {
+      return request.auth != null
+        && firestore.exists(/databases/(default)/documents/trips/$(tripId)/members/$(request.auth.uid + '_' + role));
+    }
+    function isAdmin() {
+      return request.auth != null
+        && firestore.exists(/databases/(default)/documents/admins/$(request.auth.uid));
+    }
+    function image(maxMb) {
+      return request.resource.size < maxMb * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+    }
+
+    // 여행 사진: 기기에서 EXIF를 지우고 줄인 JPEG. 어르신·자녀만 올리고 다운로드 주소를 받는다.
+    // 화면(리포트 포함)은 사진 메타에 저장한 다운로드 주소로 보여 준다. Firestore 조회는 요청당 2번 이내로 둔다.
+    match /trips/{tripId}/photos/{file} {
+      allow read: if member(tripId, 'family') || member(tripId, 'senior');
+      allow create: if (member(tripId, 'family') || member(tripId, 'senior'))
+        && file.matches('[A-Za-z0-9]{20}[.]jpg')
+        && request.resource.size < 8 * 1024 * 1024
+        && request.resource.contentType == 'image/jpeg';
+      allow update, delete: if false;
+    }
+
+    // 운영진이 올린 추천 코스 · 장소 사진 (공개)
+    match /curated/{courseId}/{file} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin() && (request.resource == null || image(8));
+    }
+    match /places/{placeId}/{file} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin() && (request.resource == null || image(8));
     }
   }
 }

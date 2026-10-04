@@ -13,6 +13,8 @@
         box-sizing: border-box;
       }
       body {
+        position: relative;
+        overflow: hidden;
         width: 1200px;
         height: 630px;
         font-family: "Pretendard Variable", sans-serif;
@@ -20,38 +22,66 @@
         color: #ffffff;
         display: flex;
         align-items: center;
-        padding: 0 96px;
+        padding: 0 96px 40px;
         gap: 56px;
         word-break: keep-all; /* 한국어는 어절 단위로 줄바꿈 */
       }
+      /* 아래 물결 띠 */
+      .sea {
+        position: absolute;
+        left: 0;
+        bottom: 0;
+        width: 1200px;
+        height: 120px;
+      }
       img {
-        width: 220px;
-        height: 220px;
-        border-radius: 48px;
-        box-shadow: 0 0 0 6px rgba(255, 255, 255, 0.18);
+        position: relative;
+        width: 210px;
+        height: 210px;
+        flex: none;
+      }
+      div {
+        position: relative;
       }
       h1 {
-        font-size: 96px;
+        font-size: 100px;
         font-weight: 800;
-        letter-spacing: -2px;
+        letter-spacing: -3px;
+        line-height: 1;
       }
       p {
-        margin-top: 18px;
+        margin-top: 26px;
         font-size: 40px;
-        font-weight: 600;
+        font-weight: 650;
         line-height: 1.35;
+        white-space: pre-line; /* og.json 의 줄바꿈(
+)을 그대로 */
       }
       small {
         display: block;
-        margin-top: 28px;
+        margin-top: 22px;
         font-size: 28px;
-        font-weight: 500;
-        opacity: 0.85;
+        font-weight: 550;
+        color: #fbe2a3; /* 모래빛 (밝게) */
       }
     </style>
   </head>
   <body>
-    <img src="../logo-source/logo.svg" alt="" />
+    <svg class="sea" viewBox="0 0 1200 120" preserveAspectRatio="none" aria-hidden="true">
+      <path
+        d="M0 60c100-40 200-40 300 0s200 40 300 0 200-40 300 0 200 40 300 0v60H0z"
+        fill="#ffffff"
+        fill-opacity="0.08"
+      />
+      <path
+        d="M0 60c100-40 200-40 300 0s200 40 300 0 200-40 300 0 200 40 300 0"
+        fill="none"
+        stroke="#ffffff"
+        stroke-opacity="0.35"
+        stroke-width="6"
+      />
+    </svg>
+    <img src="../../public/brand/mark-white.svg" alt="" />
     <div>
       <h1 id="name"></h1>
       <p id="tagline"></p>
