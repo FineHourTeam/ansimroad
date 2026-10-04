@@ -20,7 +20,13 @@ import {
 import { encodeQuery } from "@/shared/lib/tripInput";
 import { useConfirmCourse } from "../hooks/useConfirmCourse";
 import { useCourseResult } from "../hooks/useCourseResult";
-import { CourseCards, CuratedSection, ShortageCard, type ConfirmState } from "./ResultsBody";
+import {
+  AllShownRow,
+  CourseCards,
+  CuratedSection,
+  ShortageCard,
+  type ConfirmState,
+} from "./ResultsBody";
 
 // '코스 생성' 통계는 S1에서 온 화면 한 번만 (StrictMode 이중 실행 방지)
 const tracked = new Set<string>();
@@ -106,16 +112,20 @@ export function ResultsPage() {
   } else if (!result || !settings) {
     body = <Loading text="코스를 만들고 있어요" />;
   } else if (result.shortage) {
-    body = (
-      <>
-        <ShortageCard
-          input={input}
-          again={excluded.length > 0}
-          contactEmail={settings.contactEmail}
-        />
-        {curatedBlock}
-      </>
-    );
+    const again = excluded.length > 0;
+    // 운영진 추천 코스가 있으면 '장소가 부족해요' 카드 없이 추천 코스만 보여 준다 (화면이 비지 않으니까)
+    body =
+      r.curated.length > 0 ? (
+        <>
+          {again && <AllShownRow input={input} />}
+          {curatedBlock}
+        </>
+      ) : (
+        <>
+          <ShortageCard input={input} again={again} contactEmail={settings.contactEmail} />
+          {curatedBlock}
+        </>
+      );
   } else {
     // ③ 순서 고정: 바다 → 역사·문화 → 자연·경치 (→ 목포 대표 코스, 있을 때만 맨 뒤)
     const cards = [...result.courses, ...(result.representative ? [result.representative] : [])];

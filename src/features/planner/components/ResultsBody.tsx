@@ -99,6 +99,18 @@ export function ShortageCard({
   );
 }
 
+/** 다른 코스 보기로 장소를 다 쓴 뒤, 추천 코스가 있어 큰 안내 카드 대신 보여 주는 한 줄 */
+export function AllShownRow({ input }: { input: TripInput }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h2 className="text-base font-bold">이 조건으로 만들 수 있는 코스는 모두 보여 드렸어요</h2>
+      <Button variant="outline" size="xl" asChild>
+        <Link to={paths.resultWithQuery(encodeQuery(input))}>처음 코스로 돌아가기</Link>
+      </Button>
+    </div>
+  );
+}
+
 /** 모담팀 추천 코스 (관리자 페이지에서 만들어 공개한 코스) */
 export function CuratedSection({
   isError,

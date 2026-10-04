@@ -130,11 +130,19 @@ test("S2: 다른 코스 보기로 장소를 다 쓰면 그렇게 안내하고, �
   await expect(
     page.getByRole("heading", { name: "이 조건으로 만들 수 있는 코스는 모두 보여 드렸어요" }),
   ).toBeVisible();
-  await expect(page.getByText("처음 코스로 돌아가거나 조건을 바꿔 보세요.")).toBeVisible();
   await expect(page.getByRole("heading", { name: "모담팀 추천 코스", level: 2 })).toBeVisible();
   await expect(page.getByRole("article", { name: CURATED_TITLE })).toBeVisible();
   await expect(page.getByRole("button", { name: "다른 코스 보기" })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "처음 코스로 돌아가기" })).toBeVisible();
+});
+
+test("S2: 조건에 맞는 장소가 모자라도 운영진 추천 코스가 있으면 '부족해요' 카드 없이 추천 코스만", async ({
+  page,
+}) => {
+  await page.goto(`/result?${resultQuery({ ...INPUT, age: 50, transport: "transit" })}`);
+  await expect(page.getByRole("article", { name: CURATED_TITLE })).toBeVisible();
+  await expect(page.getByText("조건에 맞는 확인된 장소가 아직 부족해요")).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "처음 코스로 돌아가기" })).toHaveCount(0);
 });
 
 test("S2 요약 줄을 누르면 S1이 고른 값 그대로 열리고 주소는 비운다 (F-03)", async ({ page }) => {
