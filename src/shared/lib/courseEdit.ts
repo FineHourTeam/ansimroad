@@ -1,4 +1,4 @@
-// 확정한 코스 수정: 장소 빼기 · 머무는 시간 조정 · 장소 넣기. 바꾼 뒤 시간표(도착·출발·이동)를 앞에서부터 다시 계산한다.
+// 확정한 코스 수정: 장소 빼기 · 순서 바꾸기 · 머무는 시간 조정 · 장소 넣기. 바꾼 뒤 시간표(도착·출발·이동)를 앞에서부터 다시 계산한다.
 // 점심 11:30 고정은 수정 후에는 적용하지 않는다 (직접 조정이므로 시간이 순서대로 이어진다).
 import type { Course, Place, Stop, StopRole } from "@/shared/domain/types";
 import { distanceMeters, travelMinutes } from "@/shared/lib/geo";
@@ -41,6 +41,18 @@ export function removeStop(course: Course, index: number): Course {
     course,
     base(course).filter((_, i) => i !== index),
   );
+}
+
+/** 순서 바꾸기: dir = -1 이면 한 칸 앞으로, 1 이면 한 칸 뒤로 (끝에서는 그대로) */
+export function moveStop(course: Course, index: number, dir: -1 | 1): Course {
+  const list = base(course);
+  const to = index + dir;
+  const a = list[index];
+  const b = list[to];
+  if (!a || !b) return course;
+  list[index] = b;
+  list[to] = a;
+  return rebuild(course, list);
 }
 
 export function changeStay(course: Course, index: number, deltaMin: number): Course {

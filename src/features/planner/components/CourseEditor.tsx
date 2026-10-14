@@ -17,6 +17,7 @@ import {
   addPlace,
   changeStay,
   MAX_STOPS,
+  moveStop,
   MAX_STOPS_MESSAGE,
   removeStop,
   shiftStart,
@@ -134,6 +135,28 @@ export function CourseEditor({
                   }}
                 />
               </div>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-base">순서</span>
+                <Stepper
+                  value={`${String(selIndex + 1)}번째`}
+                  minus={{
+                    label: "앞으로 한 칸 옮기기",
+                    text: "앞으로",
+                    disabled: selIndex === 0,
+                    onClick: () => {
+                      onChange(moveStop(course, selIndex, -1));
+                    },
+                  }}
+                  plus={{
+                    label: "뒤로 한 칸 옮기기",
+                    text: "뒤로",
+                    disabled: selIndex === course.stops.length - 1,
+                    onClick: () => {
+                      onChange(moveStop(course, selIndex, 1));
+                    },
+                  }}
+                />
+              </div>
               <Button
                 variant="destructive"
                 size="xl"
@@ -220,8 +243,9 @@ function Stepper({
   plus,
 }: {
   value: string;
-  minus: { label: string; disabled: boolean; onClick: () => void };
-  plus: { label: string; disabled: boolean; onClick: () => void };
+  /** text: 단추 글자 (없으면 −10분 / +10분) */
+  minus: { label: string; text?: string; disabled: boolean; onClick: () => void };
+  plus: { label: string; text?: string; disabled: boolean; onClick: () => void };
 }) {
   return (
     <div className="flex items-center gap-1.5">
@@ -232,7 +256,7 @@ function Stepper({
         disabled={minus.disabled}
         onClick={minus.onClick}
       >
-        −10분
+        {minus.text ?? "−10분"}
       </Button>
       <span className="min-w-16 text-center text-lg font-extrabold tabular-nums">{value}</span>
       <Button
@@ -242,7 +266,7 @@ function Stepper({
         disabled={plus.disabled}
         onClick={plus.onClick}
       >
-        +10분
+        {plus.text ?? "+10분"}
       </Button>
     </div>
   );

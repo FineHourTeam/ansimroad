@@ -13,7 +13,7 @@ import { verifyBadgeText } from "@/shared/lib/placeFacts";
 
 /**
  * 상단 바 (56px). back 이 문자열이면 그 주소로, 함수면 실행. 없으면 뒤로 버튼을 그리지 않는다.
- * brand: 뒤로 버튼이 없는 첫 화면급 화면(자녀 현황 · 리포트 등)에서 왼쪽에 안심로드 심볼을 둔다.
+ * brand: 뒤로 버튼이 없는 첫 화면급 화면(자녀 현황 · 리포트 등)에서 왼쪽에 안심로드 심볼을 둔다 (누르면 첫 화면).
  */
 export function TopBar({
   title,
@@ -45,9 +45,13 @@ export function TopBar({
             <ArrowLeftIcon />
           </Button>
         ) : brand ? (
-          <span className="grid place-items-center">
+          <Link
+            to={paths.home}
+            aria-label="안심로드 첫 화면으로"
+            className="grid size-11 place-items-center rounded-full"
+          >
             <BrandMark size={28} />
-          </span>
+          </Link>
         ) : (
           <span />
         )}

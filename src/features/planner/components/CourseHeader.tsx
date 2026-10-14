@@ -1,9 +1,8 @@
-// S2-1 ① 코스 헤더 카드: 첫 장소 사진 · 코스 이름(수정 중이면 입력칸) · 날짜 · 시간 · 걷는 시간 · [코스 수정]
+// S2-1 ① 코스 헤더 (카드 틀 없음 · 휴대폰에서는 사진이 화면 좌우 끝까지): 첫 장소 사진 · 코스 이름(수정 중이면 입력칸) · 날짜 · 시간 · 걷는 시간 · [코스 수정]
 import { useState } from "react";
 import { CalendarIcon, CheckIcon, ClockIcon, EditIcon, WalkIcon } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
@@ -17,7 +16,7 @@ function Cover({ url }: { url: string }) {
   const [failed, setFailed] = useState(false);
   if (failed) return null;
   return (
-    <div className="relative">
+    <div className="relative -mx-4 overflow-hidden sm:mx-0 sm:rounded-2xl">
       <img
         src={url}
         alt=""
@@ -53,10 +52,9 @@ export function CourseHeader({
 }) {
   const cover = course.stops[0]?.place.photoUrl ?? null;
   return (
-    <Card className={cn("gap-4 pt-0", className)}>
+    <section className={cn("flex flex-col gap-4", className)}>
       {cover && <Cover key={cover} url={cover} />}
-      {/* 사진이 없으면 이 칸이 맨 위라 위 여백을 채운다 */}
-      <header className="flex flex-col gap-3 px-5 first:pt-5">
+      <header className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
           {edit?.editing ? (
             <div className="flex w-full flex-col gap-1.5">
@@ -116,6 +114,6 @@ export function CourseHeader({
           </Button>
         )}
       </header>
-    </Card>
+    </section>
   );
 }

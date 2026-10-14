@@ -161,6 +161,35 @@ test("휴대폰 화면", async ({ page }) => {
   await shot(page, "10-admin-login");
 });
 
+// 소개 자료용: 화면 높이를 실제 휴대폰(390 × 844)에 맞춰 여행 끝 장면(여행 완료 → 별점)과 부모님 화면을 찍는다
+test.describe("소개 자료", () => {
+  test.use({ viewport: { width: 390, height: 844 } });
+
+  test("여행 완료 · 별점 · 부모님 화면", async ({ page }) => {
+    test.setTimeout(120_000);
+    const trip = await seedTrip();
+    const evening = `?now=${encodeURIComponent(demoNow(TRIP_DATE, "15:30"))}`;
+    await page.goto(`/f/${trip.familyToken}${evening}`);
+    const done = page.getByRole("button", { name: "여행 완료" });
+    await done.scrollIntoViewIfNeeded();
+    await page.evaluate(() => window.scrollBy(0, 160)); // 칸이 화면 가운데쯤 오게
+    await shot(page, "11-complete");
+    await done.click();
+    await page.getByText("여행 리포트 만들기").waitFor();
+    // 첫 장소에 별 다섯 개
+    await page.getByRole("radio").nth(4).click().catch(() => undefined);
+    await shot(page, "12-rate");
+
+    await page.addInitScript((t) => {
+      localStorage.setItem(`sr.consent.${t}`, "agree");
+    }, trip.seniorToken);
+    await page.goto(`/t/${trip.seniorToken}?now=${encodeURIComponent(demoNow(TRIP_DATE, "11:40"))}`);
+    await shot(page, "13-senior");
+    await page.getByRole("heading", { name: "오늘 다닐 곳" }).scrollIntoViewIfNeeded();
+    await shot(page, "14-senior-map");
+  });
+});
+
 test.describe("PC", () => {
   test.use({
     viewport: { width: 1440, height: 900 },

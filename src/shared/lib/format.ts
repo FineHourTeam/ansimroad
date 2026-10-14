@@ -3,6 +3,7 @@ import type {
   AgeBand,
   Mobility,
   Party,
+  StartMin,
   Transport,
   TripInput,
   WalkLimit,
@@ -40,6 +41,23 @@ export const TRANSPORT_OPTIONS: { value: Transport; label: string }[] = [
   { value: "transit", label: "택시·버스" },
 ];
 
+/** 도착 시각 선택지: 오전 9시 ~ 오후 3시, 30분 단위 (9시 전에는 여는 장소가 없다) */
+export const START_VALUES: StartMin[] = Array.from({ length: 13 }, (_, i) => 540 + i * 30);
+
+/** 600 → '오전 10시', 750 → '낮 12시 30분', 810 → '오후 1시 30분' */
+export function clockLabel(min: number): string {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  const part = h < 12 ? "오전" : h === 12 ? "낮" : "오후";
+  const h12 = h > 12 ? h - 12 : h;
+  return `${part} ${String(h12)}시${m ? ` ${String(m)}분` : ""}`;
+}
+
+export const START_OPTIONS: { value: StartMin; label: string }[] = START_VALUES.map((v) => ({
+  value: v,
+  label: clockLabel(v),
+}));
+
 const label = <T>(opts: { value: T; label: string }[], v: T) =>
   opts.find((o) => o.value === v)?.label ?? "";
 
@@ -48,6 +66,8 @@ export const ageLabel = (v: AgeBand) => label(AGE_OPTIONS, v);
 export const mobilityLabel = (v: Mobility) => label(MOBILITY_OPTIONS, v);
 export const walkLabel = (v: WalkLimit) => label(WALK_OPTIONS, v);
 export const transportLabel = (v: Transport) => label(TRANSPORT_OPTIONS, v);
+/** 칩용: '오전 10시 도착' · '오후 1시 30분 도착' */
+export const startLabel = (v: StartMin = 600) => `${clockLabel(v)} 도착`;
 
 /** S2 ② 입력 요약 줄: '70대 · 2명 · 계단이 어려움 · 20분 · 10/18(일) · 택시·버스' */
 export function inputSummary(i: TripInput): string {
@@ -57,6 +77,7 @@ export function inputSummary(i: TripInput): string {
     mobilityLabel(i.mobility),
     walkLabel(i.walk),
     shortDate(i.date),
+    startLabel(i.start),
     transportLabel(i.transport),
   ].join(" · ");
 }

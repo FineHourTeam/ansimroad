@@ -1,6 +1,6 @@
 // S2 · S2-1: 주소(입력값 + 제외 목록)만으로 코스를 다시 만든다 → 같은 주소면 같은 결과 (F-12)
 import { useMemo } from "react";
-import { usePublishedCurated } from "@/features/curated";
+import { useCourseTexts, usePublishedCurated } from "@/features/curated";
 import { usePlaceData, useSettings } from "@/features/places";
 import { generateCourses } from "@/shared/engine/generate";
 import { curatedToCourse } from "@/shared/lib/curated";
@@ -11,6 +11,7 @@ export function useCourseResult(search: string) {
   const placesQ = usePlaceData();
   const settingsQ = useSettings();
   const curatedQ = usePublishedCurated();
+  const textsQ = useCourseTexts(); // 자동 코스별 설명 (못 읽으면 설명 없이 보여 준다)
   const places = placesQ.data?.places;
   const settings = settingsQ.data;
 
@@ -29,8 +30,18 @@ export function useCourseResult(search: string) {
     if (!places || !curatedQ.data) return [];
     return curatedQ.data
       .filter((c) => c.published && c.stops.length > 0)
-      .map((c) => curatedToCourse(c, places));
-  }, [curatedQ.data, places]);
+      .map((c) => curatedToCourse(c, places, input?.start));
+  }, [curatedQ.data, places, input?.start]);
 
-  return { input, excluded, result, curated, settings, placesQ, settingsQ, curatedQ };
+  return {
+    input,
+    excluded,
+    result,
+    curated,
+    settings,
+    placesQ,
+    settingsQ,
+    curatedQ,
+    texts: textsQ.data,
+  };
 }

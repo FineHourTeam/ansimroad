@@ -1,8 +1,9 @@
 // ② 일정: 누를 수 없는 목록 (실수 방지). 지난 장소 '완료'(차분한 모래빛), 지금 장소 '지금 여기'(청록),
-// 지금 시각은 달력 앱처럼 가로 빨간 선. 장소마다 번호 · 도착 시각 · 이름 · 자녀 메모 (지난 장소는 메모를 접는다)
-import { Fragment, useEffect, useRef } from "react";
+// 지금 시각은 달력 앱처럼 가로 빨간 선. 장소마다 번호 · 도착 시각 · 이름 · 사진 · 자녀 메모 (지난 장소는 사진 · 메모를 접는다)
+import { Fragment, useEffect, useRef, useState } from "react";
 import { CheckIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
+import { isTourApiPhoto } from "@/shared/data/placeSchema";
 import type { Course } from "@/shared/domain/types";
 import type { NowPos, StopState } from "@/shared/engine/timeline";
 import { hhmm } from "@/shared/lib/date";
@@ -128,6 +129,9 @@ export function SeniorTimeline({
                     </span>
                   )}
                 </p>
+                {state !== "done" && s.place.photoUrl && (
+                  <StopPhoto url={s.place.photoUrl} name={s.place.name} />
+                )}
                 {/* 자녀 메모: 수첩에 적은 것처럼 모래빛 세로줄 */}
                 {memo && state !== "done" && (
                   <p className="border-highlight mt-3 border-l-4 pl-3 text-2xl leading-relaxed">
@@ -153,6 +157,32 @@ export function SeniorTimeline({
         </div>
       )}
     </>
+  );
+}
+
+/** 장소 사진: 가 보기 전에 어떤 곳인지 알아보게 크게. 못 불러오면 통째로 숨긴다 */
+function StopPhoto({ url, name }: { url: string; name: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+  return (
+    <div className="relative mt-3 overflow-hidden rounded-xl">
+      <img
+        src={url}
+        alt={`${name} 사진`}
+        loading="lazy"
+        decoding="async"
+        referrerPolicy="no-referrer"
+        className="bg-background-subtle aspect-video w-full object-cover"
+        onError={() => {
+          setFailed(true);
+        }}
+      />
+      {isTourApiPhoto(url) && (
+        <span className="bg-foreground/60 text-background absolute right-2 bottom-2 rounded-full px-2.5 py-0.5 text-sm font-medium">
+          사진: 한국관광공사
+        </span>
+      )}
+    </div>
   );
 }
 

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { changeStay, removeStop, shiftStart } from "@/shared/lib/courseEdit";
+import { changeStay, moveStop, removeStop, shiftStart } from "@/shared/lib/courseEdit";
 import { parseCsv } from "@/shared/data/csv";
 import { parsePlaceRows } from "@/shared/data/placeSchema";
 import type { TripInput } from "@/shared/domain/types";
@@ -29,6 +29,15 @@ const T1: TripInput = {
 const course = at(generateCourses(places, T1, { emergencyByRegion: {} }).courses, 0);
 
 describe("확정 후 코스 수정", () => {
+  it("순서를 바꾸면 두 장소 자리가 바뀌고 시간표를 다시 계산한다 · 끝에서는 그대로", () => {
+    const next = moveStop(course, 1, -1);
+    expect(at(next.stops, 0).place.id).toBe(at(course.stops, 1).place.id);
+    expect(at(next.stops, 1).place.id).toBe(at(course.stops, 0).place.id);
+    expect(at(next.stops, 0).arriveMin).toBe(course.startMin);
+    expect(moveStop(course, 0, -1)).toBe(course);
+    expect(moveStop(course, course.stops.length - 1, 1)).toBe(course);
+  });
+
   it("머무는 시간을 늘리면 뒤 일정이 같이 밀린다", () => {
     const next = changeStay(course, 0, 10);
     expect(at(next.stops, 0).stayMin).toBe(at(course.stops, 0).stayMin + 10);

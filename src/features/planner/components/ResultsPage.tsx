@@ -14,6 +14,7 @@ import {
   inputSummary,
   mobilityLabel,
   partyLabel,
+  startLabel,
   transportLabel,
   walkLabel,
 } from "@/shared/lib/format";
@@ -131,7 +132,7 @@ export function ResultsPage() {
     const cards = [...result.courses, ...(result.representative ? [result.representative] : [])];
     body = (
       <>
-        <CourseCards courses={cards} query={query} state={state} />
+        <CourseCards courses={cards} query={query} state={state} texts={r.texts} />
         {/* ⑨ 방금 보여 준 장소를 빼고 같은 룰로 다시 (무작위 없음, 제외 목록은 주소에) */}
         {settings.otherCoursesEnabled && (
           <Button
@@ -162,13 +163,14 @@ export function ResultsPage() {
     mobilityLabel(input.mobility),
     walkLabel(input.walk),
     shortDate(input.date),
+    startLabel(input.start),
     transportLabel(input.transport),
   ];
   return (
     <div className="min-h-dvh">
       <Seo title="코스 제안" />
       <TopBar title="이런 코스는 어떠세요?" back={back} />
-      <PageBody wide className="flex flex-col gap-5">
+      <PageBody wide surface="plain" className="flex flex-col gap-5">
         {/* ② 입력 요약 줄: 누르면 S1 (입력값 유지) */}
         <Link
           to={back}

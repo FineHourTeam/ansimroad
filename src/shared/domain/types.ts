@@ -92,6 +92,8 @@ export type AgeBand = 40 | 50 | 60 | 70 | 80; // 80 = 80대 이상
 export type Mobility = "none" | "stairs" | "wheelchair";
 export type WalkLimit = 10 | 20 | 30; // 30 = 30분 이상(상한 없음)
 export type Transport = "car" | "transit";
+/** 첫 장소 도착 시각(분). 9:00 ~ 15:00, 30분 단위 (START_VALUES) */
+export type StartMin = number;
 
 export interface TripInput {
   party: Party;
@@ -100,6 +102,8 @@ export interface TripInput {
   walk: WalkLimit;
   date: string; // YYYY-MM-DD
   transport: Transport;
+  /** 첫 장소 도착 시각. 이 칸이 생기기 전에 저장된 여행은 비어 있다 → 10:00 (SCHEDULE.startMin) */
+  start?: StartMin;
 }
 
 /** S1 폼 상태. 아직 고르지 않은 항목은 null. */
@@ -135,6 +139,8 @@ export interface Course {
   er: EmergencyInfo | null; // P8: 오전 관광지 기준
   pharmacy: string | null;
   fallbackBadge: boolean; // '테마 외 장소 포함'
+  /** 운영진 추천 코스의 한 줄 소개 (자동 코스는 config/courseTexts 에서 따로 읽는다) */
+  summary?: string;
 }
 
 export interface GenerateOptions {

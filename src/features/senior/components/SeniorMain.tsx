@@ -1,6 +1,6 @@
-// S4 본 화면 ①~⑤: 제목 · 오늘 일정(상태 + 지금 시각 선) · 사진 남기기 · 응급실 전화.
+// S4 본 화면 ①~⑤: 제목 · 오늘 일정(상태 + 지금 시각 선 + 장소 사진) · 오늘 동선 지도 · 사진 남기기 · 응급실 전화.
 // 글자·버튼 기준은 §0.3 S4 열(N-03): 본문 22px+(text-2xl), 장소명 26px+(text-3xl), 버튼 64px+, 회색 글자·팝업 없음. 메뉴·뒤로·로고·법적 링크 없음.
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSeniorPhoto } from "../hooks/useSeniorPhoto";
 import { canShootOn, countSentToday, dayGapOf, dayNotice } from "../seniorView";
 import { PhotoDock } from "./PhotoDock";
@@ -8,10 +8,12 @@ import { SeniorFrame, SeniorHeader } from "./SeniorMessage";
 import { SeniorTimeline } from "./SeniorTimeline";
 import { Seo } from "@/components/Seo";
 import { usePhotos } from "@/features/trip";
+import { MapView } from "@/shared/components/MapView";
 import type { ConsentChoice, TripSnapshot } from "@/shared/domain/types";
 import { nowLinePosition, seniorStates, type StopState } from "@/shared/engine/timeline";
 import { now } from "@/shared/lib/clock";
 import { hhmm, minutesOfDay, toLocalYmd } from "@/shared/lib/date";
+import { courseMapPoints } from "@/shared/lib/mapPoints";
 
 const TICK_MS = 30_000; // 상태(완료 · 지금 여기)는 시각 기준이라 30초마다 다시 계산
 
@@ -41,6 +43,8 @@ export function SeniorMain({
 
   const shoot = useSeniorPhoto({ tripId: trip.tripId, course, consent, locationOn, photoMaxPx });
   const photos = usePhotos(trip.tripId);
+  // 30초마다 다시 그려도 지도는 그대로 두게 고정한다
+  const points = useMemo(() => courseMapPoints(course, { emergencyRooms: [] }), [course]);
 
   const current = now();
   const minute = minutesOfDay(current);
@@ -74,6 +78,12 @@ export function SeniorMain({
           nowLine={nowLine}
           nowLabel={hhmm(minute)}
         />
+        <section aria-labelledby="senior-map" className="mt-3 flex flex-col gap-3">
+          <h2 id="senior-map" className="text-2xl font-bold">
+            오늘 다닐 곳
+          </h2>
+          <MapView points={points} className="isolate rounded-2xl" />
+        </section>
         {course.pharmacy && (
           <p className="bg-background-subtle rounded-2xl px-4 py-3 text-2xl font-semibold">
             가까운 약국 · {course.pharmacy}
