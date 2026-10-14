@@ -13,7 +13,7 @@ import { CourseCard } from "./CourseCard";
 /** 카드 수에 맞춘 칸: 2장이면 가운데 2칸, 4장(목포 대표 코스 포함)이면 PC 한 줄 4칸 */
 function gridClass(count: number): string {
   return cn(
-    "grid gap-4 sm:grid-cols-2 sm:gap-5",
+    "grid gap-8 sm:grid-cols-2 sm:gap-x-6 sm:gap-y-10",
     count === 2 && "lg:mx-auto lg:max-w-3xl",
     count === 3 && "lg:grid-cols-3 lg:gap-6",
     count >= 4 && "lg:grid-cols-4",
@@ -32,11 +32,14 @@ export function CourseCards({
   query,
   curated = false,
   state,
+  texts,
 }: {
   courses: Course[];
   query: string;
   curated?: boolean;
   state: ConfirmState;
+  /** 자동 코스별 설명 (코스 키 → 두 줄 설명) */
+  texts?: Partial<Record<string, string>>;
 }) {
   return (
     <div className={gridClass(courses.length)}>
@@ -44,6 +47,8 @@ export function CourseCards({
         <CourseCard
           key={c.key}
           course={c}
+          // 추천 코스는 운영진이 쓴 한 줄 소개, 자동 코스는 코스별 설명
+          desc={c.summary ?? texts?.[c.key]}
           curated={curated}
           detailHref={paths.resultDetailOf(c.key, query)}
           confirm={state.busyKey === c.key ? "busy" : state.failedKey === c.key ? "failed" : "idle"}

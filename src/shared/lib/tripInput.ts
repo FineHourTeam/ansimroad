@@ -1,10 +1,12 @@
 // 입력값 보존(F-03)과 결과 주소(F-12: 새로고침해도 같은 결과).
-// 결과 주소 예: /result?p=2&a=70&m=stairs&w=20&d=2026-10-18&t=transit&ex=A0018,A0023
+// 결과 주소 예: /result?p=2&a=70&m=stairs&w=20&d=2026-10-18&s=600&t=transit&ex=A0018,A0023
 import { isValidYmd } from "@/shared/lib/date";
+import { START_VALUES } from "@/shared/lib/format";
 import type {
   AgeBand,
   Mobility,
   Party,
+  StartMin,
   Transport,
   TripInput,
   TripInputDraft,
@@ -19,6 +21,7 @@ export const EMPTY_DRAFT: TripInputDraft = {
   mobility: null,
   walk: null,
   date: null,
+  start: 600, // 기본 오전 10시 (고르지 않아도 된다)
   transport: null,
 };
 
@@ -46,6 +49,7 @@ export function encodeQuery(input: TripInput, excluded: string[] = []): string {
     m: input.mobility,
     w: String(input.walk),
     d: input.date,
+    s: String(input.start ?? 600),
     t: input.transport,
   });
   if (excluded.length > 0) q.set("ex", [...new Set(excluded)].sort().join(","));
@@ -69,6 +73,8 @@ export function decodeQuery(search: string): { input: TripInput | null; excluded
       const d = q.get("d");
       return d && isValidYmd(d) ? d : null;
     })(),
+    // 이 칸이 생기기 전 주소(s 없음)는 10:00 으로 읽는다
+    start: pick<StartMin>(q.get("s"), START_VALUES, Number) ?? 600,
     transport: pick<Transport>(q.get("t"), ["car", "transit"], (s) => s as Transport),
   };
   const excluded = (q.get("ex") ?? "")

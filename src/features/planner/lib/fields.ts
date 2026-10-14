@@ -9,5 +9,6 @@ export const FIELD_TITLES: Record<FieldKey, string> = {
   mobility: "걷는 데 어려움이 있으신가요?",
   walk: "한 번에 얼마나 걸으실 수 있나요?",
   date: "언제 가시나요?",
+  start: "몇 시에 도착하시나요?",
   transport: "어떻게 이동하세요?",
 };

@@ -28,14 +28,16 @@ interface Context {
   cafes: Place[];
   emergencyByRegion: Record<string, EmergencyInfo>;
   allowP3Swap: boolean;
+  startMin: number; // 첫 장소 도착 시각
 }
 
 function withinHours(p: Place, arrive: number, depart: number): boolean {
   return p.openMin !== null && p.closeMin !== null && arrive >= p.openMin && depart <= p.closeMin;
 }
 
-/** P2 시각 계산. 운영시간 밖이거나 16:30을 넘기면 null. */
+/** P2 시각 계산. 운영시간 밖이거나 끝나는 시각(기본 16:30)을 넘기면 null. */
 function schedule(
+  startMin: number,
   am: Place,
   lunch: Place,
   pm: Place,
@@ -49,7 +51,7 @@ function schedule(
     [cafe, "cafe", cafe.stayMin ?? SCHEDULE.cafeDefaultStay],
   ];
   const stops: Stop[] = [];
-  let clock = SCHEDULE.startMin;
+  let clock = startMin;
   let prev: Place | null = null;
   for (const [place, role, stay] of plan) {
     const travel = prev ? travelMinutes(prev, place) : 0;
@@ -75,7 +77,9 @@ function schedule(
     clock = depart;
     prev = place;
   }
-  if (clock > SCHEDULE.endByMin) return null;
+  // P2 16:30 이전 종료. 10:00 보다 늦게 도착하면 하루 길이(6시간 30분)를 같게 두고 끝나는 시각도 그만큼 늦춘다
+  const endBy = Math.max(SCHEDULE.endByMin, startMin + SCHEDULE.endByMin - SCHEDULE.startMin);
+  if (clock > endBy) return null;
   return stops;
 }
 
@@ -102,7 +106,7 @@ function fillMealAndCafe(
     );
   for (const lunch of lunches) {
     for (const cafe of cafes) {
-      const stops = schedule(am, lunch, pm, cafe, theme);
+      const stops = schedule(ctx.startMin, am, lunch, pm, cafe, theme);
       if (stops) return stops;
     }
   }
@@ -272,6 +276,7 @@ export function generateCourses(
     cafes: passed.filter((p) => p.type === "카페휴식"),
     emergencyByRegion: settings.emergencyByRegion,
     allowP3Swap: options.allowP3Swap ?? true,
+    startMin: input.start ?? SCHEDULE.startMin,
   };
 
   const courses: Course[] = [];

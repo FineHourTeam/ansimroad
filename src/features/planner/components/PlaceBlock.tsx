@@ -1,10 +1,8 @@
-// 장소 블록: 이름 · 역할 · 머무는 시간 · 확인 배지 · 사진(원본 비율 · 옆으로 넘기기) · 설명 · 정보 꼬리표 · 지도/전화 · 후기 · 메모
+// 장소 블록: 이름 · 역할 · 머무는 시간 · 사진(원본 비율 · 옆으로 넘기기) · 설명 · 정보 꼬리표 · 지도/전화 · 후기 · 메모
 import { ChevronDownIcon, ClockIcon, MapPinIcon, PhoneIcon } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { VerifyBadge } from "@/shared/components/common";
 import { PlacePhoto } from "@/shared/components/PlacePhoto";
 import type { Place } from "@/shared/domain/types";
 import { naverMapLink, telHref } from "@/shared/lib/format";
@@ -12,8 +10,8 @@ import { placeFacts } from "@/shared/lib/placeFacts";
 import { MemoBox } from "./MemoBox";
 import { PlaceReviews } from "./PlaceReviews";
 
-/** 머무는 시간 · 확인 배지 한 줄 */
-function Meta({ place, stayMin }: { place: Place; stayMin: number | null }) {
+/** 머무는 시간 한 줄 (확인 배지는 두지 않는다 — 코스의 장소는 모두 확인을 거친 곳이다) */
+function Meta({ stayMin }: { stayMin: number | null }) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
       {stayMin !== null && (
@@ -22,7 +20,6 @@ function Meta({ place, stayMin }: { place: Place; stayMin: number | null }) {
           머무는 시간 {stayMin}분
         </p>
       )}
-      <VerifyBadge status={place.verify} />
     </div>
   );
 }
@@ -77,7 +74,7 @@ function Body({ place, readOnly }: { place: Place; readOnly: boolean }) {
   );
 }
 
-/** 코스의 장소 한 곳 (카드). 번호 · 도착 시각은 바깥 시간 줄에, tag = 역할(오전 · 점심 …) */
+/** 코스의 장소 한 곳 (카드 틀 없음 · 시간 줄 오른쪽에 바로 놓는다). 번호 · 도착 시각은 바깥 시간 줄에, tag = 역할(오전 · 점심 …) */
 export function PlaceBlock({
   place,
   stayMin,
@@ -90,31 +87,29 @@ export function PlaceBlock({
   readOnly: boolean;
 }) {
   return (
-    <Card size="sm">
-      <article
-        aria-label={place.name}
-        className="flex flex-col gap-3 px-4 sm:grid sm:grid-cols-5 sm:items-start sm:gap-4"
-      >
-        <header className="flex flex-col gap-1.5 sm:col-span-5">
-          <div className="flex items-start gap-2">
-            <h3 className="min-w-0 flex-1 text-xl leading-snug font-extrabold tracking-tight">
-              {place.name}
-            </h3>
-            <Badge variant="secondary" className="mt-0.5">
-              {tag}
-            </Badge>
-          </div>
-          <Meta place={place} stayMin={stayMin} />
-        </header>
-        <PlacePhoto
-          url={place.photoUrl}
-          urls={place.photoUrls}
-          alt={place.name}
-          className="sm:col-span-2"
-        />
-        <Body place={place} readOnly={readOnly} />
-      </article>
-    </Card>
+    <article
+      aria-label={place.name}
+      className="flex flex-col gap-3 sm:grid sm:grid-cols-5 sm:items-start sm:gap-4"
+    >
+      <header className="flex flex-col gap-1.5 sm:col-span-5">
+        <div className="flex items-start gap-2">
+          <h3 className="min-w-0 flex-1 text-xl leading-snug font-extrabold tracking-tight">
+            {place.name}
+          </h3>
+          <Badge variant="secondary" className="mt-0.5">
+            {tag}
+          </Badge>
+        </div>
+        <Meta stayMin={stayMin} />
+      </header>
+      <PlacePhoto
+        url={place.photoUrl}
+        urls={place.photoUrls}
+        alt={place.name}
+        className="sm:col-span-2"
+      />
+      <Body place={place} readOnly={readOnly} />
+    </article>
   );
 }
 
@@ -139,7 +134,7 @@ export function SparePlace({
       </summary>
       <div className="grid gap-3 px-4 pb-4 sm:grid-cols-5 sm:gap-4">
         <div className="sm:col-span-5">
-          <Meta place={place} stayMin={place.stayMin} />
+          <Meta stayMin={place.stayMin} />
         </div>
         <PlacePhoto
           url={place.photoUrl}

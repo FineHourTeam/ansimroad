@@ -141,6 +141,17 @@ describe("코스 생성 (F-04~F-07, F-12)", () => {
     );
   });
 
+  it("도착 시각을 고르면 첫 장소가 그 시각에 시작하고, 점심은 11:30 이전으로 당겨지지 않는다", () => {
+    for (const start of [540, 660] as const) {
+      const r = generateCourses(demo, { ...T1, start }, settings);
+      for (const c of r.courses) {
+        expect(c.startMin).toBe(start);
+        expect(at(c.stops, 1).arriveMin).toBeGreaterThanOrEqual(690);
+        expect(c.endMin).toBeLessThanOrEqual(990);
+      }
+    }
+  });
+
   it("같은 입력 10회 → 같은 결과 (F-12)", () => {
     const first = JSON.stringify(generateCourses(demo, T2, settings));
     for (let i = 0; i < 10; i++)

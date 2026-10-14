@@ -1,7 +1,6 @@
 // S2-1 코스 상세 본문 (F-08 · F-09 · D-06 · D-07). 확정 전(S2-1)과 확정 후(/f/:token/course) 모두 이 화면을 쓴다.
 // 휴대폰: 헤더 카드 → 지도 → 시간 줄 위 장소 블록 → 아래 고정 확정 버튼 / PC: 왼쪽 지도 고정 · 오른쪽 블록
 import { useMemo, useState, type ReactNode } from "react";
-import { Card } from "@/components/ui/card";
 import { EmergencyLine, PageBody, StickyActionBar, TopBar } from "@/shared/components/common";
 import { MapView, type MapPoint } from "@/shared/components/MapView";
 import type { Course, Place, Settings, TripInput } from "@/shared/domain/types";
@@ -95,6 +94,7 @@ export function CourseDetail({
       <TopBar title="코스 상세" back={back} />
       <PageBody
         wide
+        surface="plain"
         className="flex flex-col gap-4 lg:grid lg:grid-cols-11 lg:items-start lg:gap-x-8"
       >
         {/* ① 코스 헤더 */}
@@ -175,7 +175,7 @@ export function CourseDetail({
                       tag={ROLE_LABEL[s.role]}
                     />
                     {next ? (
-                      <p className="text-muted-foreground flex min-h-12 flex-wrap items-center gap-x-3 py-2 text-sm font-medium">
+                      <p className="text-muted-foreground border-border/70 mt-4 flex min-h-12 flex-wrap items-center gap-x-3 border-t py-2 text-sm font-medium">
                         {next.travelMin > 0 && <span>차로 약 {next.travelMin}분</span>}
                         {next.waitMin > 0 && <span>점심 전 여유 {next.waitMin}분</span>}
                       </p>
@@ -193,7 +193,7 @@ export function CourseDetail({
 
           {/* ⑤ 안전 정보 */}
           {(course.er ?? course.pharmacy) && (
-            <Card className="mt-2 gap-3 px-5">
+            <section className="border-border mt-2 flex flex-col gap-3 border-t pt-5">
               <h3 className="text-lg font-bold tracking-tight">안전 정보</h3>
               <EmergencyLine er={course.er} prefix="최근접 응급실" />
               {course.pharmacy && (
@@ -202,7 +202,7 @@ export function CourseDetail({
                   <strong className="font-semibold">{course.pharmacy}</strong>
                 </p>
               )}
-            </Card>
+            </section>
           )}
 
           {/* D-07 출처 */}

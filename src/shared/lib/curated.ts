@@ -83,6 +83,7 @@ export function curatedToCourse(c: CuratedCourse, places: Place[], startMin = 10
     er: withEr?.er ?? null,
     pharmacy: withEr?.pharmacy ?? null,
     fallbackBadge: false,
+    summary: c.summary.trim() === "" ? undefined : c.summary, // 비어 있으면 카드 설명 없음
   };
   return rebuild(
     template,

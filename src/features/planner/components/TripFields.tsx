@@ -1,4 +1,4 @@
-// S1 ④~⑨ 조건 6가지 — 질문마다 흰 카드 하나. 미입력 강조는 제목 빨간색 + '선택해 주세요' (팝업 없음)
+// S1 ④~⑨ 조건 6가지 + 도착 시각(기본 오전 10시) — 질문마다 흰 카드 하나. 미입력 강조는 제목 빨간색 + '선택해 주세요' (팝업 없음)
 import { useState, type ReactNode } from "react";
 import { CalendarIcon, ChevronRightIcon, InfoIcon } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import {
   AGE_OPTIONS,
   MOBILITY_OPTIONS,
   PARTY_OPTIONS,
+  START_OPTIONS,
   TRANSPORT_OPTIONS,
   WALK_OPTIONS,
 } from "@/shared/lib/format";
@@ -203,6 +204,18 @@ export function TripFields({
             오늘 이후 날짜를 골라 주세요
           </p>
         )}
+      </Field>
+
+      <Field k="start" missing={false}>
+        <ChoiceGroup
+          options={START_OPTIONS}
+          value={draft.start ?? 600}
+          onChange={(v) => {
+            set("start", v);
+          }}
+          labelledBy="t-start"
+          scroll
+        />
       </Field>
 
       <Field k="transport" missing={missing === "transport"}>
