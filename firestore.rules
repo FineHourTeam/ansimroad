@@ -73,6 +73,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ── 코스별 설명 (자동 코스 sea · history · nature · best): 누구나 읽기, 운영진만 쓰기 ──
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() && docId == 'courseTexts'
+        && request.resource.data.keys().hasOnly(['sea', 'history', 'nature', 'best', 'updatedAt']);
+    }
+
     // ── 운영진 명단: 본인 확인용 get만. 추가는 콘솔·스크립트(Admin SDK)로만 ──
     match /admins/{uid} {
       allow get: if signedIn() && request.auth.uid == uid;

@@ -1,4 +1,4 @@
-// 운영진 추천 코스 만들기 (/admin): 지도에서 장소를 고르며 코스를 짠다.
+// 운영진 추천 코스 만들기 (/admin): 자동 코스별 설명 + 지도에서 장소를 고르며 코스를 짠다.
 // 공개한 코스는 S2 '모담팀 추천 코스'에 나오고, 그대로 확정 → 어르신 · 자녀 화면 · 리포트 흐름을 탄다.
 import { useEffect, useState } from "react";
 import { useBlocker } from "react-router";
@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AdminShell } from "./AdminShell";
 import { CourseEditor } from "./courses/CourseEditor";
 import { CourseList } from "./courses/CourseList";
+import { CourseTextsCard } from "./courses/CourseTextsCard";
 import { emptyCourse, saveProblem } from "./courses/draft";
 import { newCuratedId, useAllCurated, useDeleteCurated, useSaveCurated } from "@/features/curated";
 import {
@@ -118,7 +119,8 @@ export function AdminCoursesPage() {
 
   return (
     <AdminShell title="추천 코스 만들기" confirmLeave={unsaved}>
-      <div className="grid gap-6 lg:grid-cols-4 lg:items-start">
+      <CourseTextsCard />
+      <div className="mt-6 grid gap-6 lg:grid-cols-4 lg:items-start">
         <CourseList
           currentId={draft.id}
           onOpen={open}
