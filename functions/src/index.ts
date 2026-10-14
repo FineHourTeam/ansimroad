@@ -22,7 +22,8 @@ async function isAdmin(authorization: string | undefined): Promise<boolean> {
   try {
     const { uid } = await getAuth().verifyIdToken(token);
     return (await getFirestore().doc(`admins/${uid}`).get()).exists;
-  } catch {
+  } catch (e) {
+    logger.warn("운영진 확인 실패", e);
     return false;
   }
 }
