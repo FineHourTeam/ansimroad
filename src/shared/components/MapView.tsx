@@ -1,6 +1,7 @@
 // 코스 지도 (F-09): 장소(순서 번호) + 응급실 마커.
 // Client ID가 있으면 네이버 지도(JavaScript API v3), 없거나 인증에 실패하면 좌표로 그린 약도를 보여 준다.
 import { useEffect, useMemo, useRef, useState } from "react";
+import { layoutMarkers } from "./mapLayout";
 import { MARKER_CLASS, markerName, type MapPoint, type MapProps } from "./mapMarker";
 import { SketchMap } from "./SketchMap";
 import { env } from "@/lib/env";
@@ -20,19 +21,19 @@ interface NMap {
   ): void;
   autoResize?: () => void;
   destroy?: () => void;
+  getProjection(): { fromCoordToOffset(c: NLatLng): { x: number; y: number } };
+  getCenter(): NLatLng;
 }
 interface NaverMaps {
   LatLng: new (lat: number, lng: number) => NLatLng;
   Map: new (el: HTMLElement, opts: object) => NMap;
   Polyline: new (opts: object) => unknown;
-  InfoWindow: new (opts: object) => {
-    setContent(html: string): void;
-    open(map: NMap, anchor: unknown): void;
-  };
   Marker: new (opts: object) => unknown;
   Point: new (x: number, y: number) => unknown;
   LatLngBounds: new (a: NLatLng, b: NLatLng) => { extend(p: NLatLng): void };
-  Event: { addListener(target: unknown, name: string, cb: (e: { coord: NLatLng }) => void): void };
+  Event: {
+    addListener(target: unknown, name: string, cb: (e: { coord: NLatLng }) => void): unknown;
+  };
   Position: { TOP_RIGHT: unknown };
   ZoomControlStyle: { SMALL: unknown };
 }
@@ -75,7 +76,13 @@ function loadNaverSdk(): Promise<NaverMaps> {
 
 const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (c) => `&#${String(c.charCodeAt(0))};`);
 
-function NaverMap({ points, onError, onSelect, onMapClick }: MapProps & { onError: () => void }) {
+function NaverMap({
+  points,
+  onError,
+  onSelect,
+  onMapClick,
+  still,
+}: MapProps & { onError: () => void; still: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const selectRef = useRef(onSelect);
   const mapClickRef = useRef(onMapClick);
@@ -102,7 +109,12 @@ function NaverMap({ points, onError, onSelect, onMapClick }: MapProps & { onErro
           zoom: 13,
           scaleControl: false,
           mapDataControl: false,
-          zoomControl: true,
+          // still: 인쇄용 — 단추 없이 그림처럼 (끌기 · 확대 막음)
+          zoomControl: !still,
+          draggable: !still,
+          scrollWheel: !still,
+          pinchZoom: !still,
+          disableDoubleClickZoom: still,
           zoomControlOptions: {
             position: maps.Position.TOP_RIGHT,
             style: maps.ZoomControlStyle.SMALL,
@@ -116,25 +128,52 @@ function NaverMap({ points, onError, onSelect, onMapClick }: MapProps & { onErro
           strokeWeight: 4,
           strokeOpacity: 0.8,
         });
-        const info = new maps.InfoWindow({ borderWidth: 0, disableAnchor: false });
-        for (const p of points) {
+        // 이름표는 늘 띄우고(약도와 같게) 누르면 뜨는 말풍선은 두지 않는다.
+        // 점 자리(anchor)는 그대로 두고, 겹친 점 · 이름표 위치는 relayout 이 style 로 옮긴다
+        const radius = (p: MapPoint) => (p.kind === "cand" ? 12 : 16);
+        const labelOf = (p: MapPoint) => (p.kind === "er" ? "응급실" : p.name);
+        points.forEach((p, i) => {
+          const r = radius(p);
           const marker = new maps.Marker({
             map: m,
             position: toLatLng(p),
             title: markerName(p),
             icon: {
-              content: `<div class="${MARKER_CLASS[p.kind]} grid place-items-center rounded-full border-2 border-background font-bold shadow-md" aria-label="${escapeHtml(markerName(p))}">${escapeHtml(p.label)}</div>`,
-              anchor: new maps.Point(16, 16),
+              content: `<div data-mi="${String(i)}" class="relative"><div class="${MARKER_CLASS[p.kind]} grid place-items-center rounded-full border-2 border-background font-bold shadow-md" aria-label="${escapeHtml(markerName(p))}">${escapeHtml(p.label)}</div><span data-ml aria-hidden="true" class="bg-background/90 text-foreground pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded px-1.5 text-xs font-semibold whitespace-nowrap shadow-sm" style="left:${String(r)}px;top:${String(r * 2 + 12)}px">${escapeHtml(labelOf(p))}</span></div>`,
+              anchor: new maps.Point(r, r),
             },
           });
           maps.Event.addListener(marker, "click", () => {
             selectRef.current?.(p);
-            info.setContent(
-              `<div class="px-3 py-2 text-sm font-semibold">${escapeHtml(p.name)}</div>`,
-            );
-            info.open(m, marker);
           });
-        }
+        });
+        const relayout = () => {
+          // 지도 칸 기준 픽셀 좌표 (칸 왼쪽 위 = 0,0): 칸 가운데 좌표와의 차이로 구한다
+          const proj = m.getProjection();
+          const mid = proj.fromCoordToOffset(m.getCenter());
+          const w = el.clientWidth;
+          const h = el.clientHeight;
+          const px = points.map((p) => {
+            const o = proj.fromCoordToOffset(toLatLng(p));
+            return {
+              x: o.x - mid.x + w / 2,
+              y: o.y - mid.y + h / 2,
+              r: radius(p),
+              chars: labelOf(p).length,
+            };
+          });
+          layoutMarkers(px, { w, h }).forEach((spot, i) => {
+            const box = el.querySelector<HTMLElement>(`[data-mi="${String(i)}"]`);
+            const label = box?.querySelector<HTMLElement>("[data-ml]");
+            const r = px[i]?.r ?? 16;
+            if (!box || !label) return;
+            box.style.transform = `translate(${String(spot.dx)}px, ${String(spot.dy)}px)`;
+            label.style.left = `${String(r + spot.lx)}px`;
+            label.style.top = `${String(r + spot.ly)}px`;
+          });
+        };
+        // 확대 · 이동이 끝날 때마다 다시 배치한다 (화면 픽셀 거리가 바뀐다)
+        maps.Event.addListener(m, "idle", relayout);
         // 빈 곳을 누르면 그 좌표를 알려 준다 (관리자: 새 장소 찍기)
         maps.Event.addListener(m, "click", (e) =>
           mapClickRef.current?.(e.coord.lat(), e.coord.lng()),
@@ -145,6 +184,8 @@ function NaverMap({ points, onError, onSelect, onMapClick }: MapProps & { onErro
         });
         const fit = () => {
           m.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40 });
+          // 마커 DOM 이 붙은 다음 프레임에 배치한다 ('idle' 은 첫 맞춤 때 오지 않을 때가 있다)
+          requestAnimationFrame(relayout);
         };
         fit();
         // 칸 크기가 바뀌면(화면 회전·PC 배치) 마커가 밖으로 밀리지 않게 다시 맞춘다
@@ -167,7 +208,7 @@ function NaverMap({ points, onError, onSelect, onMapClick }: MapProps & { onErro
         // 인증 실패 등으로 반쯤 만들어진 지도는 destroy 에서 오류를 낸다. 화면 전체가 깨지지 않게 무시
       }
     };
-  }, [points, onError]);
+  }, [points, onError, still]);
   return <div ref={ref} className="size-full" />;
 }
 
@@ -177,9 +218,12 @@ export function MapView({
   onSelect,
   selectedId,
   onMapClick,
+  still = false,
 }: {
   points: MapPoint[];
   className?: string;
+  /** 인쇄용: 확대 단추 없이 움직이지 않는 지도 */
+  still?: boolean;
   /** 관리자: 지도 빈 곳을 눌러 새 장소 좌표를 얻는다 */
   onMapClick?: (lat: number, lng: number) => void;
   /** 수정 모드: 마커를 눌러 장소를 고른다 */
@@ -202,7 +246,13 @@ export function MapView({
     >
       {useNaver ? (
         <div className="aspect-[20/13] w-full">
-          <NaverMap points={points} onError={onError} onSelect={onSelect} onMapClick={onMapClick} />
+          <NaverMap
+            points={points}
+            onError={onError}
+            onSelect={onSelect}
+            onMapClick={onMapClick}
+            still={still}
+          />
         </div>
       ) : (
         <>
