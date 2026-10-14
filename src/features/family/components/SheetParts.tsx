@@ -13,10 +13,18 @@ import { displayUrl } from "../lib/links";
 /** 좁은 화면에서도 전화번호가 '061-' 에서 끊기지 않게 */
 export const Phone = ({ n }: { n: string }) => <span className="whitespace-nowrap">{n}</span>;
 
-/** 위 머리띠: 로고 · 날짜 · 코스 이름 · 시간 (다크 화면에서는 어두운 청록 — 인쇄 · 이미지는 늘 밝은 색) */
-export function SheetHeader({ date, course }: { date: string; course: Course }) {
-  return (
-    <header className="bg-primary text-primary-foreground dark:bg-accent dark:text-accent-foreground flex flex-col gap-4 rounded-2xl px-5 py-5 print:gap-3 print:px-7 print:py-4">
+/** 위 머리띠: 로고 · 날짜 · 코스 이름 · 시간 (+ 인쇄용은 오른쪽에 코스 지도). 다크 화면에서는 어두운 청록 — 인쇄 · 이미지는 늘 밝은 색 */
+export function SheetHeader({
+  date,
+  course,
+  map,
+}: {
+  date: string;
+  course: Course;
+  map?: ReactNode;
+}) {
+  const info = (
+    <div className="flex flex-col gap-4 print:gap-3">
       <div className="flex items-center justify-between gap-3">
         <BrandLogo height={24} tone="white" />
         <p className="text-sm font-semibold tabular-nums">{longDate(date)}</p>
@@ -30,6 +38,17 @@ export function SheetHeader({ date, course }: { date: string; course: Course }) 
           {course.totalWalkMin}분
         </p>
       </div>
+    </div>
+  );
+  return (
+    <header
+      className={cn(
+        "bg-primary text-primary-foreground dark:bg-accent dark:text-accent-foreground rounded-2xl px-5 py-5 print:px-7 print:py-4",
+        map && "grid gap-4 sm:grid-cols-2 sm:items-center print:grid-cols-2",
+      )}
+    >
+      {info}
+      {map}
     </header>
   );
 }
@@ -172,7 +191,7 @@ export function QrCard({
   label,
   title,
   url,
-  qrSize = 88,
+  qrSize = 64,
   className,
 }: {
   label: string;
@@ -184,17 +203,17 @@ export function QrCard({
   return (
     <figure
       className={cn(
-        "bg-card text-card-foreground m-0 flex break-inside-avoid items-center gap-4 rounded-2xl border p-4 print:p-3",
+        "bg-card text-card-foreground m-0 flex break-inside-avoid items-center gap-3 rounded-xl border p-3 print:p-2.5",
         className,
       )}
     >
       <QRCodeSVG value={url} size={qrSize} marginSize={0} title={`${label} 링크 QR 코드`} />
       <figcaption className="flex min-w-0 flex-col items-start gap-1">
-        <span className="bg-accent text-accent-foreground rounded-full px-2.5 py-0.5 text-sm font-bold">
+        <span className="bg-accent text-accent-foreground rounded-full px-2 py-0.5 text-xs font-bold">
           {label}
         </span>
-        <strong className="text-base leading-snug">{title}</strong>
-        <UrlText url={url} className="text-sm font-semibold" />
+        {/* 주소 글자는 싣지 않는다 (종이를 보고 주소를 치는 사람은 없다 — QR 로 들어간다) */}
+        <strong className="text-sm leading-snug">{title}</strong>
       </figcaption>
     </figure>
   );
