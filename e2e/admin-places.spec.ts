@@ -79,6 +79,26 @@ async function openPlace(page: Page, id: string, name: string) {
   await expect(sheet(page).getByText(`ID ${id}`)).toBeVisible();
 }
 
+// '새 장소 만들기'는 지도 / 관광공사 중 고르는 창을 연다. 고르면 창이 닫히고 편집 시트가 열린다
+const picker = (page: Page) => page.getByRole("dialog", { name: "새 장소 만들기" });
+
+/** 고르는 창의 지도 빈 곳을 눌러 그 좌표로 새 장소 편집을 연다 */
+async function newFromMap(page: Page) {
+  await page.getByRole("button", { name: "새 장소 만들기" }).click();
+  await picker(page)
+    .getByTestId("sketch-map-canvas")
+    .click({ position: { x: 12, y: 12 } });
+  await expect(picker(page)).toHaveCount(0);
+}
+
+/** 고르는 창의 관광공사 탭에서 '바위'를 찾는다 */
+async function searchTour(page: Page) {
+  await page.getByRole("button", { name: "새 장소 만들기" }).click();
+  await picker(page).getByRole("tab", { name: "한국관광공사에서 가져오기" }).click();
+  await picker(page).getByLabel("관광공사 검색어").fill("바위");
+  await picker(page).getByRole("button", { name: "검색하기" }).click();
+}
+
 type TourMock = { cid: string; title: string; addr1: string; 위도: string; 경도: string };
 function tourMock(): TourMock {
   const cid = `${String(Date.now()).slice(-7)}${String(Math.floor(Math.random() * 100))}`;
@@ -145,7 +165,7 @@ test("새 장소를 만들면 Firestore 에 저장되고 표에 나온다", asyn
   const name = `${id} 새 장소`;
   const { 위도, 경도 } = coord();
   await loginAsAdmin(page, "/admin/places");
-  await page.getByRole("button", { name: "새 장소 만들기" }).click();
+  await newFromMap(page);
   const s = sheet(page);
   await expect(s.getByRole("heading", { name: "새 장소" })).toBeVisible();
 
@@ -206,7 +226,7 @@ test("고친 칸이 저장되고 새로 불러와도 남아 있다", async ({ pa
 test("위도가 국내 범위를 벗어나면 이유를 보여 주고 저장하지 않는다", async ({ page }) => {
   const id = newId("bad");
   await loginAsAdmin(page, "/admin/places");
-  await page.getByRole("button", { name: "새 장소 만들기" }).click();
+  await newFromMap(page);
   const s = sheet(page);
   await s.getByLabel("ID").fill(id);
   await s.getByLabel("장소명").fill(`${id} 잘못된 좌표`);
@@ -230,7 +250,7 @@ test("위도가 국내 범위를 벗어나면 이유를 보여 주고 저장하�
 
 test("이미 있는 ID 로는 새 장소를 만들지 않는다", async ({ page }) => {
   await loginAsAdmin(page, "/admin/places");
-  await page.getByRole("button", { name: "새 장소 만들기" }).click();
+  await newFromMap(page);
   const s = sheet(page);
   await s.getByLabel("ID").fill("A0018"); // 시드 장소 ID
   await s.getByLabel("장소명").fill("E2E 덮어쓰면 안 되는 이름");
@@ -252,7 +272,7 @@ test("이미 있는 ID 로는 새 장소를 만들지 않는다", async ({ page 
 test("지도 빈 곳을 누르면 그 좌표로 새 장소를 만든다", async ({ page }) => {
   const id = newId("map");
   await loginAsAdmin(page, "/admin/places");
-  await page.getByTestId("sketch-map-canvas").click({ position: { x: 12, y: 12 } });
+  await newFromMap(page);
   const s = sheet(page);
   await expect(s.getByRole("heading", { name: "새 장소" })).toBeVisible();
   const lat = await s.getByLabel("위도").inputValue();
@@ -420,12 +440,12 @@ test("관광공사에서 찾아 새 장소로 가져오면 저장된다", async 
   await mockTour(page, t);
 
   await loginAsAdmin(page, "/admin/places");
-  await page.getByLabel("관광공사 검색어").fill("바위");
-  await page.getByRole("button", { name: "검색하기" }).click();
-  const results = page.getByRole("list", { name: "관광공사 검색 결과" });
+  await searchTour(page);
+  const results = picker(page).getByRole("list", { name: "관광공사 검색 결과" });
   await expect(results.getByText(t.title)).toBeVisible();
   await expect(results.getByText("다른 지역 바위")).toHaveCount(0); // 목포만
   await results.getByRole("button", { name: `${t.title} 새 장소로 가져오기` }).click();
+  await expect(picker(page)).toHaveCount(0);
 
   const s = sheet(page);
   await expect(s.getByLabel("장소명")).toHaveValue(t.title);
@@ -441,9 +461,9 @@ test("관광공사에서 찾아 새 장소로 가져오면 저장된다", async 
   expect(await field(id, "경도")).toBe(t.경도);
   await expect(s.getByRole("heading", { name: t.title })).toBeVisible(); // 저장이 끝나야 닫힌다
 
-  // 이미 가져온 장소는 다시 고를 수 없다 (같은 검색어로 다시 누르면 다시 찾는다)
+  // 이미 가져온 장소는 다시 고를 수 없다 (창을 다시 열어 같은 검색어로 찾는다)
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "검색하기" }).click();
+  await searchTour(page);
   await expect(results.getByText("이미 있음")).toBeVisible();
 });
 
