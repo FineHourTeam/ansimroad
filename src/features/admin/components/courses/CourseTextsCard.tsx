@@ -36,7 +36,8 @@ function Form({ initial }: { initial: CourseTexts }) {
         e.preventDefault();
         save.mutate(texts, {
           onSuccess: () => toast.success("코스 설명을 저장했어요 · 사용자 화면에 바로 나와요"),
-          onError: () => toast.error("저장하지 못했어요. 인터넷 연결이나 운영진 권한을 확인해 주세요"),
+          onError: () =>
+            toast.error("저장하지 못했어요. 인터넷 연결이나 운영진 권한을 확인해 주세요"),
         });
       }}
     >
