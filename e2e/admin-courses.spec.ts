@@ -64,11 +64,11 @@ test("운영진 명단에 없는 계정은 운영진 전용 안내를 본다", a
 
 test("저장 전 확인 · 다른 코스를 열 때 저장 안 한 내용 지키기", async ({ page }) => {
   await loginAsAdmin(page);
-  await page.getByRole("button", { name: "저장하기" }).click();
+  await page.getByRole("button", { name: "저장하기", exact: true }).click();
   await expect(page.getByText("코스 이름을 적어 주세요")).toBeVisible();
 
   await page.getByLabel("코스 이름").fill("버릴 코스");
-  await page.getByRole("button", { name: "저장하기" }).click();
+  await page.getByRole("button", { name: "저장하기", exact: true }).click();
   await expect(page.getByText("지도에서 장소를 하나 이상 골라 주세요")).toBeVisible();
 
   await page.getByRole("button", { name: new RegExp(CURATED_TITLE) }).click();
@@ -180,7 +180,7 @@ test("지도에서 장소를 골라 코스를 만들고, 저장 → 새로고침
     "예상 시간표 10:00",
   );
   // 코스가 길어도 저장 줄은 화면 아래에 붙어 있다 · '접근성 정보 없음'은 새 위치 칸에만
-  await expect(page.getByRole("button", { name: "저장하기" })).toBeInViewport();
+  await expect(page.getByRole("button", { name: "저장하기", exact: true })).toBeInViewport();
   await expect(page.getByText("접근성 정보 없음")).toHaveCount(1);
 
   // 버튼으로 1 → 2, 키보드 끌어서 놓기로 4 → 3
@@ -213,7 +213,7 @@ test("지도에서 장소를 골라 코스를 만들고, 저장 → 새로고침
   await expect(first.getByRole("img", { name: `${LUNCH.name} 사진 1` })).toBeVisible();
 
   await page.getByRole("switch", { name: "사용자 화면에 공개" }).click();
-  await page.getByRole("button", { name: "저장하기" }).click();
+  await page.getByRole("button", { name: "저장하기", exact: true }).click();
   await expect(page.getByText("저장했어요 · 사용자 화면에 공개 중")).toBeVisible();
 
   // Firestore 에 그대로 남았는지

@@ -56,14 +56,14 @@ const isResult = (query: string) => (url: URL) =>
 
 // ⑩ 빈 칸이 있으면 aria-disabled 지만 눌러서 첫 미입력 항목 안내를 받는다 (Playwright 는 aria-disabled 를 못 누르는 것으로 본다)
 const submit = (page: Page) =>
-  page.getByRole("button", { name: "코스 3개 만들기" }).click({ force: true });
+  page.getByRole("button", { name: "부모님 맞춤 여행 코스 추천받기" }).click({ force: true });
 
 test("S1: 빈 칸은 첫 미입력 항목으로 안내하고, 다 고르면 코스 3개로 간다", async ({ page }) => {
   await page.goto("/");
   await submit(page);
   await expect(page.locator("#field-party").getByText("선택해 주세요")).toBeVisible();
   await expect(
-    page.getByRole("radiogroup", { name: "누구와 가시나요?" }).getByRole("radio").first(),
+    page.getByRole("radiogroup", { name: "여행하실 분은 몇 분인가요?" }).getByRole("radio").first(),
   ).toBeFocused();
   await expect(page).toHaveURL(/\/$/);
 
@@ -78,12 +78,15 @@ test("S1: 빈 칸은 첫 미입력 항목으로 안내하고, 다 고르면 코�
   await expect(page.getByRole("radio", { name: "2명" })).toHaveAttribute("aria-checked", "true");
   await expect(page.getByRole("radio", { name: "자가용" })).toHaveAttribute("aria-checked", "true");
 
+  // 버튼 바로 위 '남은 항목' 한 줄 (모담 요청 2026-10-16)
+  await expect(page.getByText("남은 항목: 여행 날짜", { exact: true })).toBeVisible();
   // 날짜만 비었으면 날짜 칸으로
   await submit(page);
   await expect(page.locator("#field-date").getByText("선택해 주세요")).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "언제 가시나요?" })).toBeFocused();
+  await expect(page.getByRole("textbox", { name: "언제 여행하시나요?" })).toBeFocused();
 
-  await page.getByRole("textbox", { name: "언제 가시나요?" }).fill(TRIP_DATE);
+  await page.getByRole("textbox", { name: "언제 여행하시나요?" }).fill(TRIP_DATE);
+  await expect(page.getByText(/^남은 항목/)).toHaveCount(0);
   await submit(page);
   await expect(page).toHaveURL(isResult(resultQuery(INPUT)));
   await expect(page.getByRole("heading", { name: firstCourse().title, level: 2 })).toBeVisible();
@@ -177,7 +180,13 @@ test("S2-1: 지도 · 장소 정보를 보여 주고, 메모는 새로고침해�
   const block = page.getByRole("article", { name: first.place.name });
   await expect(block.getByRole("heading", { name: first.place.name, level: 3 })).toBeVisible();
   await expect(block.getByText(`머무는 시간 ${String(first.stayMin)}분`)).toBeVisible();
-  await expect(block.getByRole("link", { name: /지도 보기/ })).toBeVisible();
+  // 주소 한 줄 + 주소 복사 + 좌표로 여는 네이버 지도 길찾기 (모담 요청 2026-10-16)
+  await expect(block.getByText(first.place.address)).toBeVisible();
+  await expect(block.getByRole("button", { name: `${first.place.name} 주소 복사` })).toBeVisible();
+  await expect(block.getByRole("link", { name: /네이버 지도 길찾기/ })).toHaveAttribute(
+    "href",
+    `https://map.naver.com/p/directions/-/${String(first.place.lng)},${String(first.place.lat)},${encodeURIComponent(first.place.name)},,/-/car`,
+  );
 
   await block.getByRole("button", { name: "메모 남기기" }).click();
   await block.getByLabel("메모", { exact: true }).fill("입구에서 휠체어 빌리기");
@@ -388,7 +397,7 @@ test("잘못된 결과 주소는 조건을 다시 고르게 안내한다", async
   await expect(page.getByRole("heading", { name: "여행 조건을 다시 골라 주세요" })).toBeVisible();
   await page.getByRole("link", { name: "조건 고르기" }).click();
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole("button", { name: "코스 3개 만들기" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "부모님 맞춤 여행 코스 추천받기" })).toBeVisible();
 
   await page.goto(`/result/no-such-course?${resultQuery()}`);
   await expect(page.getByRole("heading", { name: "코스를 찾을 수 없어요" })).toBeVisible();

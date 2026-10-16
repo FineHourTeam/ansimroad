@@ -1,4 +1,4 @@
-// S2 코스: 장소 사진 넘기기(1/N · 넘기면 아래 동선의 같은 번호가 강조) · 이름 · 설명 두 줄 · 동선 · 시간 · 걷는 시간 · 응급실 · [자세히 보기] [확정하기]
+// S2 코스: 테마 띠(색 · 아이콘 · 이름) · 장소 사진 넘기기(1/N · 넘기면 아래 동선의 같은 번호가 강조) · 이름 · 설명 두 줄 · 동선 · 시간 · 걷는 시간 · 응급실 · [자세히 보기] [확정하기]
 // 카드 틀 없이 흰 바탕에 놓는다 (휴대폰에서는 사진이 화면 좌우 끝까지).
 import { useReducedMotion } from "motion/react";
 import { useEffect, useState } from "react";
@@ -18,6 +18,8 @@ import { cn } from "@/lib/utils";
 import { isTourApiPhoto } from "@/shared/data/placeSchema";
 import type { Course, Stop } from "@/shared/domain/types";
 import { hhmm } from "@/shared/lib/date";
+import { CourseThemeIcon } from "@/shared/components/CourseThemeIcon";
+import { courseTone, themeTitle } from "@/shared/lib/courseTheme";
 import { erDisplayName } from "@/shared/lib/format";
 import { routeLine } from "../lib/courses";
 
@@ -50,6 +52,17 @@ function Slide({ stop }: { stop: Stop }) {
         </span>
       )}
     </div>
+  );
+}
+
+/** '점심 · 쉬어 가기' 꼬리표 (코스 테마 색) */
+export function RoleTag({ role }: { role: Stop["role"] }) {
+  const text = role === "lunch" ? "점심" : role === "cafe" ? "쉬어 가기" : null;
+  if (!text) return null;
+  return (
+    <Badge className="bg-course-soft text-course-soft-foreground shrink-0 border-transparent">
+      {text}
+    </Badge>
   );
 }
 
@@ -87,7 +100,7 @@ function Gallery({ stops, onIndex }: { stops: Stop[]; onIndex: (i: number) => vo
     <Carousel
       setApi={setApi}
       opts={{ loop: true }}
-      className="relative -mx-4 sm:mx-0 sm:overflow-hidden sm:rounded-2xl"
+      className="relative -mx-4 sm:mx-0 sm:overflow-hidden sm:rounded-b-2xl"
     >
       <CarouselContent className="ml-0">
         {stops.map((s) => (
@@ -130,23 +143,41 @@ export function CourseCard({
   const titleId = `course-${course.key}`;
   const Heading = curated ? "h3" : "h2"; // 추천 코스는 '모담팀 추천 코스'(h2) 아래에 놓인다
   const [active, setActive] = useState(0);
+  const label = themeTitle(course.theme);
   return (
     <article
       aria-labelledby={titleId}
+      data-course={courseTone(course.theme)}
       className="border-border flex h-full flex-col gap-4 border-b pb-8 last:border-b-0 sm:border-b-0 sm:pb-0"
     >
-      <Gallery stops={course.stops} onIndex={setActive} />
+      {/* 테마 띠 + 사진: 휴대폰에서는 화면 좌우 끝까지, PC 에서는 둘이 한 덩어리 (띠 위쪽 · 사진 아래쪽만 둥글게) */}
+      <div className="flex flex-col">
+        <header className="bg-course text-course-foreground -mx-4 flex items-center gap-3 px-4 py-3.5 sm:mx-0 sm:rounded-t-2xl">
+          <span className="bg-course-foreground/15 grid size-11 shrink-0 place-items-center rounded-xl">
+            <CourseThemeIcon theme={course.theme} size="lg" />
+          </span>
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+              <Heading
+                id={titleId}
+                className="text-xl leading-tight font-extrabold tracking-tight text-balance"
+              >
+                {course.title}
+              </Heading>
+              {curated && <Badge variant="highlight">운영진 추천</Badge>}
+            </div>
+            {/* 이름을 바꾼 코스도 테마를 글자로 (색만으로 구분하지 않게) */}
+            {label && label !== course.title && <p className="text-sm font-semibold">{label}</p>}
+          </div>
+        </header>
+        <Gallery stops={course.stops} onIndex={setActive} />
+      </div>
       <div className="flex flex-1 flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
-          <Heading
-            id={titleId}
-            className="text-2xl leading-tight font-extrabold tracking-tight text-balance"
-          >
-            {course.title}
-          </Heading>
-          {curated && <Badge variant="highlight">운영진 추천</Badge>}
-          {course.fallbackBadge && <Badge variant="secondary">테마 외 장소 포함</Badge>}
-        </div>
+        {course.fallbackBadge && (
+          <Badge variant="secondary" className="self-start">
+            테마 외 장소 포함
+          </Badge>
+        )}
         {desc && (
           <p className="text-muted-foreground line-clamp-2 text-base leading-relaxed">{desc}</p>
         )}
@@ -161,34 +192,34 @@ export function CourseCard({
                 className={cn(
                   "relative flex items-center gap-2.5 py-1 text-base font-semibold",
                   i > 0 &&
-                    "before:border-primary/30 before:absolute before:bottom-1/2 before:left-3 before:h-full before:-translate-x-1/2 before:border-l-2 before:border-dotted",
+                    "before:border-course/30 before:absolute before:bottom-1/2 before:left-3 before:h-full before:-translate-x-1/2 before:border-l-2 before:border-dotted",
                 )}
               >
                 <span
                   className={cn(
                     "relative grid size-6 shrink-0 place-items-center rounded-full text-sm font-bold tabular-nums transition-colors motion-reduce:transition-none",
                     i === active
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-accent text-accent-foreground",
+                      ? "bg-course text-course-foreground"
+                      : "bg-course-soft text-course-soft-foreground",
                   )}
                 >
                   {i + 1}
                 </span>
-                <span className={cn("min-w-0 truncate", i === active && "text-primary")}>
+                <span className={cn("min-w-0 truncate", i === active && "text-course")}>
                   {s.place.name}
                 </span>
-                {s.role === "lunch" && <Badge variant="secondary">점심</Badge>}
+                <RoleTag role={s.role} />
               </li>
             ))}
           </ol>
         </div>
         <ul className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1.5 border-t pt-3 text-sm">
           <li className="inline-flex items-center gap-1.5 tabular-nums">
-            <ClockIcon size="sm" className="text-primary" />
+            <ClockIcon size="sm" className="text-course" />
             {hhmm(course.startMin)} ~ {hhmm(course.endMin)}
           </li>
           <li className="inline-flex items-center gap-1.5">
-            <WalkIcon size="sm" className="text-primary" />총 걷는 시간 약 {course.totalWalkMin}분
+            <WalkIcon size="sm" className="text-course" />총 걷는 시간 약 {course.totalWalkMin}분
           </li>
           {course.er && (
             <li className="inline-flex items-center gap-1.5">

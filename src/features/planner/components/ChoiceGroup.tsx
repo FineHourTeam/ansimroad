@@ -64,6 +64,8 @@ export function ChoiceGroup<T extends string | number>({
         <ToggleGroupItem
           key={String(o.value)}
           value={String(o.value)}
+          // 두 줄 카드(이동 조건)는 화면 읽기 프로그램이 '문제없음, 평지·계단 모두 괜찮음' 처럼 쉼표로 끊어 읽게
+          aria-label={o.sub ? `${o.label}, ${o.sub}` : undefined}
           className={
             cards
               ? "h-auto min-h-16 w-full justify-start gap-3 rounded-xl px-4 py-3 text-left whitespace-normal"

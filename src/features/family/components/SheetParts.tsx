@@ -43,8 +43,9 @@ export function SheetHeader({
   return (
     <header
       className={cn(
-        "bg-primary text-primary-foreground dark:bg-accent dark:text-accent-foreground rounded-2xl px-5 py-5 print:px-7 print:py-4",
-        map && "grid gap-4 sm:grid-cols-2 sm:items-center print:grid-cols-2",
+        "bg-course text-course-foreground rounded-2xl px-5 py-5 print:px-7 print:py-3",
+        // 종이에서는 지도 칸을 조금 좁혀(높이도 함께 준다) 일정 · 링크 QR 까지 A4 한 장에 들어가게
+        map && "grid gap-4 sm:grid-cols-2 sm:items-center print:grid-cols-[5fr_3fr]",
       )}
     >
       {info}
@@ -55,9 +56,11 @@ export function SheetHeader({
 
 function Item({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
-    <span className="inline-flex items-center gap-1">
+    // 글자는 한 칸(span)으로 묶어야 좁은 폭에서 번호 사이(' / ')에서 줄이 바뀐다.
+    // 묶지 않으면 글자 조각이 각각 flex 칸이 되어 줄바꿈 없이 옆으로 넘치고, 휴대폰 화면 전체가 넓어진다
+    <span className="inline-flex max-w-full items-center gap-1">
       <span className="text-muted-foreground flex">{icon}</span>
-      {children}
+      <span className="min-w-0">{children}</span>
     </span>
   );
 }
@@ -95,6 +98,17 @@ export function PlaceLine({
   );
 }
 
+/** 장소 주소 한 줄 (인쇄 · 일정표 이미지). 비어 있으면 줄을 뺀다 */
+export function AddressLine({ address, className }: { address: string; className?: string }) {
+  if (!address.trim()) return null;
+  return (
+    <p className={cn("leading-snug", className)}>
+      <span className="text-muted-foreground mr-1 font-semibold">주소</span>
+      {address}
+    </p>
+  );
+}
+
 /** 걷는 시간 · 계단 · 화장실 … 을 작은 꼬리표로 */
 export function FactTags({ place, className }: { place: Place; className?: string }) {
   const facts = placeFacts(place);
@@ -127,12 +141,12 @@ export function MemoNote({ memo, className }: { memo: string; className?: string
   );
 }
 
-/** 안전 정보: 경보처럼 보이지 않게 흰 상자 + 벽돌색 아이콘 하나 */
+/** 응급 · 편의 정보: 경보처럼 보이지 않게 흰 상자 + 벽돌색 아이콘 하나 */
 export function SafetyBox({ course, className }: { course: Course; className?: string }) {
   if (course.er === null && !course.pharmacy) return null;
   return (
     <section
-      aria-label="안전 정보"
+      aria-label="응급·편의 정보"
       className={cn(
         "bg-card text-card-foreground flex break-inside-avoid items-start gap-3 rounded-2xl border p-4 print:p-3",
         className,
@@ -142,7 +156,7 @@ export function SafetyBox({ course, className }: { course: Course; className?: s
         <HospitalIcon size="sm" />
       </span>
       <div className="flex min-w-0 flex-col gap-0.5">
-        <h2 className="text-base font-extrabold">안전 정보</h2>
+        <h2 className="text-base font-extrabold">응급·편의 정보</h2>
         {course.er && (
           <>
             <p>

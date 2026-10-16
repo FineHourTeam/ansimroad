@@ -234,7 +234,7 @@ test("'안심로드로 코스 만들기'를 누르면 처음 화면으로 간다
 
   await page.getByRole("link", { name: "안심로드로 코스 만들기" }).click();
   await expect(page).toHaveURL(/\/\?utm_source=report&utm_medium=share$/);
-  await expect(page.getByRole("form", { name: "여행 조건 입력" })).toBeVisible(); // 처음 화면의 조건 입력
+  await expect(page.getByRole("form", { name: "여행하실 분의 조건을 골라 주세요" })).toBeVisible(); // 처음 화면의 조건 입력
   await expect(page.getByText("안심로드 여행 리포트")).toHaveCount(0);
 });
 

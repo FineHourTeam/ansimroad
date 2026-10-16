@@ -9,6 +9,27 @@ import { absoluteUrl } from "../lib/links";
 import { SeniorShareButtons } from "./SeniorShareButtons";
 import { UrlPill } from "./SheetParts";
 
+/** 여행을 마친 뒤: 올린 사진과 남긴 멘트로 만든 추억 페이지 (인쇄 · PDF · 이미지) */
+export function MemoriesCard({ token }: { token: string }) {
+  return (
+    <Link
+      to={paths.memories(token)}
+      className="bg-card text-card-foreground flex min-h-16 items-center gap-3 rounded-2xl border px-4 py-4 shadow-sm"
+    >
+      <span className="bg-accent text-primary grid size-11 shrink-0 place-items-center rounded-full">
+        <PrintIcon />
+      </span>
+      <span className="flex flex-1 flex-col gap-0.5">
+        <strong className="text-lg leading-snug">추억 페이지 보기·인쇄</strong>
+        <span className="text-muted-foreground text-sm font-semibold">
+          사진과 멘트를 모아 인쇄하거나 이미지로 저장해요
+        </span>
+      </span>
+      <ChevronRightIcon />
+    </Link>
+  );
+}
+
 export function ReportCard({ reportToken }: { reportToken: string }) {
   return (
     <Link

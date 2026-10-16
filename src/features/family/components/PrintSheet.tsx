@@ -7,10 +7,19 @@ import { StarIcon } from "@/components/icons";
 import { MapView } from "@/shared/components/MapView";
 import type { PlaceReview, Stop, TripAccess, TripSnapshot } from "@/shared/domain/types";
 import { hhmm } from "@/shared/lib/date";
+import { courseTone } from "@/shared/lib/courseTheme";
 import { courseMapPoints } from "@/shared/lib/mapPoints";
 import { ROLE_LABEL } from "@/shared/lib/placeFacts";
 import { absoluteUrl } from "../lib/links";
-import { FactTags, MemoNote, PlaceLine, QrCard, SafetyBox, SheetHeader } from "./SheetParts";
+import {
+  AddressLine,
+  FactTags,
+  MemoNote,
+  PlaceLine,
+  QrCard,
+  SafetyBox,
+  SheetHeader,
+} from "./SheetParts";
 
 function Review({ review }: { review: PlaceReview }) {
   return (
@@ -40,7 +49,7 @@ function StopItem({
   return (
     <li className="group flex break-inside-avoid gap-3 pb-5 last:pb-0 print:pb-3">
       <div className="flex w-14 shrink-0 flex-col items-end">
-        <strong className="text-primary text-lg leading-7 font-extrabold tabular-nums">
+        <strong className="text-course text-lg leading-7 font-extrabold tabular-nums">
           {hhmm(stop.arriveMin)}
         </strong>
         <span className="text-muted-foreground text-sm font-semibold whitespace-nowrap">
@@ -49,7 +58,7 @@ function StopItem({
       </div>
       {/* 번호 배지 + 다음 장소로 이어지는 선 */}
       <div className="relative flex w-7 shrink-0 justify-center">
-        <span className="bg-primary text-primary-foreground z-10 grid size-7 place-items-center rounded-full text-sm font-bold">
+        <span className="bg-course text-course-foreground z-10 grid size-7 place-items-center rounded-full text-sm font-bold">
           {num}
         </span>
         <span
@@ -58,7 +67,11 @@ function StopItem({
         />
       </div>
       <div className="flex min-w-0 flex-1 flex-col gap-1.5 text-sm print:gap-1">
-        <p className="text-lg leading-7 font-extrabold tracking-tight">{stop.place.name}</p>
+        {/* 주소: 화면에서는 이름 아래, 종이에서는 이름 옆 같은 줄 (A4 한 장에 들어가게) */}
+        <div className="flex flex-col gap-0.5 print:flex-row print:items-baseline print:gap-2">
+          <p className="text-lg leading-7 font-extrabold tracking-tight">{stop.place.name}</p>
+          <AddressLine address={stop.place.address} />
+        </div>
         <div className="flex items-start gap-3">
           {stop.place.photoUrl && (
             <img
@@ -102,7 +115,10 @@ export function PrintSheet({
   // 지도는 points 가 바뀌면 다시 그리므로 고정한다
   const points = useMemo(() => courseMapPoints(course, { emergencyRooms: [] }), [course]);
   return (
-    <article className="bg-card text-card-foreground mx-auto flex w-full max-w-3xl flex-col gap-5 rounded-2xl border p-4 leading-relaxed shadow-sm [-webkit-print-color-adjust:exact] [print-color-adjust:exact] sm:p-8 print:min-h-[270mm] print:max-w-none print:gap-3 print:rounded-none print:border-0 print:p-0 print:shadow-none">
+    <article
+      data-course={courseTone(course.theme)}
+      className="bg-card text-card-foreground mx-auto flex w-full max-w-3xl flex-col gap-5 rounded-2xl border p-4 leading-relaxed shadow-sm [-webkit-print-color-adjust:exact] [print-color-adjust:exact] sm:p-8 print:min-h-[270mm] print:max-w-none print:gap-2.5 print:rounded-none print:border-0 print:p-0 print:shadow-none"
+    >
       <SheetHeader
         date={input.date}
         course={course}

@@ -187,7 +187,7 @@ test("여행 전: 보내기 카드와 링크 모아 보기에 부모님 링크�
   );
   await expect(page.getByRole("link", { name: "다른 코스 다시 고르기" })).toHaveAttribute(
     "href",
-    `/result?p=2&a=70&m=none&w=20&d=${TRIP_DATE}&t=car`,
+    `/result?p=2&a=70&m=none&w=20&d=${TRIP_DATE}&s=600&t=car`,
   );
   await page.getByRole("link", { name: "인쇄 · 이미지로 보기" }).click();
   await expect(page).toHaveURL(new RegExp(`/f/${trip.familyToken}/print$`));
@@ -215,9 +215,9 @@ test("인쇄용: 코스 · 시각 · 메모 · 두 링크와 QR을 싣고 인쇄
   expect(
     (await sheet.getByText(phone, { exact: true }).first().boundingBox())?.height,
   ).toBeLessThan(30);
-  await expect(sheet.getByText(`/t/${trip.seniorToken}`)).toBeVisible();
-  await expect(sheet.getByText(`/f/${trip.familyToken}`)).toBeVisible();
-  // 두 링크마다 휴대폰으로 찍어 여는 QR
+  // 장소마다 주소 한 줄 (모담 요청 2026-10-16)
+  await expect(sheet.getByText(first.place.address).first()).toBeVisible();
+  // 두 링크는 주소 글자 없이 휴대폰으로 찍어 여는 QR 로만 싣는다
   const links = page.getByRole("region", { name: "링크 주소" });
   await expect(links.getByRole("img", { name: /링크 QR 코드$/ })).toHaveCount(2);
   await expect(links.getByRole("img", { name: "부모님용 링크 QR 코드" })).toBeVisible();
@@ -243,9 +243,10 @@ test("인쇄용: 이미지로 저장하면 가로 1080px PNG 를 받고, 공유�
     Object.defineProperty(navigator, "canShare", { configurable: true, value: () => true });
     Object.defineProperty(navigator, "share", {
       configurable: true,
-      value: (data: { files?: File[]; title?: string }) => {
+      value: (data: { files?: File[]; title?: string; text?: string }) => {
         w.__shared.push({
           title: data.title,
+          text: data.text,
           files: (data.files ?? []).map((f) => ({ name: f.name, type: f.type, size: f.size })),
         });
         return Promise.resolve();
@@ -260,12 +261,13 @@ test("인쇄용: 이미지로 저장하면 가로 1080px PNG 를 받고, 공유�
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "이미지로 저장하기" }).click();
   const file = await download;
+  // 안내는 4초 뒤 사라진다: 파일을 읽기 전에 먼저 확인한다 (병렬 실행 때 읽기가 느려 놓치지 않게)
+  await expect(page.getByText("일정표 이미지를 저장했어요")).toBeVisible();
   expect(file.suggestedFilename()).toBe(name);
   const png = await readFile(await file.path());
   // PNG 서명 + IHDR 가로(16~19바이트) = 1080
   expect([...png.subarray(0, 8)]).toEqual([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
   expect(png.readUInt32BE(16)).toBe(1080);
-  await expect(page.getByText("일정표 이미지를 저장했어요")).toBeVisible();
 
   await page.getByRole("button", { name: "이미지로 공유하기" }).click();
   await expect
@@ -273,9 +275,17 @@ test("인쇄용: 이미지로 저장하면 가로 1080px PNG 를 받고, 공유�
     .toEqual([
       {
         title: expect.stringContaining(trip.course.title) as unknown,
+        // 모담 양식: 제목 줄 · 시간 줄 · 장소마다 '시각 이름 · 주소' · 맨 끝 부모님 링크
+        text: expect.stringMatching(
+          new RegExp(
+            `^\\[안심로드\\] .+ ${trip.course.title} 일정표예요\\n[\\s\\S]*📷 여행 날 사진 남기기: \\S+/t/${trip.seniorToken}$`,
+          ),
+        ) as unknown,
         files: [{ name, type: "image/png", size: expect.any(Number) as unknown }],
       },
     ]);
+  // 글이 빠지는 앱이 있어 공유 뒤 '글 복사' 단추를 띄운다
+  await expect(page.getByRole("button", { name: "글 복사" })).toBeVisible();
 });
 
 test("여행 완료: 별점 · 후기 저장 → 리포트로 이동", async ({ page }) => {

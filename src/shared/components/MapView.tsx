@@ -101,9 +101,8 @@ function NaverMap({
         const first = points[0];
         if (disposed || !el || !first) return;
         const toLatLng = (p: MapPoint) => new maps.LatLng(p.lat, p.lng);
-        const primary = getComputedStyle(document.documentElement)
-          .getPropertyValue("--primary")
-          .trim();
+        // 경로 선은 코스 테마 색 (지도를 감싼 data-course 영역의 --course, 없으면 브랜드 청록)
+        const lineColor = getComputedStyle(el).getPropertyValue("--course").trim();
         const m = new maps.Map(el, {
           center: toLatLng(first),
           zoom: 13,
@@ -124,7 +123,7 @@ function NaverMap({
         new maps.Polyline({
           map: m,
           path: points.filter((p) => p.kind === "stop").map(toLatLng),
-          strokeColor: primary,
+          strokeColor: lineColor,
           strokeWeight: 4,
           strokeOpacity: 0.8,
         });

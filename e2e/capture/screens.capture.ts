@@ -177,13 +177,19 @@ test.describe("소개 자료", () => {
     await done.click();
     await page.getByText("여행 리포트 만들기").waitFor();
     // 첫 장소에 별 다섯 개
-    await page.getByRole("radio").nth(4).click().catch(() => undefined);
+    await page
+      .getByRole("radio")
+      .nth(4)
+      .click()
+      .catch(() => undefined);
     await shot(page, "12-rate");
 
     await page.addInitScript((t) => {
       localStorage.setItem(`sr.consent.${t}`, "agree");
     }, trip.seniorToken);
-    await page.goto(`/t/${trip.seniorToken}?now=${encodeURIComponent(demoNow(TRIP_DATE, "11:40"))}`);
+    await page.goto(
+      `/t/${trip.seniorToken}?now=${encodeURIComponent(demoNow(TRIP_DATE, "11:40"))}`,
+    );
     await shot(page, "13-senior");
     await page.getByRole("heading", { name: "오늘 다닐 곳" }).scrollIntoViewIfNeeded();
     await shot(page, "14-senior-map");

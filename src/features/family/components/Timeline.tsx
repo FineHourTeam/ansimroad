@@ -1,6 +1,6 @@
 // ③ 예정과 실제(사진)를 나란히: 휴대폰도 2열 그대로. 여행 당일에는 지금 시각을 빨간 선으로 보여 준다.
 import { Fragment } from "react";
-import type { Course, PhotoRecord } from "@/shared/domain/types";
+import type { Course, PhotoRecord, Transport } from "@/shared/domain/types";
 import type { NowPos } from "@/shared/engine/timeline";
 import type { UploadState } from "../hooks/usePhotoUpload";
 import { NowLine } from "./StatusBanner";
@@ -8,6 +8,7 @@ import { DOT_COL, ROW_GRID, StopRow } from "./StopRow";
 
 export function Timeline({
   course,
+  transport,
   memos,
   slots,
   nowPos,
@@ -19,6 +20,7 @@ export function Timeline({
   onStay,
 }: {
   course: Course;
+  transport: Transport;
   memos: Record<string, string>;
   slots: PhotoRecord[][];
   /** 여행 당일에만 */
@@ -50,6 +52,7 @@ export function Timeline({
               course={course}
               stop={stop}
               index={i}
+              transport={transport}
               memo={memos[stop.place.id]}
               photos={slots[i] ?? []}
               past={isPastMin(stop.arriveMin)}

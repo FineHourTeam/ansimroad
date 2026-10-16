@@ -62,7 +62,7 @@
 - [x] **F4** 에뮬레이터(auth 9099 · firestore 8080 · storage 9199 · functions 5001) — dev(.env)·E2E(.env.e2e, `npm run e2e`)가 연결해 씀. 보안 규칙 대조는 `e2e/rules.spec.ts`
 - [ ] **F5** 테스트 계정 규약(`docs/TEST_ACCOUNTS.md`) — dev·에뮬레이터 전용, `npm run seed:test`, 로그인 UI 배선: `[아니오 — 운영진 로그인 만들 때]`
 - [ ] **F6** 승인 도메인에 preview 채널 도메인 추가 — 등록됨: localhost · modam-5eb63.web.app/firebaseapp.com · ansimroad.web.app/firebaseapp.com (preview 채널 도메인은 PR 첫 배포 뒤 추가)
-- [ ] **F7** CORS — Storage 파일을 fetch·canvas로 쓸 때만 `cors.json` 적용 (`docs/CORS.md`)
+- [x] **F7** CORS — Storage 파일을 fetch·canvas로 쓸 때만 `cors.json` 적용 (`docs/CORS.md`) — 2026-10-16 적용 (여행 추억 페이지 이미지 저장에 사진을 담으려고). 도메인이 생기면 origin 에 추가 후 다시 적용
 - [-] **F8** 프로덕션 QA 계정(앱스토어 심사 등) — 웹 서비스라 해당없음
 - [ ] **F9** App Check — 배포가 안정된 뒤 모니터링 모드부터
 - [x] **F10** Authentication → 로그인 방법 → **익명** 사용 설정 (2026-10-03 CLI로 켬) — 링크(/t · /f · /r) 화면이 익명 로그인 후 토큰으로 합류한다 (안 켜면 프로덕션에서 링크 화면이 안 열림)

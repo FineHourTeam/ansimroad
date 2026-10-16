@@ -39,7 +39,7 @@ function Field({
     <section id={`field-${k}`} aria-labelledby={`t-${k}`} className="scroll-mt-4">
       <Card className={cn("gap-4", missing && "border-destructive/50")}>
         <CardContent className="flex min-h-7 flex-wrap items-center gap-x-2 gap-y-1">
-          <h2
+          <h3
             id={`t-${k}`}
             className={cn("text-lg font-bold tracking-tight", missing && "text-destructive")}
           >
@@ -50,7 +50,7 @@ function Field({
             ) : (
               title
             )}
-          </h2>
+          </h3>
           {missing && <Badge variant="destructive">선택해 주세요</Badge>}
           {aside}
         </CardContent>

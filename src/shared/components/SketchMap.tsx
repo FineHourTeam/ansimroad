@@ -125,7 +125,7 @@ export function SketchMap({ points, onSelect, selectedId, onMapClick }: MapProps
         <span
           key={`seg-${String(i)}`}
           aria-hidden="true"
-          className="bg-primary/75 pointer-events-none absolute h-1 origin-left rounded-full"
+          className="bg-course/75 pointer-events-none absolute h-1 origin-left rounded-full"
           style={{
             left: pct(a.x, W),
             top: pct(a.y, H),
@@ -166,7 +166,7 @@ export function SketchMap({ points, onSelect, selectedId, onMapClick }: MapProps
                 aria-hidden="true"
                 className={cn(
                   "bg-background/80 pointer-events-none absolute -translate-x-1/2 -translate-y-1/2 rounded-sm px-1 text-xs font-bold whitespace-nowrap",
-                  p.kind === "er" ? "text-emergency" : "text-primary",
+                  p.kind === "er" ? "text-emergency" : "text-course",
                 )}
                 style={{ left: pct(label.x, W), top: pct(label.y, H) }}
               >

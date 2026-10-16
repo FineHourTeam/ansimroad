@@ -19,6 +19,9 @@ const FamilyCoursePage = lazy(() =>
 );
 const SharePage = lazy(() => import("@/features/family").then((m) => ({ default: m.SharePage })));
 const PrintPage = lazy(() => import("@/features/family").then((m) => ({ default: m.PrintPage })));
+const MemoriesPage = lazy(() =>
+  import("@/features/family").then((m) => ({ default: m.MemoriesPage })),
+);
 const SeniorPage = lazy(() => import("@/features/senior").then((m) => ({ default: m.SeniorPage })));
 const ReportPage = lazy(() => import("@/features/report").then((m) => ({ default: m.ReportPage })));
 const AdminLoginPage = lazy(() =>
@@ -70,6 +73,7 @@ export const router = createBrowserRouter([
       { path: paths.familyCoursePattern, element: <FamilyCoursePage /> },
       { path: paths.sharePattern, element: <SharePage /> },
       { path: paths.printPattern, element: <PrintPage /> },
+      { path: paths.memoriesPattern, element: <MemoriesPage /> },
       { path: paths.seniorPattern, element: <SeniorPage /> },
       { path: paths.reportPattern, element: <ReportPage /> },
       { path: paths.privacy, element: <LegalPage doc="privacy" /> },

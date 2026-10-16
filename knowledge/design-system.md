@@ -31,6 +31,8 @@ UI를 만들기 전에 이 파일을 먼저 읽고 **토큰을 재사용**한다
 | radius/base | __ | `--radius` | `rounded-md` 등 |
 | space 스케일 | 4px 단위 | (Tailwind 기본 스케일) | `p-4` = 16px |
 | icon 스타일 | 선 두께·끝 모양·채움 | `src/components/icons/icon-style.ts` | `@/components/icons` (기본 아이콘 팩 금지) |
+| 코스 테마 (2026-10-16 모담 요청) | 바다 #1F5F99 · 역사·문화 #8B5A2B · 자연·경치 #2F7A3E (+ soft · 다크 쌍) | `--sea` · `--history` · `--nature` → `data-course` 영역의 `--course` | `bg-course` / `text-course` / `bg-course-soft` |
+| 추억 페이지 종이 · 손글씨 | 크림 #FBF7EF · Nanum Pen Script | `--paper` · `--font-hand` | `bg-paper` / `font-hand` |
 
 ## 강제 규칙 (에이전트 준수)
 

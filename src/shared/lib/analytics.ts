@@ -8,6 +8,7 @@ export type AnalyticsEvent =
   | "course_confirm"
   | "share_kakao"
   | "photo_upload"
+  | "photo_upload_fail" // 실패 원인(reason)만 싣는다 — 기기에서만 나는 업로드 실패를 찾으려고 (2026-10-16)
   | "trip_complete"
   | "report_share";
 
@@ -65,11 +66,19 @@ export function trackPageView(): void {
   window.gtag("event", "page_view", { page_location, page_title: document.title });
 }
 
-export function track(event: AnalyticsEvent): void {
+export function track(event: AnalyticsEvent, params?: Record<string, string>): void {
   if (!ID || !window.gtag) {
-    devLog(event);
+    devLog(event, ...(params ? [JSON.stringify(params)] : []));
     return;
   }
   window.gtag("set", { page_location: sanitizedLocation() });
-  window.gtag("event", event);
+  window.gtag("event", event, params);
+}
+
+/** 실패 원인 (통계용): Firebase 오류 코드 · 시간 초과 · 그 밖은 오류 이름. 사진 · 위치 값은 싣지 않는다 */
+export function failReason(e: unknown): string {
+  if (typeof e === "object" && e !== null && "code" in e && typeof e.code === "string")
+    return e.code;
+  if (e instanceof Error) return e.message === "timeout" ? "timeout" : e.name;
+  return "unknown";
 }

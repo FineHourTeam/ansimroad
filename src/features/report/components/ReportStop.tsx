@@ -28,7 +28,7 @@ export function ReportStop({
       <Card>
         <CardContent className="flex flex-col gap-4">
           <div className="flex items-center gap-3">
-            <span className="bg-primary text-primary-foreground grid size-9 shrink-0 place-items-center rounded-full text-base font-bold tabular-nums">
+            <span className="bg-course text-course-foreground grid size-9 shrink-0 place-items-center rounded-full text-base font-bold tabular-nums">
               {index + 1}
             </span>
             <div className="min-w-0">

@@ -10,6 +10,7 @@ import { MapView } from "@/shared/components/MapView";
 import type { Course, Settings, TripAccess, TripSnapshot } from "@/shared/domain/types";
 import { nowLinePosition, photosBySlot } from "@/shared/engine/timeline";
 import { changeStay } from "@/shared/lib/courseEdit";
+import { courseTone } from "@/shared/lib/courseTheme";
 import { hhmm, koreanMonthDay, minutesOfDay, toLocalYmd } from "@/shared/lib/date";
 import { courseMapPoints } from "@/shared/lib/mapPoints";
 import { useNow } from "../hooks/useNow";
@@ -18,7 +19,7 @@ import { bannerText, isPast } from "../lib/familyView";
 import { CompleteTrip } from "./CompleteTrip";
 import { CourseHeader, StartAdjust } from "./CourseControls";
 import { PhotoPicker } from "./PhotoPicker";
-import { FamilyLinks, ReportCard, SendCard } from "./SendCard";
+import { FamilyLinks, MemoriesCard, ReportCard, SendCard } from "./SendCard";
 import { StatusBanner, type TripPhase } from "./StatusBanner";
 import { Timeline } from "./Timeline";
 
@@ -71,8 +72,10 @@ export function FamilyDashboard({
   const showComplete = !trip.completedAt && (today >= date || photos.length > 0);
 
   return (
-    <div className="flex flex-col gap-4">
+    // data-course: 번호 원 · 지도 마커 · 경로 선이 코스 테마 색
+    <div className="flex flex-col gap-4" data-course={courseTone(course.theme)}>
       {trip.reportToken && <ReportCard reportToken={trip.reportToken} />}
+      {trip.completedAt && <MemoriesCard token={token} />}
       <CourseHeader date={date} course={course} onChange={apply} />
 
       {photosQ.isPending ? (
@@ -125,6 +128,7 @@ export function FamilyDashboard({
       )}
       <Timeline
         course={course}
+        transport={trip.input.transport}
         memos={trip.memos}
         slots={slots}
         nowPos={today === date ? nowLinePosition(course, nowMin) : null}
