@@ -35,3 +35,4 @@ export {
   MinusIcon,
   CalendarIcon,
 } from "./travel-icons";
+export { SeaThemeIcon, HistoryThemeIcon, NatureThemeIcon } from "./theme-icons";

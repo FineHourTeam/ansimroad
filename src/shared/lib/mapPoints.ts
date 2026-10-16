@@ -1,6 +1,7 @@
 // 코스 → 지도 마커 목록. 응급실 좌표는 설정값 응급실 목록에서 이름으로 찾는다 (시트에 좌표 컬럼 없음).
 import type { MapPoint } from "@/shared/components/MapView";
 import type { Course, Settings } from "@/shared/domain/types";
+import { erDisplayName } from "@/shared/lib/format";
 
 export function courseMapPoints(
   course: Course,
@@ -20,7 +21,7 @@ export function courseMapPoints(
     const lat = er.lat ?? room?.lat;
     const lng = er.lng ?? room?.lng;
     if (lat !== undefined && lng !== undefined)
-      pts.push({ lat, lng, name: `응급실 · ${er.name}`, label: "✚", kind: "er" });
+      pts.push({ lat, lng, name: `응급실 · ${erDisplayName(er.name)}`, label: "✚", kind: "er" });
   }
   return pts;
 }

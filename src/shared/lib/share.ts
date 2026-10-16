@@ -5,10 +5,11 @@ export function canWebShare(): boolean {
   return typeof navigator !== "undefined" && typeof navigator.share === "function";
 }
 
+/** url 을 빼면 글 안의 주소만 간다 (카카오톡이 글 속 첫 주소로 미리보기 카드를 만든다) */
 export async function shareLink(data: {
   title: string;
   text: string;
-  url: string;
+  url?: string;
 }): Promise<"shared" | "cancelled" | "failed"> {
   try {
     await navigator.share(data);

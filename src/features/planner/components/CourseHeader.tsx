@@ -8,7 +8,9 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { isTourApiPhoto } from "@/shared/data/placeSchema";
 import type { Course } from "@/shared/domain/types";
+import { CourseThemeIcon } from "@/shared/components/CourseThemeIcon";
 import { renameCourse } from "@/shared/lib/courseEdit";
+import { themeTitle } from "@/shared/lib/courseTheme";
 import { hhmm, shortDate } from "@/shared/lib/date";
 
 /** 사진을 못 불러오면 통째로 숨긴다 (아래 장소 블록에 같은 사진 자리가 또 있다) */
@@ -51,6 +53,7 @@ export function CourseHeader({
   className?: string;
 }) {
   const cover = course.stops[0]?.place.photoUrl ?? null;
+  const theme = themeTitle(course.theme);
   return (
     <section className={cn("flex flex-col gap-4", className)}>
       {cover && <Cover key={cover} url={cover} />}
@@ -78,9 +81,21 @@ export function CourseHeader({
               />
             </div>
           ) : (
-            <h2 className="text-2xl leading-tight font-extrabold tracking-tight text-balance">
+            <h2 className="flex items-center gap-2 text-2xl leading-tight font-extrabold tracking-tight text-balance">
+              {theme && (
+                <span className="bg-course text-course-foreground grid size-9 shrink-0 place-items-center rounded-full">
+                  <CourseThemeIcon theme={course.theme} />
+                </span>
+              )}
               {course.title}
             </h2>
+          )}
+          {/* 이름을 바꾼 코스도 테마를 글자로 (색만으로 구분하지 않게) */}
+          {theme && theme !== course.title && (
+            <Badge className="bg-course-soft text-course-soft-foreground border-transparent">
+              <CourseThemeIcon theme={course.theme} />
+              {theme}
+            </Badge>
           )}
           {readOnly && (
             <Badge variant="outline" className="border-success text-success">
@@ -91,15 +106,15 @@ export function CourseHeader({
         </div>
         <ul className="text-muted-foreground flex flex-wrap gap-x-4 gap-y-1.5 text-sm font-medium">
           <li className="inline-flex items-center gap-1.5">
-            <CalendarIcon size="sm" className="text-primary" />
+            <CalendarIcon size="sm" className="text-course" />
             {shortDate(date)}
           </li>
           <li className="inline-flex items-center gap-1.5 tabular-nums">
-            <ClockIcon size="sm" className="text-primary" />
+            <ClockIcon size="sm" className="text-course" />
             {hhmm(course.startMin)} ~ {hhmm(course.endMin)}
           </li>
           <li className="inline-flex items-center gap-1.5">
-            <WalkIcon size="sm" className="text-primary" />총 걷는 시간 약 {course.totalWalkMin}분
+            <WalkIcon size="sm" className="text-course" />총 걷는 시간 약 {course.totalWalkMin}분
           </li>
         </ul>
         {edit && (

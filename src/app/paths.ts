@@ -18,6 +18,8 @@ export const paths = {
   sharePattern: "/f/:token/share",
   print: (token: string) => `/f/${token}/print`, // S3 인쇄용
   printPattern: "/f/:token/print",
+  memories: (token: string) => `/f/${token}/memories`, // 여행 추억 페이지 (사진 · 멘트 인쇄 · 저장)
+  memoriesPattern: "/f/:token/memories",
 
   senior: (token: string) => `/t/${token}`, // S4 어르신
   seniorPattern: "/t/:token",

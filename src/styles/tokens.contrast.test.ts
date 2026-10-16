@@ -71,6 +71,13 @@ const PAIRS: [string, string][] = [
   ["emergency-soft", "emergency-soft-foreground"],
   ["emergency-soft", "emergency"],
   ["background", "emergency"],
+  // 코스 테마: 띠 위 글자 · 꼬리표 · 흰 카드 위 테마색 글자(시각 · 번호)
+  ...(["sea", "history", "nature"] as const).flatMap((k): [string, string][] => [
+    [k, `${k}-foreground`],
+    [`${k}-soft`, `${k}-soft-foreground`],
+    ["background", k],
+  ]),
+  ["paper", "paper-foreground"],
 ];
 
 describe.each([

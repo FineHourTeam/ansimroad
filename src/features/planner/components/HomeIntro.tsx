@@ -8,7 +8,7 @@ import { usePlaceData } from "@/features/places";
 import { cn } from "@/lib/utils";
 import { countVerified, isTourApiPhoto } from "@/shared/data/placeSchema";
 
-const STEPS = ["조건 입력", "코스 3개", "부모님께 링크"];
+const STEPS = ["조건 입력", "코스 추천", "부모님께 링크"]; // 대표 코스가 붙으면 3개가 아닐 수 있다
 const MAX_SLIDES = 6;
 const SLIDE_MS = 1500;
 
@@ -77,10 +77,16 @@ export function HomeIntro({
         <h1>
           <BrandLogo height={34} tone="white" />
         </h1>
-        <p className="text-2xl leading-snug font-extrabold tracking-tight text-balance sm:text-3xl">
-          엄마 아빠 목포 여행,
-          <br /> 코스는 제가 짤게요
-        </p>
+        {/* 슬로건 (모담 확정 문구 2026-10-16) */}
+        <div className="flex flex-col gap-2">
+          <p className="text-2xl leading-snug font-extrabold tracking-tight text-balance sm:text-3xl">
+            부모님 여행은 편안하게,
+            <br /> 자녀의 마음은 안심하게
+          </p>
+          <p className="text-primary-foreground/85 dark:text-muted-foreground text-base leading-snug font-medium text-balance break-keep">
+            걷는 시간과 계단까지 따진 목포 하루 코스, 여행 날 소식은 사진으로
+          </p>
+        </div>
         <ol aria-label="이용 순서" className="grid grid-cols-3">
           {STEPS.map((t, i) => (
             <li

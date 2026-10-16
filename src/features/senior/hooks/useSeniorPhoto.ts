@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { locate, withTimeout } from "../seniorView";
 import { useAddPhoto, useRecordLocationEvent } from "@/features/trip";
 import type { ConsentChoice, Course } from "@/shared/domain/types";
-import { track } from "@/shared/lib/analytics";
+import { failReason, track } from "@/shared/lib/analytics";
 import { now } from "@/shared/lib/clock";
 import { isoToHhmm } from "@/shared/lib/date";
 import { prepareUploadImage } from "@/shared/lib/image";
@@ -75,7 +75,8 @@ export function useSeniorPhoto(opts: {
       timer.current = window.setTimeout(() => {
         setPhase({ kind: "idle" });
       }, SENT_MS);
-    } catch {
+    } catch (err) {
+      track("photo_upload_fail", { by: "senior", reason: failReason(err) });
       setPhase({ kind: "failed" });
     }
   }

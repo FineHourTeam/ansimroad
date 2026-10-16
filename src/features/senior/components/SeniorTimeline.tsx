@@ -1,7 +1,7 @@
 // ② 일정: 누를 수 없는 목록 (실수 방지). 지난 장소 '완료'(차분한 모래빛), 지금 장소 '지금 여기'(청록),
 // 지금 시각은 달력 앱처럼 가로 빨간 선. 장소마다 번호 · 도착 시각 · 이름 · 사진 · 자녀 메모 (지난 장소는 사진 · 메모를 접는다)
 import { Fragment, useEffect, useRef, useState } from "react";
-import { CheckIcon } from "@/components/icons";
+import { CheckIcon, MapPinIcon } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import { isTourApiPhoto } from "@/shared/data/placeSchema";
 import type { Course } from "@/shared/domain/types";
@@ -19,8 +19,8 @@ const GAP_PX = 12; // 목록 사이 간격 (gap-3)
 
 const DOT_TONE: Record<StopState, string> = {
   done: "bg-success text-success-foreground",
-  now: "bg-primary text-primary-foreground",
-  upcoming: "bg-accent text-accent-foreground",
+  now: "bg-course text-course-foreground",
+  upcoming: "bg-course-soft text-course-soft-foreground",
 };
 
 export function SeniorTimeline({
@@ -129,6 +129,19 @@ export function SeniorTimeline({
                     </span>
                   )}
                 </p>
+                {/* 주소: 길게 눌러 복사해 내비게이션에 붙여 넣을 수 있게 이 줄만 고를 수 있다 (누르는 단추는 아니다) */}
+                {state !== "done" && s.place.address.trim() && (
+                  <p
+                    className="mt-2 flex items-start gap-2 text-2xl leading-snug font-semibold select-text"
+                    style={{ WebkitTouchCallout: "default" }}
+                  >
+                    <MapPinIcon className="text-course mt-1 size-6 shrink-0" />
+                    <span>
+                      <span className="sr-only">주소 </span>
+                      {s.place.address}
+                    </span>
+                  </p>
+                )}
                 {state !== "done" && s.place.photoUrl && (
                   <StopPhoto url={s.place.photoUrl} name={s.place.name} />
                 )}

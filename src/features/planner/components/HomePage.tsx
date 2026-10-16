@@ -14,6 +14,7 @@ import { toLocalYmd } from "@/shared/lib/date";
 import {
   decodeQuery,
   encodeQuery,
+  FIELD_ORDER,
   firstMissing,
   isComplete,
   loadDraft,
@@ -21,7 +22,7 @@ import {
 } from "@/shared/lib/tripInput";
 import { AboutPanel } from "./AboutPanel";
 import { HomeIntro } from "./HomeIntro";
-import { FIELD_TITLES, type FieldKey } from "../lib/fields";
+import { FIELD_SHORT, FIELD_TITLES, type FieldKey } from "../lib/fields";
 import { TripFields } from "./TripFields";
 
 export function HomePage() {
@@ -67,6 +68,8 @@ export function HomePage() {
     setDraft((d) => ({ ...d, [k]: v }));
   };
   const missingNow = missing && draft[missing] === null ? missing : null;
+  // ⑩ 버튼 바로 위 '남은 항목: 여행 날짜' 한 줄 (모담 요청 2026-10-16)
+  const remaining = FIELD_ORDER.filter((k) => draft[k] === null).map((k) => FIELD_SHORT[k]);
 
   const submit = (e: SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -92,8 +95,8 @@ export function HomePage() {
   return (
     <div className="min-h-dvh sm:grid sm:grid-cols-5 sm:items-start lg:grid-cols-12">
       <Seo
-        title="자녀가 계획하고, 부모님은 사진만 찍는 목포 여행"
-        description="조건 6가지만 고르면 모담팀이 직접 확인한 목포 장소로 부모님 여행 코스 3개를 만들어요."
+        title="부모님 여행은 편안하게, 자녀의 마음은 안심하게"
+        description="걷는 시간과 계단까지 따진 목포 하루 코스, 여행 날 소식은 사진으로"
       />
       <HomeIntro contactEmail={contactEmail} className="sm:col-span-2 lg:col-span-5" />
       {/* 오른쪽(휴대폰은 아래) 칸: 질문 카드 + 아래 고정 '코스 만들기' */}
@@ -106,11 +109,14 @@ export function HomePage() {
           <div className="mx-auto max-w-xl lg:max-w-2xl">
             <form
               id="trip-form"
-              aria-label="여행 조건 입력"
+              aria-labelledby="trip-form-title"
               noValidate
               onSubmit={submit}
               className="flex scroll-mt-4 flex-col gap-4"
             >
+              <h2 id="trip-form-title" className="px-1 text-xl font-extrabold tracking-tight">
+                여행하실 분의 조건을 골라 주세요
+              </h2>
               <TripFields draft={draft} set={set} missing={missingNow} today={today} />
               <p className="sr-only" aria-live="polite">
                 {missingNow ? `아직 고르지 않은 항목이 있어요: ${FIELD_TITLES[missingNow]}` : ""}
@@ -127,7 +133,21 @@ export function HomePage() {
           </div>
         </main>
         <StickyActionBar>
-          <div className="mx-auto w-full max-w-xl lg:max-w-2xl">
+          <div className="mx-auto flex w-full max-w-xl flex-col gap-2 lg:max-w-2xl">
+            {remaining.length > 0 && (
+              <p
+                id="remaining"
+                className="text-muted-foreground text-center text-sm font-semibold text-balance"
+              >
+                남은 항목: {/* 줄은 항목 사이에서만 바뀐다 ('이동 / 수단'처럼 끊기지 않게) */}
+                {remaining.map((r, i) => (
+                  <span key={r} className="whitespace-nowrap">
+                    {r}
+                    {i < remaining.length - 1 ? ", " : ""}
+                  </span>
+                ))}
+              </p>
+            )}
             {/* ⑩ disabled 대신 aria-disabled: 눌렀을 때 첫 미입력 항목으로 안내하려고. 띠는 폼 밖이라 form 속성으로 잇는다 */}
             <Button
               type="submit"
@@ -135,6 +155,7 @@ export function HomePage() {
               size="cta"
               className="w-full aria-disabled:opacity-60"
               aria-disabled={!isComplete(draft)}
+              aria-describedby={remaining.length > 0 ? "remaining" : undefined}
               aria-busy={slow}
             >
               {slow ? (
@@ -143,7 +164,7 @@ export function HomePage() {
                   코스를 만들고 있어요
                 </>
               ) : (
-                "코스 3개 만들기"
+                "부모님 맞춤 여행 코스 추천받기"
               )}
             </Button>
           </div>

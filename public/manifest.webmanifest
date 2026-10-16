@@ -1,7 +1,7 @@
 {
   "name": "안심로드",
   "short_name": "안심로드",
-  "description": "자녀가 계획하고, 부모님은 사진만 찍는 목포 여행",
+  "description": "부모님 여행은 편안하게, 자녀의 마음은 안심하게",
   "lang": "ko",
   "start_url": "/",
   "display": "standalone",

@@ -7,7 +7,9 @@ import { Button } from "@/components/ui/button";
 import type { TripSnapshot } from "@/shared/domain/types";
 import { StickyActionBar } from "@/shared/components/common";
 import { koreanMonthDay } from "@/shared/lib/date";
+import { copyText } from "@/shared/lib/share";
 import { canShareFile, imageFileName, renderCardPng, saveBlob } from "../lib/imageExport";
+import { scheduleShareText } from "../lib/shareText";
 
 type Busy = "save" | "share" | null;
 
@@ -15,10 +17,13 @@ const isError = (e: unknown, name: string) => e instanceof DOMException && e.nam
 
 export function PrintActions({
   trip,
+  seniorUrl,
   cardRef,
   printReady,
 }: {
   trip: TripSnapshot;
+  /** 공유 글 맨 끝의 '사진 남기기' 링크 (부모님용만) */
+  seniorUrl: string | null;
   cardRef: RefObject<HTMLDivElement | null>;
   /** 후기를 다 불러온 뒤에 인쇄 (후기도 싣는다) */
   printReady: boolean;
@@ -26,6 +31,22 @@ export function PrintActions({
   const [busy, setBusy] = useState<Busy>(null);
   const name = imageFileName(trip.input.date, trip.course.title);
   const head = `${koreanMonthDay(trip.input.date)} ${trip.course.title}`;
+  const text = scheduleShareText(trip, seniorUrl);
+  // 그림과 글을 함께 보내도 받는 앱에 따라 글이 빠질 수 있다 (iOS 일부 앱은 글이 있으면 그림을 버린다는 보고도 있다).
+  // 공유를 마치면 '글 복사' 단추를 띄워 빠졌을 때 붙여 넣게 한다
+  const offerCopy = () => {
+    toast("글이 빠졌다면 '글 복사'를 눌러 붙여 넣어 주세요", {
+      duration: 10_000,
+      action: {
+        label: "글 복사",
+        onClick: () =>
+          void copyText(text).then((ok) => {
+            if (ok) toast.success("일정 글을 복사했어요");
+            else toast.error("복사하지 못했어요. 다시 눌러 주세요");
+          }),
+      },
+    });
+  };
 
   const run = async (kind: "save" | "share") => {
     const node = cardRef.current;
@@ -44,9 +65,10 @@ export function PrintActions({
       } else if (!canShareFile(file)) {
         saveInstead();
       } else {
-        const data = { files: [file], title: head, text: `${head} 일정표예요` };
+        const data = { files: [file], title: head, text };
         try {
           await navigator.share(data);
+          offerCopy();
         } catch (e) {
           if (isError(e, "AbortError")) return;
           // 이미지를 굽는 사이 '누른 순간'이 지나 공유 창이 막힌 경우: 한 번 더 누르면 바로 열린다
@@ -54,7 +76,7 @@ export function PrintActions({
             toast("이미지가 준비됐어요", {
               action: {
                 label: "공유하기",
-                onClick: () => void navigator.share(data).catch(saveInstead),
+                onClick: () => void navigator.share(data).then(offerCopy, saveInstead),
               },
             });
           } else saveInstead();

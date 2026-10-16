@@ -1,11 +1,13 @@
-// ③ 타임라인 한 줄: 왼쪽 예정(번호 · 시각 · 장소 · 머무는 시간 조정) | 가운데 점 | 오른쪽 실제 사진 칸
-import { AddIcon, CameraIcon } from "@/components/icons";
+// ③ 타임라인 한 줄: 왼쪽 예정(번호 · 시각 · 장소 · 주소 복사 · 길찾기 · 머무는 시간 조정) | 가운데 점 | 오른쪽 실제 사진 칸
+import { AddIcon, CameraIcon, CopyIcon, MapPinIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PlacePhoto } from "@/shared/components/PlacePhoto";
-import type { Course, PhotoRecord, Stop } from "@/shared/domain/types";
+import type { Course, PhotoRecord, Stop, Transport } from "@/shared/domain/types";
 import { hhmm } from "@/shared/lib/date";
+import { naverDirectionsLink } from "@/shared/lib/format";
 import { ROLE_LABEL } from "@/shared/lib/placeFacts";
+import { copyLink } from "../lib/links";
 import { PhotoCard } from "./PhotoCard";
 import { NowLine } from "./StatusBanner";
 
@@ -17,6 +19,8 @@ export interface StopRowProps {
   course: Course;
   stop: Stop;
   index: number;
+  /** 길찾기 수단 (자가용 → 자동차, 택시 · 버스 → 대중교통) */
+  transport: Transport;
   memo: string | undefined;
   photos: PhotoRecord[];
   past: boolean;
@@ -57,6 +61,43 @@ function StayAdjust({ stop, index, onStay }: Pick<StopRowProps, "stop" | "index"
           }}
         >
           +10분
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+/** 주소 글자(길게 눌러 고를 수 있다) + [주소 복사] [길찾기] — 네이버 지도 길찾기는 장소 좌표로 연결한다 */
+function PlaceAddress({ stop, transport }: Pick<StopRowProps, "stop" | "transport">) {
+  const { place } = stop;
+  const address = place.address.trim();
+  return (
+    <div className="flex flex-col gap-1.5">
+      {address && <p className="text-muted-foreground text-sm leading-snug">{address}</p>}
+      <div className={address ? "grid grid-cols-2 gap-1.5" : "grid"}>
+        {address && (
+          <Button
+            variant="outline"
+            size="xl"
+            className="px-1 text-sm"
+            aria-label={`${place.name} 주소 복사`}
+            onClick={() => void copyLink(address, "주소를 복사했어요")}
+          >
+            {/* 휴대폰 반 칸은 좁아서 글자만 (아이콘은 넓은 화면에서) */}
+            <CopyIcon size="sm" className="hidden sm:block" />
+            주소 복사
+          </Button>
+        )}
+        <Button variant="outline" size="xl" className="px-1 text-sm" asChild>
+          <a
+            href={naverDirectionsLink(place, transport)}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${place.name} 네이버 지도 길찾기 (새 창)`}
+          >
+            <MapPinIcon size="sm" className="hidden sm:block" />
+            길찾기
+          </a>
         </Button>
       </div>
     </div>
@@ -126,7 +167,7 @@ export function StopRow(p: StopRowProps) {
       {/* self-start: 사진이 여러 장이어도 예정 카드는 제 내용 높이만 */}
       <div className="bg-card text-card-foreground border-border/80 flex flex-col gap-2 self-start rounded-2xl border p-3 shadow-sm sm:p-4">
         <p className="flex items-center gap-1.5">
-          <span className="bg-primary text-primary-foreground grid size-6 shrink-0 place-items-center rounded-full text-xs font-bold">
+          <span className="bg-course text-course-foreground grid size-6 shrink-0 place-items-center rounded-full text-xs font-bold">
             {p.index + 1}
           </span>
           <strong className="text-lg leading-none font-extrabold tabular-nums">
@@ -140,6 +181,7 @@ export function StopRow(p: StopRowProps) {
           </span>
           <span className="text-base leading-snug font-bold">{stop.place.name}</span>
         </p>
+        <PlaceAddress stop={stop} transport={p.transport} />
         {p.memo && (
           <p className="bg-highlight/25 text-highlight-foreground dark:bg-highlight/15 dark:text-highlight rounded-lg px-2 py-1 text-sm font-medium">
             메모: {p.memo}

@@ -39,6 +39,7 @@ export function resultQuery(input: TripInput = INPUT): string {
     m: input.mobility,
     w: String(input.walk),
     d: input.date,
+    s: String(input.start ?? 600), // 도착 시각 (기본 오전 10시 — 앱이 주소에 늘 싣는다)
     t: input.transport,
   }).toString();
 }

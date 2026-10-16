@@ -2,3 +2,4 @@
 export { FamilyPage } from "./components/FamilyPage";
 export { SharePage } from "./components/SharePage";
 export { PrintPage } from "./components/PrintPage";
+export { MemoriesPage } from "./components/MemoriesPage";

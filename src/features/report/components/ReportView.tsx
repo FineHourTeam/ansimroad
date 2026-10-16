@@ -13,6 +13,7 @@ import type { PhotoRecord, PlaceReview, ReportSnapshot } from "@/shared/domain/t
 import { photosBySlot } from "@/shared/engine/timeline";
 import { track } from "@/shared/lib/analytics";
 import { isValidYmd, koreanMonthDay } from "@/shared/lib/date";
+import { courseTone } from "@/shared/lib/courseTheme";
 import { canWebShare, copyText, shareLink } from "@/shared/lib/share";
 import { averageRating, heroPhoto } from "../report";
 import { ReportHero } from "./ReportHero";
@@ -101,7 +102,7 @@ export function ReportView({
           </div>
         )}
 
-        <ol className="mt-2 flex flex-col gap-4">
+        <ol className="mt-2 flex flex-col gap-4" data-course={courseTone(course.theme)}>
           {course.stops.map((s, i) => (
             <ReportStop
               key={s.place.id}

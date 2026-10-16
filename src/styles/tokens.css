@@ -72,6 +72,29 @@
   --emergency-soft: oklch(0.946 0.024 51.2); /* #FBE9DF 응급실 버튼·줄 바탕 */
   --emergency-soft-foreground: oklch(0.406 0.114 40.6); /* #7A2E0E */
 
+  /* ── 코스 테마 (모담 요청 2026-10-16) ── 코스 카드 띠 · 번호 원 · 지도 번호 마커 · 경로 선 · '점심 · 쉬어 가기' 꼬리표.
+   * 색만으로 구분하지 않게 늘 글자 라벨 · 아이콘과 함께 쓴다. 띠 위 흰 글자 대비 4.5:1 이상 (tokens.contrast.test) */
+  --sea: #1f5f99; /* 바다 */
+  --sea-foreground: #ffffff;
+  --sea-soft: #e3edf7;
+  --sea-soft-foreground: #1a4c7a;
+  --history: #8b5a2b; /* 역사 · 문화 */
+  --history-foreground: #ffffff;
+  --history-soft: #f4eadf;
+  --history-soft-foreground: #6b4320;
+  --nature: #2f7a3e; /* 자연 · 경치 */
+  --nature-foreground: #ffffff;
+  --nature-soft: #e2f0e4;
+  --nature-soft-foreground: #245e30;
+  /* 지금 화면의 코스 색: data-course="sea|history|nature" 영역 안에서 그 테마로 바뀐다 (아래 base 층). 테마가 없으면 브랜드 청록 */
+  --course: var(--primary);
+  --course-foreground: var(--primary-foreground);
+  --course-soft: var(--accent);
+  --course-soft-foreground: var(--accent-foreground);
+  /* 여행 추억 페이지의 크림색 종이 */
+  --paper: #fbf7ef;
+  --paper-foreground: oklch(0.2 0.012 70);
+
   /* ── 경계 ── */
   --border: oklch(0.915 0.01 80); /* #E6E2DC */
   --input: oklch(0.88 0.012 80); /* #DCD7CF 입력칸은 테두리보다 한 단계 또렷하게 */
@@ -133,6 +156,25 @@
   --emergency-soft: oklch(0.274 0.048 42);
   --emergency-soft-foreground: oklch(0.88 0.057 48.6);
 
+  --sea: #7cb4e8;
+  --sea-foreground: #0e2236;
+  --sea-soft: #1b2b3b;
+  --sea-soft-foreground: #a9cbee;
+  --history: #d9a36e;
+  --history-foreground: #2a1a0a;
+  --history-soft: #33261a;
+  --history-soft-foreground: #e6c29c;
+  --nature: #7cc98a;
+  --nature-foreground: #0f2414;
+  --nature-soft: #1a2e1f;
+  --nature-soft-foreground: #a6d9af;
+  --course: var(--primary);
+  --course-foreground: var(--primary-foreground);
+  --course-soft: var(--accent);
+  --course-soft-foreground: var(--accent-foreground);
+  --paper: oklch(0.225 0.008 70);
+  --paper-foreground: oklch(0.97 0.004 80);
+
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 18%);
   --ring: oklch(0.704 0.123 182.5);
@@ -176,6 +218,12 @@
   --color-emergency-foreground: var(--emergency-foreground);
   --color-emergency-soft: var(--emergency-soft);
   --color-emergency-soft-foreground: var(--emergency-soft-foreground);
+  --color-course: var(--course);
+  --color-course-foreground: var(--course-foreground);
+  --color-course-soft: var(--course-soft);
+  --color-course-soft-foreground: var(--course-soft-foreground);
+  --color-paper: var(--paper);
+  --color-paper-foreground: var(--paper-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -197,12 +245,22 @@
   --font-sans:
     "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto,
     "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  /* 손글씨 (여행 추억 페이지의 멘트만) — public/fonts/NanumPenScript, 그 화면에서만 불러온다 */
+  --font-hand: "Nanum Pen Script", var(--font-sans);
 
   /* 라운드 스케일 — --radius 기준 파생 */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* 손글씨 글꼴 (여행 추억 페이지 멘트) — 나눔손글씨 펜, SIL OFL (public/fonts/NanumPenScript-OFL.txt).
+ * 쓰는 화면에서만 내려받는다 (글꼴은 그 글꼴로 그릴 글자가 있을 때 받는다) */
+@font-face {
+  font-family: "Nanum Pen Script";
+  src: url("/fonts/NanumPenScript-Regular.woff2") format("woff2");
+  font-display: swap;
 }
 
 /* 그림자 — 카드는 옅고 따뜻하게, 아래 고정 띠(StickyActionBar)는 위쪽으로 */
@@ -227,6 +285,25 @@
   /* PageBody(<main data-surface="subtle">)가 있는 화면은 바탕 전체를 모래빛으로 — 첫 화면 · 어르신 화면은 흰 바탕 그대로 */
   body:has(main[data-surface="subtle"]) {
     background-color: var(--color-background-subtle);
+  }
+  /* 코스 테마 영역: 안쪽의 bg-course · text-course · bg-course-soft … 가 그 테마 색이 된다 */
+  [data-course="sea"] {
+    --course: var(--sea);
+    --course-foreground: var(--sea-foreground);
+    --course-soft: var(--sea-soft);
+    --course-soft-foreground: var(--sea-soft-foreground);
+  }
+  [data-course="history"] {
+    --course: var(--history);
+    --course-foreground: var(--history-foreground);
+    --course-soft: var(--history-soft);
+    --course-soft-foreground: var(--history-soft-foreground);
+  }
+  [data-course="nature"] {
+    --course: var(--nature);
+    --course-foreground: var(--nature-foreground);
+    --course-soft: var(--nature-soft);
+    --course-soft-foreground: var(--nature-soft-foreground);
   }
   @media print {
     body {

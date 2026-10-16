@@ -4,6 +4,7 @@ import type { TripSnapshot } from "@/shared/domain/types";
 import { track } from "@/shared/lib/analytics";
 import { koreanMonthDay } from "@/shared/lib/date";
 import { copyText, shareLink } from "@/shared/lib/share";
+import { seniorShareText } from "./shareText";
 
 /** 화면 경로 → 전체 주소 */
 export const absoluteUrl = (path: string) => `${window.location.origin}${path}`;
@@ -16,10 +17,16 @@ export async function copyLink(url: string, doneText: string): Promise<void> {
   else toast.error("복사하지 못했어요. 다시 눌러 주세요");
 }
 
-/** 카카오톡으로 보내기: 공유 창을 못 열면 복사로 대신한다 */
+/** 카카오톡으로 보내기: 날짜 · 코스 · 장소별 시각 · 주소 + 부모님 링크 (링크는 글 맨 끝에). 공유 창을 못 열면 글째 복사한다 */
 export async function sendSeniorLink(trip: TripSnapshot, url: string): Promise<void> {
   track("share_kakao");
-  const head = `${koreanMonthDay(trip.input.date)} ${trip.course.title}`;
-  const r = await shareLink({ title: head, text: `${head} — 사진만 찍으세요`, url });
-  if (r === "failed") await copyLink(url, "부모님 링크를 복사했어요");
+  const text = seniorShareText(trip, url);
+  const r = await shareLink({
+    title: `${koreanMonthDay(trip.input.date)} ${trip.course.title}`,
+    text,
+  });
+  if (r !== "failed") return;
+  if (await copyText(text))
+    toast.success("일정과 부모님 링크를 복사했어요. 카카오톡에 붙여 넣어 주세요");
+  else toast.error("복사하지 못했어요. 다시 눌러 주세요");
 }

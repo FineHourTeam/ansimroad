@@ -1,11 +1,13 @@
-// 장소 블록: 이름 · 역할 · 머무는 시간 · 사진(원본 비율 · 옆으로 넘기기) · 설명 · 정보 꼬리표 · 지도/전화 · 후기 · 메모
-import { ChevronDownIcon, ClockIcon, MapPinIcon, PhoneIcon } from "@/components/icons";
+// 장소 블록: 이름 · 역할 · 머무는 시간 · 사진(원본 비율 · 옆으로 넘기기) · 설명 · 주소 · 정보 꼬리표 · 주소 복사/길찾기/전화 · 후기 · 메모
+import { toast } from "sonner";
+import { ChevronDownIcon, ClockIcon, CopyIcon, MapPinIcon, PhoneIcon } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PlacePhoto } from "@/shared/components/PlacePhoto";
-import type { Place } from "@/shared/domain/types";
-import { naverMapLink, telHref } from "@/shared/lib/format";
+import type { Place, Transport } from "@/shared/domain/types";
+import { naverDirectionsLink, telHref } from "@/shared/lib/format";
+import { copyText } from "@/shared/lib/share";
 import { placeFacts } from "@/shared/lib/placeFacts";
 import { MemoBox } from "./MemoBox";
 import { PlaceReviews } from "./PlaceReviews";
@@ -16,7 +18,7 @@ function Meta({ stayMin }: { stayMin: number | null }) {
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
       {stayMin !== null && (
         <p className="text-muted-foreground inline-flex items-center gap-1.5 text-sm font-semibold">
-          <ClockIcon size="sm" className="text-primary" />
+          <ClockIcon size="sm" className="text-course" />
           머무는 시간 {stayMin}분
         </p>
       )}
@@ -24,12 +26,30 @@ function Meta({ stayMin }: { stayMin: number | null }) {
   );
 }
 
-function Body({ place, readOnly }: { place: Place; readOnly: boolean }) {
+function Body({
+  place,
+  readOnly,
+  transport,
+}: {
+  place: Place;
+  readOnly: boolean;
+  transport: Transport;
+}) {
   const facts = placeFacts(place);
   const [phone, phone2] = place.phones;
+  const address = place.address.trim();
   return (
     <div className="flex min-w-0 flex-col gap-3 text-base sm:col-span-3">
       {place.desc && <p className="leading-relaxed">{place.desc}</p>}
+      {address && (
+        <p className="flex items-start gap-1.5 text-sm leading-snug">
+          <MapPinIcon size="sm" className="text-course mt-0.5 shrink-0" />
+          <span>
+            <span className="sr-only">주소 </span>
+            {address}
+          </span>
+        </p>
+      )}
       {facts.length > 0 && (
         <ul className="flex flex-wrap gap-1.5" aria-label="장소 정보">
           {facts.map((f) => (
@@ -44,19 +64,37 @@ function Body({ place, readOnly }: { place: Place; readOnly: boolean }) {
         </ul>
       )}
       <div className="flex gap-2">
-        <Button variant="outline" size="xl" className="flex-1" asChild>
+        {address && (
+          <Button
+            variant="outline"
+            size="xl"
+            className="flex-1 px-2"
+            aria-label={`${place.name} 주소 복사`}
+            onClick={() =>
+              void copyText(address).then((ok) => {
+                if (ok) toast.success("주소를 복사했어요");
+                else toast.error("복사하지 못했어요. 다시 눌러 주세요");
+              })
+            }
+          >
+            <CopyIcon />
+            주소 복사
+          </Button>
+        )}
+        {/* 네이버 지도 길찾기: 장소 좌표로 연결 (휴대폰은 네이버 지도 앱으로) */}
+        <Button variant="outline" size="xl" className="flex-1 px-2" asChild>
           <a
-            href={naverMapLink(place.name, place.address)}
+            href={naverDirectionsLink(place, transport)}
             target="_blank"
             rel="noopener noreferrer"
-            aria-label={`${place.name} 지도 보기 (새 창)`}
+            aria-label={`${place.name} 네이버 지도 길찾기 (새 창)`}
           >
             <MapPinIcon />
-            지도
+            길찾기
           </a>
         </Button>
         {phone && (
-          <Button variant="outline" size="xl" className="flex-1" asChild>
+          <Button variant="outline" size="xl" className="flex-1 px-2" asChild>
             <a href={telHref(phone)} aria-label={`${place.name} 전화 걸기 ${phone}`}>
               <PhoneIcon />
               전화
@@ -80,11 +118,13 @@ export function PlaceBlock({
   stayMin,
   tag,
   readOnly,
+  transport,
 }: {
   place: Place;
   stayMin: number | null;
   tag: string;
   readOnly: boolean;
+  transport: Transport;
 }) {
   return (
     <article
@@ -96,7 +136,7 @@ export function PlaceBlock({
           <h3 className="min-w-0 flex-1 text-xl leading-snug font-extrabold tracking-tight">
             {place.name}
           </h3>
-          <Badge variant="secondary" className="mt-0.5">
+          <Badge className="bg-course-soft text-course-soft-foreground mt-0.5 border-transparent">
             {tag}
           </Badge>
         </div>
@@ -108,7 +148,7 @@ export function PlaceBlock({
         alt={place.name}
         className="sm:col-span-2"
       />
-      <Body place={place} readOnly={readOnly} />
+      <Body place={place} readOnly={readOnly} transport={transport} />
     </article>
   );
 }
@@ -117,10 +157,12 @@ export function PlaceBlock({
 export function SparePlace({
   place,
   readOnly,
+  transport,
   className,
 }: {
   place: Place;
   readOnly: boolean;
+  transport: Transport;
   className?: string;
 }) {
   return (
@@ -142,7 +184,7 @@ export function SparePlace({
           alt={place.name}
           className="sm:col-span-2"
         />
-        <Body place={place} readOnly={readOnly} />
+        <Body place={place} readOnly={readOnly} transport={transport} />
       </div>
     </details>
   );

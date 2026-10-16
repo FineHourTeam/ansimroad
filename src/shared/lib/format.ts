@@ -93,6 +93,18 @@ export function naverMapLink(name: string, address?: string): string {
   return `https://map.naver.com/p/search/${encodeURIComponent(q)}`;
 }
 
+/**
+ * 네이버 지도 길찾기 (목적지 = 장소 좌표). 웹은 길찾기 화면, 휴대폰은 좌표를 그대로 넘겨 네이버 지도 앱으로 연결된다
+ * (2026-10-16 확인: map.naver.com/p/directions 는 경도,위도 순서). transit = 대중교통
+ */
+export function naverDirectionsLink(
+  place: { name: string; lat: number; lng: number },
+  transport: Transport = "car",
+): string {
+  const goal = `${String(place.lng)},${String(place.lat)},${encodeURIComponent(place.name)},,`;
+  return `https://map.naver.com/p/directions/-/${goal}/-/${transport === "car" ? "car" : "transit"}`;
+}
+
 export function kmText(meters: number): string {
   return meters >= 1000 ? `${(meters / 1000).toFixed(1)} km` : `${String(meters)} m`;
 }

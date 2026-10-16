@@ -89,3 +89,6 @@ import { DeleteIcon } from "@/components/icons";
 | LogoutIcon | 로그아웃 | 2026-10-03 |
 | MinusIcon | 빼기 · 줄이기 (머무는 시간 −10분) | 2026-10-03 |
 | CalendarIcon | 날짜 고르기 칸 (S1 여행 날짜) | 2026-10-03 |
+| SeaThemeIcon | 바다 코스 (물결) — 코스 카드 띠 · 추억 페이지 | 2026-10-16 |
+| HistoryThemeIcon | 역사·문화 코스 (기와지붕) | 2026-10-16 |
+| NatureThemeIcon | 자연·경치 코스 (산) | 2026-10-16 |

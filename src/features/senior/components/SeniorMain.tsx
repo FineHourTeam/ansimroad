@@ -13,6 +13,7 @@ import type { ConsentChoice, TripSnapshot } from "@/shared/domain/types";
 import { nowLinePosition, seniorStates, type StopState } from "@/shared/engine/timeline";
 import { now } from "@/shared/lib/clock";
 import { hhmm, minutesOfDay, toLocalYmd } from "@/shared/lib/date";
+import { courseTone } from "@/shared/lib/courseTheme";
 import { courseMapPoints } from "@/shared/lib/mapPoints";
 
 const TICK_MS = 30_000; // 상태(완료 · 지금 여기)는 시각 기준이라 30초마다 다시 계산
@@ -70,7 +71,11 @@ export function SeniorMain({
           </p>
         )}
       </SeniorHeader>
-      <main className="flex flex-1 flex-col gap-3 px-4 pt-4 pb-6">
+      {/* data-course: 번호 원 · 지도 마커 · 경로 선이 코스 테마 색 ('지금 여기' 같은 상태 표시는 그대로) */}
+      <main
+        className="flex flex-1 flex-col gap-3 px-4 pt-4 pb-6"
+        data-course={courseTone(course.theme)}
+      >
         <SeniorTimeline
           course={course}
           memos={trip.memos}

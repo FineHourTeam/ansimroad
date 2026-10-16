@@ -4,25 +4,27 @@ import type { Ref } from "react";
 import { paths } from "@/app/paths";
 import type { Stop, TripAccess, TripSnapshot } from "@/shared/domain/types";
 import { hhmm } from "@/shared/lib/date";
+import { courseTone } from "@/shared/lib/courseTheme";
 import { ROLE_LABEL } from "@/shared/lib/placeFacts";
 import { absoluteUrl } from "../lib/links";
-import { MemoNote, PlaceLine, QrCard, SafetyBox, SheetHeader } from "./SheetParts";
+import { AddressLine, MemoNote, PlaceLine, QrCard, SafetyBox, SheetHeader } from "./SheetParts";
 
 function CardStop({ stop, num, memo }: { stop: Stop; num: number; memo?: string }) {
   return (
     <li className="flex gap-3">
-      <span className="bg-primary text-primary-foreground grid size-7 shrink-0 place-items-center rounded-full text-sm font-bold">
+      <span className="bg-course text-course-foreground grid size-7 shrink-0 place-items-center rounded-full text-sm font-bold">
         {num}
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <p className="text-primary text-base leading-7 font-extrabold tabular-nums">
+        <p className="text-course text-base leading-7 font-extrabold tabular-nums">
           {hhmm(stop.arriveMin)}
           <span className="text-muted-foreground ml-1.5 text-sm font-semibold">
             {ROLE_LABEL[stop.role]}
           </span>
         </p>
         <p className="text-lg leading-snug font-extrabold tracking-tight">{stop.place.name}</p>
-        {/* 휴대폰 한두 화면에 들어오게: 시각 · 이름 · 머무는 시간 · 전화 · 메모만 (꼬리표 · 이동 시간은 인쇄용에) */}
+        <AddressLine address={stop.place.address} />
+        {/* 휴대폰 한두 화면에 들어오게: 시각 · 이름 · 주소 · 머무는 시간 · 전화 · 메모만 (꼬리표 · 이동 시간은 인쇄용에) */}
         <PlaceLine place={stop.place} stayMin={stop.stayMin} />
         {memo && <MemoNote memo={memo} />}
       </div>
@@ -44,6 +46,7 @@ export function ImageCard({
   return (
     <div
       ref={ref}
+      data-course={courseTone(course.theme)}
       className="bg-background-subtle text-foreground flex w-90 flex-col gap-3 p-4 text-sm leading-relaxed"
     >
       <SheetHeader date={input.date} course={course} />

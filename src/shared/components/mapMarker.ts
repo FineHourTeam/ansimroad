@@ -14,7 +14,7 @@ export interface MapPoint {
 export const markerName = (p: MapPoint) => `${p.name}${p.hint ?? ""}`;
 
 export const MARKER_CLASS: Record<MapPoint["kind"], string> = {
-  stop: "bg-primary text-primary-foreground size-8 text-sm",
+  stop: "bg-course text-course-foreground size-8 text-sm", // 코스 테마 색 (data-course 영역)
   er: "bg-emergency text-emergency-foreground size-8 text-xs",
   cand: "bg-muted-foreground text-background size-6 text-xs",
 };

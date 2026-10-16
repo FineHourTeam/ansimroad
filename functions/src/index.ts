@@ -3,6 +3,7 @@
 //    운영진(이메일 로그인 + admins/{uid})만 쓸 수 있다. 서비스 키는 시크릿 TOURAPI_KEY.
 //    키 등록: npx firebase functions:secrets:set TOURAPI_KEY  (에뮬레이터는 functions/.secret.local)
 //  - cleanupExpiredTrips: 매일 03:00(서울) 만료 여행 정리
+//  - linkPreview: 부모님 링크(/t/{token}) 카카오톡 미리보기 카드 — Hosting rewrite /t/** → 이 함수가 앱 HTML 에 여행별 og 제목을 넣는다
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
@@ -11,6 +12,7 @@ import { defineSecret } from "firebase-functions/params";
 import { logger } from "firebase-functions/v2";
 import { onRequest } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
+import { htmlOrigin, injectMeta, previewTitle, seniorToken, SITE, SLOGAN } from "./linkPreview.js";
 import { apiPath, upstreamUrl } from "./tourapi.js";
 
 initializeApp();
@@ -56,6 +58,61 @@ export const tourapi = onRequest(
     } catch {
       res.status(502).send("TourAPI 에 연결하지 못했어요");
     }
+  },
+);
+
+// 부모님 링크 미리보기: 앱 HTML(Hosting 의 /index.html)을 1분 동안 기억해 두고, 여행 날짜 · 코스 이름을 og 제목에 넣어 돌려준다.
+// 어르신이 링크를 열 때도 이 함수를 거치므로 실패해도 앱은 열려야 한다 — 여행을 못 찾으면 기본 제목, HTML 을 못 받으면 지난 HTML.
+const HTML_TTL_MS = 60_000;
+const htmlCache = new Map<string, { html: string; at: number }>();
+
+async function appHtml(origin: string): Promise<string | null> {
+  const hit = htmlCache.get(origin);
+  if (hit && Date.now() - hit.at < HTML_TTL_MS) return hit.html;
+  try {
+    const res = await fetch(`${origin}/index.html`, { signal: AbortSignal.timeout(3000) });
+    if (!res.ok) throw new Error(`index.html ${String(res.status)}`);
+    const html = await res.text();
+    htmlCache.set(origin, { html, at: Date.now() });
+    return html;
+  } catch (e) {
+    logger.warn("앱 HTML 을 받지 못했어요", e);
+    return hit?.html ?? null;
+  }
+}
+
+async function tripTitle(token: string): Promise<string | null> {
+  const db = getFirestore();
+  const link = await db.doc(`links/${token}`).get();
+  if (!link.exists || link.get("role") !== "senior") return null;
+  const trip = await db.doc(`trips/${String(link.get("tripId"))}`).get();
+  const date: unknown = trip.get("input.date");
+  const title: unknown = trip.get("course.title");
+  return typeof date === "string" && typeof title === "string" ? previewTitle(date, title) : null;
+}
+
+export const linkPreview = onRequest(
+  { region: "asia-northeast3", maxInstances: 10, timeoutSeconds: 15, memory: "256MiB" },
+  async (req, res) => {
+    const html = await appHtml(htmlOrigin(req.get("x-forwarded-host")));
+    if (!html) {
+      res.status(503).set("Retry-After", "5").type("text/plain").send("잠시 후 다시 열어 주세요");
+      return;
+    }
+    let title = SITE;
+    const token = seniorToken(req.path);
+    if (token) {
+      try {
+        title = (await tripTitle(token)) ?? SITE;
+      } catch (e) {
+        logger.warn("미리보기용 여행을 읽지 못했어요", e);
+      }
+    }
+    res
+      .status(200)
+      .set("Cache-Control", "no-cache, no-store, must-revalidate")
+      .type("html")
+      .send(injectMeta(html, { title, description: SLOGAN }));
   },
 );
 

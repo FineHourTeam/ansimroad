@@ -5,6 +5,7 @@ import { EmergencyLine, PageBody, StickyActionBar, TopBar } from "@/shared/compo
 import { MapView, type MapPoint } from "@/shared/components/MapView";
 import type { Course, Place, Settings, TripInput } from "@/shared/domain/types";
 import { hhmm } from "@/shared/lib/date";
+import { courseTone } from "@/shared/lib/courseTheme";
 import { courseMapPoints } from "@/shared/lib/mapPoints";
 import { ROLE_LABEL } from "@/shared/lib/placeFacts";
 import { CourseEditor, type CandidatesStatus } from "./CourseEditor";
@@ -89,7 +90,8 @@ export function CourseDetail({
 
   const last = course.stops.length - 1;
   return (
-    <div className="min-h-dvh">
+    // data-course: 번호 원 · 지도 마커 · 경로 선 · 꼬리표가 코스 테마 색 (확정 버튼은 브랜드 청록 그대로)
+    <div className="min-h-dvh" data-course={courseTone(course.theme)}>
       {/* 코스 이름은 아래 제목(h2)에 있어 위 막대는 화면 이름만 */}
       <TopBar title="코스 상세" back={back} />
       <PageBody
@@ -153,17 +155,17 @@ export function CourseDetail({
                   <div className="flex w-11 shrink-0 flex-col items-center">
                     <span
                       aria-hidden="true"
-                      className="bg-primary text-primary-foreground grid size-9 place-items-center rounded-full text-base font-extrabold tabular-nums shadow-sm"
+                      className="bg-course text-course-foreground grid size-9 place-items-center rounded-full text-base font-extrabold tabular-nums shadow-sm"
                     >
                       {i + 1}
                     </span>
-                    <time className="text-primary mt-1.5 text-sm font-bold tabular-nums">
+                    <time className="text-course mt-1.5 text-sm font-bold tabular-nums">
                       {hhmm(s.arriveMin)}
                     </time>
                     {i < last && (
                       <span
                         aria-hidden="true"
-                        className="bg-primary/20 mt-2 w-0.5 flex-1 rounded-full"
+                        className="bg-course/20 mt-2 w-0.5 flex-1 rounded-full"
                       />
                     )}
                   </div>
@@ -172,6 +174,7 @@ export function CourseDetail({
                       place={s.place}
                       stayMin={s.stayMin}
                       readOnly={readOnly}
+                      transport={input.transport}
                       tag={ROLE_LABEL[s.role]}
                     />
                     {next ? (
@@ -188,13 +191,18 @@ export function CourseDetail({
 
           {/* ④ 시간 남으면 들를 곳 (접힘) — 시간 줄 오른쪽 칸에 맞춘다 */}
           {course.spare && (
-            <SparePlace place={course.spare} readOnly={readOnly} className="ml-14" />
+            <SparePlace
+              place={course.spare}
+              readOnly={readOnly}
+              transport={input.transport}
+              className="ml-14"
+            />
           )}
 
-          {/* ⑤ 안전 정보 */}
+          {/* ⑤ 응급 · 편의 정보 */}
           {(course.er ?? course.pharmacy) && (
             <section className="border-border mt-2 flex flex-col gap-3 border-t pt-5">
-              <h3 className="text-lg font-bold tracking-tight">안전 정보</h3>
+              <h3 className="text-lg font-bold tracking-tight">응급·편의 정보</h3>
               <EmergencyLine er={course.er} prefix="최근접 응급실" />
               {course.pharmacy && (
                 <p className="text-base">

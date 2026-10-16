@@ -14,6 +14,7 @@ const ROUTES: { path: string; expectText: RegExp }[] = [
   { path: `/f/${NO_TOKEN}/course`, expectText: /링크/ },
   { path: `/f/${NO_TOKEN}/share`, expectText: /링크를 다시 확인해 주세요/ },
   { path: `/f/${NO_TOKEN}/print`, expectText: /링크를 다시 확인해 주세요/ },
+  { path: `/f/${NO_TOKEN}/memories`, expectText: /링크를 다시 확인해 주세요/ },
   { path: `/t/${NO_TOKEN}`, expectText: /링크를 다시 확인해 주세요/ },
   { path: `/r/${NO_TOKEN}`, expectText: /리포트를 찾을 수 없어요/ },
   { path: "/admin/login", expectText: /로그인/ },
@@ -47,7 +48,7 @@ for (const route of ROUTES) {
 }
 
 test("결과 주소 쿼리 모양", () => {
-  expect(resultQuery()).toMatch(/^p=2&a=70&m=none&w=20&d=\d{4}-\d{2}-\d{2}&t=car$/);
+  expect(resultQuery()).toMatch(/^p=2&a=70&m=none&w=20&d=\d{4}-\d{2}-\d{2}&s=600&t=car$/);
 });
 
 // 손가락 탭 크기 · 법적 고지 본문 · 뒤로 가기

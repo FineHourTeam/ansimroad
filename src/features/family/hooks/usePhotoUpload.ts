@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { useAddPhoto } from "@/features/trip";
+import { failReason, track } from "@/shared/lib/analytics";
 import { now } from "@/shared/lib/clock";
 import { prepareUploadImage } from "@/shared/lib/image";
 
@@ -31,7 +32,8 @@ export function usePhotoUpload(tripId: string, maxPx: number) {
       }
       setState({ kind: "idle" });
       toast.success(`사진 ${String(files.length)}장을 올렸어요`);
-    } catch {
+    } catch (err) {
+      track("photo_upload_fail", { by: "family", reason: failReason(err) });
       setState({ kind: "error", stopIndex });
     }
   };
