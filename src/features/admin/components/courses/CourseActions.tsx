@@ -17,12 +17,11 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { CuratedCourse } from "@/shared/domain/types";
-import { now } from "@/shared/lib/clock";
-import { addDays, toLocalYmd } from "@/shared/lib/date";
 import { encodeQuery } from "@/shared/lib/tripInput";
 
 export function CourseActions({
   draft,
+  previewDate,
   dirty,
   saved,
   saving,
@@ -33,6 +32,8 @@ export function CourseActions({
   onDelete,
 }: {
   draft: CuratedCourse;
+  /** '사용자 화면에서 보기' 여행 날짜 (코스 장소가 모두 여는 날) */
+  previewDate: string;
   dirty: boolean;
   /** 저장된 같은 코스 (없으면 아직 저장 전) */
   saved: CuratedCourse | undefined;
@@ -51,7 +52,7 @@ export function CourseActions({
     age: 70,
     mobility: "none",
     walk: 30,
-    date: addDays(toLocalYmd(now()), 7),
+    date: previewDate,
     transport: "car",
   });
 

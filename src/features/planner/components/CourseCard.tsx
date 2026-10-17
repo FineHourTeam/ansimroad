@@ -220,6 +220,7 @@ export function CourseCard({
           </li>
           <li className="inline-flex items-center gap-1.5">
             <WalkIcon size="sm" className="text-course" />총 걷는 시간 약 {course.totalWalkMin}분
+            {course.regions.length > 0 && ` · ${String(course.regions.length)}권역`}
           </li>
           {course.er && (
             <li className="inline-flex items-center gap-1.5">

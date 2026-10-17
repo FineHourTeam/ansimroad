@@ -40,7 +40,8 @@ export function exclusionReasons(p: Place, input: TripInput): string[] {
     out.push("X1");
   if (input.mobility === "stairs" && (p.stairs === null || p.stairs === "있음")) out.push("X2");
   if (p.walkMin === null || (input.walk !== 30 && p.walkMin > input.walk)) out.push("X3");
-  if (isClosedOn(p, input.date)) out.push("X4");
+  // 칸이 비었으면 휴무를 모르는 것 → 조건 불충족 ('없음'이라고 적어야 통과)
+  if (p.closedRaw.trim() === "" || isClosedOn(p, input.date)) out.push("X4");
   if (input.transport === "transit" && (p.dropoffM === null || p.dropoffM > TRANSIT_MAX_DROPOFF_M))
     out.push("X5");
   if (input.mobility !== "none" && p.verify === "미확인") out.push("X6");

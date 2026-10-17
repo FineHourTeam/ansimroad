@@ -11,8 +11,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { CuratedCourse, CuratedStop } from "@/shared/domain/types";
-import { curatedToCourse } from "@/shared/lib/curated";
-import { hhmm } from "@/shared/lib/date";
+import { now } from "@/shared/lib/clock";
+import { curatedToCourse, firstOpenDate } from "@/shared/lib/curated";
+import { addDays, hhmm, toLocalYmd } from "@/shared/lib/date";
 
 export function CourseEditor({
   draft,
@@ -187,6 +188,7 @@ export function CourseEditor({
 
       <CourseActions
         draft={draft}
+        previewDate={firstOpenDate(preview, addDays(toLocalYmd(now()), 7))}
         dirty={dirty}
         saved={saved}
         saving={saving}

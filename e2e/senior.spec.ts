@@ -6,7 +6,7 @@ import { paths } from "../src/app/paths";
 import { erDisplayName } from "../src/features/senior/seniorView";
 import { hhmm } from "../src/shared/lib/date";
 import { telHref } from "../src/shared/lib/format";
-import { listDocs } from "./support/emulator";
+import { listDocs, writeDocs } from "./support/emulator";
 import {
   demoNow,
   firstCourse,
@@ -323,6 +323,26 @@ test("위치 없는 안내에 동의한 뒤 위치 수집이 켜지면 위치 �
   await expect(page.getByRole("button", { name: "위치 없이 시작" })).toBeVisible();
 });
 
+test("카메라가 사진 없이 닫히면(취소 · 카메라 권한 거부) 카메라 허용 안내, 찍으면 사라진다 (F-18)", async ({
+  page,
+}) => {
+  const trip = await seedTrip();
+  await openSenior(page, trip.seniorToken, demoNow(TRIP_DATE, "12:20"));
+  const hint = page.getByRole("status").getByText("카메라를 허용해 주세요", { exact: true });
+  await expect(hint).toHaveCount(0);
+
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByRole("button", { name: "사진 남기기" }).click();
+  await chooser;
+  await page.locator('input[type="file"]').dispatchEvent("cancel");
+  await expect(hint).toBeVisible();
+  await expect(page.getByText(/휴대폰 설정의 카카오톡에서 카메라를 켜 주세요/)).toBeVisible();
+
+  await shoot(page);
+  await expect(page.getByRole("button", { name: /자녀에게 보냈어요/ })).toBeVisible();
+  await expect(hint).toHaveCount(0);
+});
+
 test("사진을 못 보내면 '다시 눌러 주세요'", async ({ page }) => {
   test.setTimeout(90_000); // 보내기 제한 30초를 기다린다
   const trip = await seedTrip();
@@ -366,6 +386,26 @@ test("자녀용 링크로 열면 어르신용 링크가 아니라고 알려 준�
 test("기간이 지난 여행은 만료 안내", async ({ page }) => {
   const trip = await seedTrip({ expired: true });
   await page.goto(paths.senior(trip.seniorToken));
+  await expect(page.getByRole("heading", { name: "기간이 지난 여행이에요" })).toBeVisible();
+});
+
+test("만료 정리가 끝난 뒤(여행은 지워지고 링크에 role · expiresAt 만 남음)에도 만료 안내", async ({
+  page,
+}) => {
+  // functions cleanupExpiredTrips 가 남기는 모양 그대로: tripId · seniorToken 을 뺀 링크 문서
+  const expiresAt = new Date(`${ymdFromToday(-1)}T23:59:59+09:00`);
+  // 기기 시계가 서버보다 늦으면 만료 시각이 아직 안 지난 것처럼 보인다 → tripId 가 없는 것만으로 만료로 본다
+  const lateClock = new Date(`${ymdFromToday(1)}T23:59:59+09:00`);
+  const id = String(Date.now());
+  const senior = `GoneSenior${id}`;
+  const family = `GoneFamily${id}`;
+  await writeDocs([
+    { path: `links/${senior}`, data: { role: "senior", expiresAt } },
+    { path: `links/${family}`, data: { role: "family", expiresAt: lateClock } },
+  ]);
+  await page.goto(paths.senior(senior));
+  await expect(page.getByRole("heading", { name: "기간이 지난 여행이에요" })).toBeVisible();
+  await page.goto(paths.family(family));
   await expect(page.getByRole("heading", { name: "기간이 지난 여행이에요" })).toBeVisible();
 });
 

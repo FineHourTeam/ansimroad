@@ -32,19 +32,20 @@ export function PrintActions({
   const name = imageFileName(trip.input.date, trip.course.title);
   const head = `${koreanMonthDay(trip.input.date)} ${trip.course.title}`;
   const text = scheduleShareText(trip, seniorUrl);
+  const copyAction = {
+    label: "글 복사",
+    onClick: () =>
+      void copyText(text).then((ok) => {
+        if (ok) toast.success("일정 글을 복사했어요");
+        else toast.error("복사하지 못했어요. 다시 눌러 주세요");
+      }),
+  };
   // 그림과 글을 함께 보내도 받는 앱에 따라 글이 빠질 수 있다 (iOS 일부 앱은 글이 있으면 그림을 버린다는 보고도 있다).
   // 공유를 마치면 '글 복사' 단추를 띄워 빠졌을 때 붙여 넣게 한다
   const offerCopy = () => {
     toast("글이 빠졌다면 '글 복사'를 눌러 붙여 넣어 주세요", {
       duration: 10_000,
-      action: {
-        label: "글 복사",
-        onClick: () =>
-          void copyText(text).then((ok) => {
-            if (ok) toast.success("일정 글을 복사했어요");
-            else toast.error("복사하지 못했어요. 다시 눌러 주세요");
-          }),
-      },
+      action: copyAction,
     });
   };
 
@@ -55,9 +56,13 @@ export function PrintActions({
     try {
       const blob = await renderCardPng(node);
       const file = new File([blob], name, { type: "image/png" });
+      // 공유가 안 되면 이미지는 저장하고, 일정 글은 '글 복사'로 따로 붙여 넣게 한다
       const saveInstead = () => {
         saveBlob(blob, name);
-        toast("이 기기에서는 이미지 공유가 안 돼서 저장했어요. 사진첩에서 골라 보내 주세요");
+        toast("이 기기에서는 이미지 공유가 안 돼서 저장했어요. 사진첩에서 골라 보내 주세요", {
+          duration: 10_000,
+          action: copyAction,
+        });
       };
       if (kind === "save") {
         saveBlob(blob, name);
@@ -76,7 +81,11 @@ export function PrintActions({
             toast("이미지가 준비됐어요", {
               action: {
                 label: "공유하기",
-                onClick: () => void navigator.share(data).then(offerCopy, saveInstead),
+                // 공유 창을 닫은 것(AbortError)은 실패가 아니다 — 저장 · '공유가 안 돼서' 안내를 띄우지 않는다
+                onClick: () =>
+                  void navigator.share(data).then(offerCopy, (err: unknown) => {
+                    if (!isError(err, "AbortError")) saveInstead();
+                  }),
               },
             });
           } else saveInstead();

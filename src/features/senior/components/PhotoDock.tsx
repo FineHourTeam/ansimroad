@@ -1,6 +1,6 @@
 // ③ 사진 남기기 · ⑤ 완료 피드백 · ④ 응급실 전화 — 항상 화면에 보이도록 아래에 고정 (F-16: 누를 수 있는 것은 이 둘뿐).
 // 일정이 주인공이라 띠는 화면 높이의 1/4 안팎: 사진 버튼(120px, F-17) 한 줄 + 응급실 한 줄(64px). 오늘 보낸 수는 사진 버튼 안에.
-import { useRef, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import type { ShootPhase } from "../hooks/useSeniorPhoto";
 import { erDisplayName } from "../seniorView";
 import { SeniorDock } from "./SeniorMessage";
@@ -30,6 +30,20 @@ export function PhotoDock({
   const fileRef = useRef<HTMLInputElement>(null);
   const busy = phase.kind === "sending";
   const locked = !canShoot && phase.kind !== "sent" && !busy;
+  // F-18 카메라 거부: 웹은 거부와 취소를 구분할 수 없어서, 카메라가 사진 없이 닫히면(cancel) 안내 1줄을 보인다.
+  // cancel 이벤트가 없는 브라우저는 안내 없이 그대로 (React 는 input 의 onCancel 을 붙이지 않아 직접 듣는다)
+  const [noPhoto, setNoPhoto] = useState(false);
+  useEffect(() => {
+    const input = fileRef.current;
+    if (!input) return;
+    const onCancel = () => {
+      setNoPhoto(true);
+    };
+    input.addEventListener("cancel", onCancel);
+    return () => {
+      input.removeEventListener("cancel", onCancel);
+    };
+  }, []);
 
   return (
     <SeniorDock>
@@ -43,9 +57,26 @@ export function PhotoDock({
         capture="environment"
         tabIndex={-1}
         aria-hidden="true"
-        onChange={(e) => void onFile(e)}
+        onChange={(e) => {
+          setNoPhoto(false);
+          void onFile(e);
+        }}
       />
       {noLocationNote && <p className="text-center text-xl font-bold">위치 없이 저장했어요</p>}
+      {/* 알림 영역은 늘 두고 글자만 넣는다 (함께 나타나면 화면 낭독기가 못 읽을 수 있다). S4 기준: 22px 이상 · 회색 글자 없음 */}
+      <div
+        role="status"
+        className={noPhoto && !locked ? "flex flex-col gap-1 text-center text-2xl" : "sr-only"}
+      >
+        {noPhoto && !locked && (
+          <>
+            <p className="font-extrabold">카메라를 허용해 주세요</p>
+            <p className="leading-snug font-semibold">
+              카카오톡이면 휴대폰 설정의 카카오톡에서 카메라를 켜 주세요
+            </p>
+          </>
+        )}
+      </div>
       {locked ? (
         <p className="border-input bg-background-subtle flex min-h-20 items-center gap-3 rounded-2xl border-2 border-dashed px-4 py-3 text-2xl leading-snug font-extrabold">
           <CameraIcon className="size-9 shrink-0" />

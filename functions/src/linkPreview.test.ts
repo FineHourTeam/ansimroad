@@ -1,17 +1,19 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { htmlOrigin, injectMeta, previewTitle, seniorToken, SLOGAN } from "./linkPreview.js";
+import { htmlOrigin, injectMeta, linkToken, previewTitle, SLOGAN } from "./linkPreview.js";
 
 const HTML = `<head><meta property="og:site_name" content="안심로드" />
 <meta property="og:title" content="안심로드" />
 <meta property="og:description" content="옛 문구" /></head>`;
 
-test("부모님 링크 경로에서만 토큰을 꺼낸다", () => {
-  assert.equal(seniorToken("/t/AbCdEfGhIj"), "AbCdEfGhIj");
-  assert.equal(seniorToken("/t/AbCdEfGhIj/"), "AbCdEfGhIj");
-  assert.equal(seniorToken("/t/short"), null);
-  assert.equal(seniorToken("/f/AbCdEfGhIj"), null);
-  assert.equal(seniorToken("/t/AbCdEfGhIj/../x"), null);
+test("부모님 · 자녀 링크 경로에서만 토큰과 역할을 꺼낸다", () => {
+  assert.deepEqual(linkToken("/t/AbCdEfGhIj"), { token: "AbCdEfGhIj", role: "senior" });
+  assert.deepEqual(linkToken("/t/AbCdEfGhIj/"), { token: "AbCdEfGhIj", role: "senior" });
+  assert.deepEqual(linkToken("/f/AbCdEfGhIj"), { token: "AbCdEfGhIj", role: "family" });
+  assert.equal(linkToken("/t/short"), null);
+  assert.equal(linkToken("/f/AbCdEfGhIj/course"), null);
+  assert.equal(linkToken("/r/AbCdEfGhIj"), null);
+  assert.equal(linkToken("/t/AbCdEfGhIj/../x"), null);
 });
 
 test("제목은 '안심로드 · 10월 18일 코스명'", () => {

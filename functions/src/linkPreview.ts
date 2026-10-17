@@ -1,13 +1,15 @@
-// 부모님 링크(/t/{token}) 카카오톡 미리보기 카드의 순수 로직 (테스트 가능하게 분리).
+// 부모님 링크(/t/{token}) · 자녀 링크(/f/{token}) 카카오톡 미리보기 카드의 순수 로직 (테스트 가능하게 분리).
 // 카카오톡 미리보기는 자바스크립트를 실행하지 않고 HTML 의 og 태그만 읽는다 → Hosting rewrite 로 이 함수가 앱 HTML 에 여행별 제목을 넣어 돌려준다.
 // 제목: '안심로드 · 10월 18일 바다 코스' · 설명: 슬로건 (모담 확정 문구 2026-10-16)
 
 export const SLOGAN = "부모님 여행은 편안하게, 자녀의 마음은 안심하게";
 export const SITE = "안심로드";
 
-/** '/t/AbCdEfGhIj' → 'AbCdEfGhIj' (앱의 토큰 규칙: 영문 · 숫자 10자 이상) */
-export function seniorToken(path: string): string | null {
-  return /^\/t\/([A-Za-z0-9]{10,})\/?$/.exec(path)?.[1] ?? null;
+/** '/t/AbCdEfGhIj' → 부모님 링크, '/f/AbCdEfGhIj' → 자녀 링크 (앱의 토큰 규칙: 영문 · 숫자 10자 이상) */
+export function linkToken(path: string): { token: string; role: "senior" | "family" } | null {
+  const m = /^\/([tf])\/([A-Za-z0-9]{10,})\/?$/.exec(path);
+  if (!m?.[2]) return null;
+  return { token: m[2], role: m[1] === "t" ? "senior" : "family" };
 }
 
 /** '2026-10-18' + '바다 코스' → '안심로드 · 10월 18일 바다 코스' */

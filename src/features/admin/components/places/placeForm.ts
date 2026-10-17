@@ -54,7 +54,7 @@ export const GROUPS: { title: string; desc: string; fields: Field[] }[] = [
     title: "운영",
     desc: "쉬는 날 · 여는 시간",
     fields: [
-      { col: "휴무요일", hint: "없음 / 월 / 화·수 / 일(2·4째)" },
+      { col: "휴무요일", hint: "없음 / 월 / 화·수 / 일(2·4째) · 비우면 코스에 안 나와요" },
       { col: "운영시간", hint: "09:00-18:00" },
     ],
   },

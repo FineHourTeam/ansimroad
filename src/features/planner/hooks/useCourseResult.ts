@@ -3,7 +3,7 @@ import { useMemo } from "react";
 import { useCourseTexts, usePublishedCurated } from "@/features/curated";
 import { usePlaceData, useSettings } from "@/features/places";
 import { generateCourses } from "@/shared/engine/generate";
-import { curatedToCourse } from "@/shared/lib/curated";
+import { curatedFits, curatedToCourse } from "@/shared/lib/curated";
 import { decodeQuery } from "@/shared/lib/tripInput";
 
 export function useCourseResult(search: string) {
@@ -25,13 +25,14 @@ export function useCourseResult(search: string) {
     });
   }, [input, excluded, places, settings]);
 
-  // 운영진 추천 코스: 장소가 하나도 없는 코스는 뺀다
+  // 운영진 추천 코스: 장소가 하나도 없는 코스, 이동조건 · 여행 날짜 휴무에 맞지 않는 코스는 뺀다
   const curated = useMemo(() => {
-    if (!places || !curatedQ.data) return [];
+    if (!places || !curatedQ.data || !input) return [];
     return curatedQ.data
       .filter((c) => c.published && c.stops.length > 0)
-      .map((c) => curatedToCourse(c, places, input?.start));
-  }, [curatedQ.data, places, input?.start]);
+      .map((c) => curatedToCourse(c, places, input.start, settings?.emergencyByRegion))
+      .filter((course) => curatedFits(course, input));
+  }, [curatedQ.data, places, input, settings?.emergencyByRegion]);
 
   return {
     input,
