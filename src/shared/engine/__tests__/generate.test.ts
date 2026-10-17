@@ -115,6 +115,14 @@ describe("휴무요일 해석 (X4)", () => {
     expect(isClosedOn(dokcheon, "2026-10-18")).toBe(false); // 셋째 일요일
     expect(isClosedOn(dokcheon, "2026-10-25")).toBe(true); // 넷째 일요일
   });
+
+  it("휴무요일 칸이 비어 있으면 X4 조건 불충족으로 뺀다 (부록 A.2 보수적), '없음'은 통과", () => {
+    const base = sample.find((x) => x.id === "A0114")!;
+    const blank = { ...base, closedRaw: "", closed: [] };
+    const none = { ...base, closedRaw: "없음", closed: [] };
+    expect(exclusionReasons(blank, { ...T1, date: "2026-10-18" })).toContain("X4");
+    expect(exclusionReasons(none, { ...T1, date: "2026-10-18" })).not.toContain("X4");
+  });
 });
 
 describe("코스 생성 (F-04~F-07, F-12)", () => {

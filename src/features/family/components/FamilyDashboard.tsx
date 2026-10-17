@@ -70,6 +70,15 @@ export function FamilyDashboard({
   const ended = !!trip.completedAt || today > date || (today === date && nowMin >= course.endMin);
   const phase: TripPhase = ended ? "done" : today < date ? "before" : "today";
   const showComplete = !trip.completedAt && (today >= date || photos.length > 0);
+  // 보내기 카드는 여행 전에만 크게. 다만 여행 당일에 확정했으면 아직 링크를 안 보냈을 수 있어서 부모님 사진이 오기 전까지 둔다
+  const confirmedToday = toLocalYmd(new Date(trip.createdAt)) === date;
+  // 사진을 다 불러온 뒤에 판단한다 (불러오는 동안 카드가 잠깐 떴다 사라지지 않게)
+  const showSend =
+    today < date ||
+    (phase === "today" &&
+      confirmedToday &&
+      photosQ.isSuccess &&
+      !photos.some((p) => p.by === "senior"));
 
   return (
     // data-course: 번호 원 · 지도 마커 · 경로 선이 코스 테마 색
@@ -106,7 +115,7 @@ export function FamilyDashboard({
         />
       )}
 
-      {!trip.reportToken && today < date && access.seniorToken && (
+      {!trip.reportToken && showSend && access.seniorToken && (
         <SendCard trip={trip} seniorToken={access.seniorToken} />
       )}
       <FamilyLinks token={token} printOn={settings.printViewEnabled} />

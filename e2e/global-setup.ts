@@ -3,8 +3,9 @@ import { readFileSync } from "node:fs";
 import { parseCsv } from "../src/shared/data/csv";
 import { recordsToPlaces, toRecords } from "../src/shared/data/placeRecords";
 import type { CuratedStop } from "../src/shared/domain/types";
+import { isClosedOn } from "../src/shared/engine/rules";
 import { ADMIN, clearEmulators, ensureUser, NOT_ADMIN, writeDocs } from "./support/emulator";
-import { CURATED_TITLE } from "./support/fixtures";
+import { CURATED_TITLE, TRIP_DATE } from "./support/fixtures";
 
 export default async function globalSetup(): Promise<void> {
   // 여러 실행이 같은 에뮬레이터를 함께 쓸 수 있게 기본은 덮어쓰기만 한다 (CI · 최종 검증은 E2E_RESET=1)
@@ -19,8 +20,9 @@ export default async function globalSetup(): Promise<void> {
 
   // 공개된 운영진 추천 코스 1개 (S2 · S2-1 에서 보인다)
   const { places } = recordsToPlaces(records);
+  // 여행 날짜(오늘 + 7일)에 쉬는 곳은 고르지 않는다: 쉬는 날이면 S2 가 추천 코스를 빼서 요일마다 결과가 달라진다
   const pick = (type: string, n = 0) => {
-    const p = places.filter((x) => x.type === type)[n];
+    const p = places.filter((x) => x.type === type && !isClosedOn(x, TRIP_DATE))[n];
     if (!p) throw new Error(`시드: ${type} 장소가 없어요`);
     return p;
   };

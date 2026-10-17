@@ -112,7 +112,9 @@ export async function joinTrip(token: string, role: TokenRole): Promise<TokenLoo
   if (toLocalYmd(now()) > toLocalYmd(expiresAt.toDate()) || Date.now() > expiresAt.toMillis()) {
     return { ok: false, reason: "expired" };
   }
-  const tripId = String(l.tripId);
+  // 만료 정리(cleanupExpiredTrips)는 여행을 지우고 링크에서 tripId 를 뺀다 → 기기 시계가 늦어도 만료로 본다
+  if (typeof l.tripId !== "string") return { ok: false, reason: "expired" };
+  const tripId = l.tripId;
   await setDoc(doc(db, "trips", tripId, "members", `${uid}_${role}`), { role, token });
   const access: TripAccess = {
     tripId,

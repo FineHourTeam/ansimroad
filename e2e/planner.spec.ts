@@ -99,6 +99,13 @@ test("S2: 같은 주소는 새로고침해도 같은 코스, 다른 코스 보�
   await expect(routes(page).first()).toBeVisible();
   const before = await routes(page).allTextContents();
   expect(before.join()).toContain(firstCourse().stops[0]?.place.name ?? "?");
+  // F-07: '총 걷는 시간 약 N분 · N권역' (권역 = 장소 권역 종류 수)
+  const fc = firstCourse();
+  await expect(
+    page
+      .getByRole("article", { name: fc.title })
+      .getByText(`총 걷는 시간 약 ${String(fc.totalWalkMin)}분 · ${String(fc.regions.length)}권역`),
+  ).toBeVisible();
 
   await page.reload();
   await expect(routes(page).first()).toBeVisible();
@@ -180,6 +187,13 @@ test("S2-1: 지도 · 장소 정보를 보여 주고, 메모는 새로고침해�
   const block = page.getByRole("article", { name: first.place.name });
   await expect(block.getByRole("heading", { name: first.place.name, level: 3 })).toBeVisible();
   await expect(block.getByText(`머무는 시간 ${String(first.stayMin)}분`)).toBeVisible();
+  // F-08 확인 배지: 현장 → '모담팀이 직접 확인', 전화 → '전화로 확인', 미확인 → 없음
+  for (const s of course.stops) {
+    const badge = { 현장: "모담팀이 직접 확인", 전화: "전화로 확인", 미확인: null }[s.place.verify];
+    const b = page.getByRole("article", { name: s.place.name });
+    if (badge) await expect(b.getByText(badge, { exact: true })).toBeVisible();
+    else await expect(b.getByText(/직접 확인|전화로 확인/)).toHaveCount(0);
+  }
   // 주소 한 줄 + 주소 복사 + 좌표로 여는 네이버 지도 길찾기 (모담 요청 2026-10-16)
   await expect(block.getByText(first.place.address)).toBeVisible();
   await expect(block.getByRole("button", { name: `${first.place.name} 주소 복사` })).toBeVisible();

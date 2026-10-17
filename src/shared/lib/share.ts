@@ -1,5 +1,5 @@
 // 카카오톡으로 보내기(F-15): 브라우저 공유 시트(Web Share API)를 쓴다.
-// 미지원 환경에서는 링크 복사만 보여 준다 (§0.4).
+// 미지원 환경에서는 복사로 대신한다 (§0.4).
 
 export function canWebShare(): boolean {
   return typeof navigator !== "undefined" && typeof navigator.share === "function";

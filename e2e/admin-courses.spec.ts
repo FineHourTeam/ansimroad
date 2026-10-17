@@ -5,7 +5,7 @@ import { parseCsv } from "../src/shared/data/csv";
 import { recordsToPlaces, toRecords } from "../src/shared/data/placeRecords";
 import { loginAsAdmin } from "./support/admin";
 import { ADMIN, getDoc, listDocs, NOT_ADMIN } from "./support/emulator";
-import { CURATED_TITLE, PHOTO_FILE, resultQuery } from "./support/fixtures";
+import { CURATED_TITLE, PHOTO_FILE } from "./support/fixtures";
 
 const PLACES = recordsToPlaces(
   toRecords(parseCsv(readFileSync("public/data/places.demo.csv", "utf8"))),
@@ -240,14 +240,14 @@ test("지도에서 장소를 골라 코스를 만들고, 저장 → 새로고침
   expect(stops[2]?.placeId).toBeUndefined();
   expect(stops[3]?.role?.stringValue).toBe("cafe");
 
-  await expect(page.getByRole("link", { name: "사용자 화면에서 보기" })).toHaveAttribute(
-    "href",
-    new RegExp(`/result/c-${id}\\?`),
-  );
+  const preview = page.getByRole("link", { name: "사용자 화면에서 보기" });
+  await expect(preview).toHaveAttribute("href", new RegExp(`/result/c-${id}\\?`));
+  // 미리보기 날짜는 코스 장소(뜰채는 월요일 휴무)가 모두 여는 날 — 그 조건으로 S2 를 연다 (요일마다 결과가 달라지지 않게)
+  const query = (await preview.getAttribute("href"))?.split("?")[1] ?? "";
 
   // 사용자 화면(S2 → S2-1)에 공개되어 올린 사진 · 설명 · 새 위치까지 보이고, 확정도 된다
   const user = await page.context().newPage();
-  await user.goto(`/result?${resultQuery()}`);
+  await user.goto(`/result?${query}`);
   const card = user
     .getByRole("region", { name: "모담팀 추천 코스" })
     .getByRole("article", { name: title });
