@@ -14,8 +14,8 @@ export function ymdFromToday(n: number): string {
   return kst.toISOString().slice(0, 10);
 }
 
-/** 테스트 여행일: 일주일 뒤 */
-export const TRIP_DATE = ymdFromToday(7);
+/** 테스트 여행일: 일주일 뒤 (휴무 요일이라 코스가 안 나오면 TRIP_DATE=YYYY-MM-DD 로 바꾼다) */
+export const TRIP_DATE = process.env.TRIP_DATE ?? ymdFromToday(7);
 
 /** ?now= 시연 시계 (여행일 hh:mm, 한국 시각) */
 export function demoNow(date: string, hhmm: string): string {
