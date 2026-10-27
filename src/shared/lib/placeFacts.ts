@@ -47,3 +47,12 @@ export function verifyBadgeText(v: VerifyStatus): string | null {
 }
 
 export const ROLE_LABEL = { am: "오전", lunch: "점심", pm: "오후", cafe: "쉬어 가기" } as const;
+
+/** 공유 글에서 장소 이름 뒤에 붙는 표시 — 점심 · 쉬어 가기만 */
+export const ROLE_NOTE: Partial<Record<keyof typeof ROLE_LABEL, string>> = {
+  lunch: " (점심)",
+  cafe: " (쉬어 가기)",
+};
+
+/** 공유 글의 순번 ① ② ③ … (⑳ 까지) */
+export const circled = (i: number) => String.fromCharCode(0x2460 + i);

@@ -15,7 +15,7 @@ import { track } from "@/shared/lib/analytics";
 import { isValidYmd, koreanMonthDay } from "@/shared/lib/date";
 import { courseTone } from "@/shared/lib/courseTheme";
 import { canWebShare, copyText, shareLink } from "@/shared/lib/share";
-import { averageRating, heroPhoto } from "../report";
+import { averageRating, heroPhoto, reportShareText } from "../report";
 import { ReportHero } from "./ReportHero";
 import { ReportStop } from "./ReportStop";
 
@@ -43,10 +43,10 @@ export function ReportView({
     track("report_share");
     const url = `${window.location.origin}${paths.report(token)}`;
     if (canWebShare()) {
+      // 링크는 글 안에만 (url 을 따로 주면 카카오톡에 주소가 두 번 간다)
       const r = await shareLink({
         title: `${head} · 여행 리포트`,
-        text: `부모님과 다녀온 목포 하루 — ${head}`,
-        url,
+        text: reportShareText(trip, photos.length, Object.keys(reviews).length > 0, url),
       });
       if (r !== "failed") return;
     }
@@ -126,7 +126,7 @@ export function ReportView({
             우리 부모님 목포 여행도 만들어 보세요
           </h2>
           <p className="text-muted-foreground text-pretty">
-            걷기 · 계단 · 화장실까지 모담팀이 직접 확인한 장소로 1분 만에 코스를 만들어요.
+            걷는 시간 · 계단 · 화장실 정보를 함께 보며 1분 만에 코스를 만들어요.
           </p>
           <Button asChild size="cta" className="mt-2 w-full">
             <Link to={`${paths.home}?utm_source=report&utm_medium=share`}>

@@ -84,6 +84,11 @@ export function koreanMonthDay(ymd: string): string {
   return `${String(m)}월 ${String(d)}일`;
 }
 
+/** '2026-10-18' → '2026년 10월 18일(일)' (카카오톡 공유 글) */
+export function koreanDateWeekday(ymd: string): string {
+  return `${String(parseYmd(ymd).y)}년 ${koreanMonthDay(ymd)}(${WEEKDAYS[weekdayOf(ymd)] ?? ""})`;
+}
+
 /** '2026-10-18' → '2026년 10월 18일 (일)' */
 export function longDate(ymd: string): string {
   const { y, m, d } = parseYmd(ymd);

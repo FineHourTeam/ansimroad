@@ -223,7 +223,20 @@ test("공유 시트가 있으면 '카카오톡으로 공유하기'가 리포트 
   await shareButtons.last().click();
   await expect
     .poll(() => page.evaluate(() => (window as unknown as { __shared: ShareData[] }).__shared))
-    .toEqual([expect.objectContaining({ url: `${String(baseURL)}/r/${r.reportToken}` })]);
+    .toEqual([
+      expect.objectContaining({
+        // 모담 양식(2026-10-27): 글 첫 줄 + 맨 끝에 리포트 링크 (url 은 따로 주지 않는다)
+        text: expect.stringMatching(
+          new RegExp(
+            `^\\[안심로드\\] 부모님과 다녀온 목포 하루\\n[\\s\\S]*▶ 여행 리포트 보기\\n${String(baseURL)}/r/${r.reportToken}$`,
+          ),
+        ),
+      }),
+    ]);
+  const shared = await page.evaluate(
+    () => (window as unknown as { __shared: ShareData[] }).__shared,
+  );
+  expect(shared[0]?.url).toBeUndefined();
   await expect.poll(() => sawEvent(page, events, "report_share")).toBe(true);
   await expect(page.getByText("리포트 링크를 복사했어요")).toHaveCount(0); // 공유했으면 복사로 넘어가지 않는다
 });

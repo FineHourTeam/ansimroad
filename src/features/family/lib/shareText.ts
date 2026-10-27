@@ -1,17 +1,13 @@
 // 카카오톡으로 보내는 글 (모담 확정 양식 2026-10-16). 링크는 부모님용만 싣는다 (자녀용 링크는 빼고).
 // 주소는 카카오톡에서 길게 눌러 복사해 내비게이션에 붙여 넣을 수 있게 장소마다 한 줄로.
-import type { Stop, TripSnapshot } from "@/shared/domain/types";
+import type { TripSnapshot } from "@/shared/domain/types";
 import { hhmm, koreanMonthDay, WEEKDAYS, weekdayOf } from "@/shared/lib/date";
+import { circled, ROLE_NOTE } from "@/shared/lib/placeFacts";
 
 /** '10월 18일(일)' */
 export function monthDayWeekday(ymd: string): string {
   return `${koreanMonthDay(ymd)}(${WEEKDAYS[weekdayOf(ymd)] ?? ""})`;
 }
-
-/** ① ② ③ … (⑳ 까지) */
-const circled = (i: number) => String.fromCharCode(0x2460 + i);
-
-const ROLE_NOTE: Partial<Record<Stop["role"], string>> = { lunch: " (점심)", cafe: " (쉬어 가기)" };
 
 type ShareTrip = Pick<TripSnapshot, "input" | "course">;
 

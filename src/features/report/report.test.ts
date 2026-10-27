@@ -7,7 +7,7 @@ import type { PhotoRecord, TripInput } from "@/shared/domain/types";
 import { generateCourses } from "@/shared/engine/generate";
 import { photosBySlot } from "@/shared/engine/timeline";
 import { hhmm } from "@/shared/lib/date";
-import { averageRating, heroPhoto } from "./report";
+import { averageRating, heroPhoto, reportShareText } from "./report";
 
 const places = parsePlaceRows(
   parseCsv(readFileSync(resolve(__dirname, "../../../public/data/places.demo.csv"), "utf8")),
@@ -96,5 +96,49 @@ describe("heroPhoto", () => {
   it("별점이 같거나 없으면 앞 장소, 사진이 없으면 null", () => {
     expect(heroPhoto(course, groups, {})?.id).toBe("a");
     expect(heroPhoto(course, [[], [], [], []], {})).toBeNull();
+  });
+});
+
+describe("카카오톡 공유 글 (모담 양식 2026-10-27)", () => {
+  const URL = "https://ansimroad.web.app/r/RAbCdEfGhIjK";
+  const trip = { date: "2026-10-27", course, expiresOn: "2026-11-26" };
+
+  it("머리 세 줄 · 장소마다 번호 시각 이름(+점심 · 쉬어 가기) · 사진 수 · 별점 안내 · 보는 기한 · 링크", () => {
+    const text = reportShareText(trip, 4, true, URL);
+    const lines = text.split("\n");
+    expect(lines[0]).toBe("[안심로드] 부모님과 다녀온 목포 하루");
+    expect(lines[1]).toBe(`📅 2026년 10월 27일(화) · ${course.title}`);
+    expect(lines[2]).toBe(
+      `🕙 ${hhmm(course.startMin)}~${hhmm(course.endMin)} · ${String(course.stops.length)}곳 · 걷는 시간 약 ${String(course.totalWalkMin)}분`,
+    );
+    expect(lines[3]).toBe("");
+    expect(lines[4]).toBe(`① ${hhmm(stopAt(0).arriveMin)} ${stopAt(0).place.name}`);
+    expect(text).toMatch(/ \(점심\)\n/);
+    expect(text).toMatch(/ \(쉬어 가기\)\n/);
+    expect(text).toContain(
+      "\n\n📷 남긴 사진 4장 · 장소별 별점과 후기는 리포트에서 볼 수 있어요\n사진은 11월 26일까지 볼 수 있어요.\n\n▶ 여행 리포트 보기\n" +
+        URL,
+    );
+    expect(text.endsWith(URL)).toBe(true);
+  });
+
+  it("사진 · 후기가 없으면 그 줄을 뺀다", () => {
+    const none = reportShareText(trip, 0, false, URL);
+    expect(none).not.toContain("📷");
+    expect(none).not.toContain("별점");
+    expect(none).toContain("\n\n리포트는 11월 26일까지 볼 수 있어요.\n\n▶");
+    expect(reportShareText(trip, 2, false, URL)).toContain(
+      "\n📷 남긴 사진 2장\n사진은 11월 26일까지",
+    );
+    expect(reportShareText(trip, 0, true, URL)).toContain(
+      "\n⭐ 장소별 별점과 후기는 리포트에서 볼 수 있어요\n리포트는",
+    );
+  });
+
+  it("보는 기한을 모르면 그 줄도 뺀다", () => {
+    const text = reportShareText({ ...trip, expiresOn: "" }, 0, false, URL);
+    expect(text).toContain(stopAt(course.stops.length - 1).place.name);
+    expect(text).toMatch(/\n\n▶ 여행 리포트 보기\n/);
+    expect(text).not.toContain("볼 수 있어요");
   });
 });
