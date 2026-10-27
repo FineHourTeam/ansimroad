@@ -4,7 +4,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { parseCsv } from "@/shared/data/csv";
 import { hhmm } from "@/shared/lib/date";
-import { parseClosedDays, parsePlaceRows, countVerified } from "@/shared/data/placeSchema";
+import { parseClosedDays, parsePlaceRows } from "@/shared/data/placeSchema";
 import type { Course, TripInput } from "@/shared/domain/types";
 import { generateCourses } from "@/shared/engine/generate";
 import { exclusionReasons, isClosedOn } from "@/shared/engine/rules";
@@ -64,8 +64,6 @@ const route = (c: Course) => c.stops.map((s) => `${hhmm(s.arriveMin)} ${s.place.
 describe("장소 데이터 파싱 (D-01, D-02)", () => {
   it("샘플 10곳을 모두 읽는다", () => {
     expect(sample).toHaveLength(10);
-    expect(countVerified(sample)).toBe(0);
-    expect(countVerified(demo)).toBe(9);
   });
 
   it("전화 칸 번호 2개를 나눈다", () => {

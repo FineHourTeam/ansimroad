@@ -150,6 +150,7 @@ function ShootFace({ phase, sentToday }: { phase: ShootPhase; sentToday: number 
     sub = count ? `${phase.at} · ${count}` : phase.at;
   } else if (phase.kind === "failed") {
     label = "다시 눌러 주세요";
+    sub = `사유: ${phase.reason}`;
   }
   return (
     <>

@@ -187,13 +187,8 @@ test("S2-1: 지도 · 장소 정보를 보여 주고, 메모는 새로고침해�
   const block = page.getByRole("article", { name: first.place.name });
   await expect(block.getByRole("heading", { name: first.place.name, level: 3 })).toBeVisible();
   await expect(block.getByText(`머무는 시간 ${String(first.stayMin)}분`)).toBeVisible();
-  // F-08 확인 배지: 현장 → '모담팀이 직접 확인', 전화 → '전화로 확인', 미확인 → 없음
-  for (const s of course.stops) {
-    const badge = { 현장: "모담팀이 직접 확인", 전화: "전화로 확인", 미확인: null }[s.place.verify];
-    const b = page.getByRole("article", { name: s.place.name });
-    if (badge) await expect(b.getByText(badge, { exact: true })).toBeVisible();
-    else await expect(b.getByText(/직접 확인|전화로 확인/)).toHaveCount(0);
-  }
+  // F-08 확인 배지는 모담 요청(2026-10-27)으로 확인을 마칠 때까지 어떤 확인상태에서도 보이지 않는다
+  await expect(page.getByText(/모담팀이 직접 확인|전화로 확인/)).toHaveCount(0);
   // 주소 한 줄 + 주소 복사 + 좌표로 여는 네이버 지도 길찾기 (모담 요청 2026-10-16)
   await expect(block.getByText(first.place.address)).toBeVisible();
   await expect(block.getByRole("button", { name: `${first.place.name} 주소 복사` })).toBeVisible();

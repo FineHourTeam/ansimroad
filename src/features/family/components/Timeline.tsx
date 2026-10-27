@@ -60,6 +60,9 @@ export function Timeline({
               nowLabel={nowLabel}
               locationOn={locationOn}
               upload={upload.kind !== "idle" && upload.stopIndex === i ? upload.kind : "idle"}
+              uploadReason={
+                upload.kind === "error" && upload.stopIndex === i ? upload.reason : null
+              }
               busy={busy}
               onPick={onPick}
               onStay={onStay}

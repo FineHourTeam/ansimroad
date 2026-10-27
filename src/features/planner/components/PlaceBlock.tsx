@@ -4,20 +4,18 @@ import { ChevronDownIcon, ClockIcon, CopyIcon, MapPinIcon, PhoneIcon } from "@/c
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { VerifyBadge } from "@/shared/components/common";
 import { PlacePhoto } from "@/shared/components/PlacePhoto";
-import type { Place, Transport, VerifyStatus } from "@/shared/domain/types";
+import type { Place, Transport } from "@/shared/domain/types";
 import { naverDirectionsLink, telHref } from "@/shared/lib/format";
 import { copyText } from "@/shared/lib/share";
 import { placeFacts } from "@/shared/lib/placeFacts";
 import { MemoBox } from "./MemoBox";
 import { PlaceReviews } from "./PlaceReviews";
 
-/** 확인 배지(F-08: 현장 '모담팀이 직접 확인' · 전화 '전화로 확인' · 미확인은 없음) + 머무는 시간 한 줄 */
-function Meta({ stayMin, verify }: { stayMin: number | null; verify: VerifyStatus }) {
+/** 머무는 시간 한 줄. 확인 배지(F-08)는 모담 요청(2026-10-27)으로 확인을 마칠 때까지 보이지 않는다 — 확인상태 값과 코스 규칙은 그대로 */
+function Meta({ stayMin }: { stayMin: number | null }) {
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-      <VerifyBadge status={verify} />
       {stayMin !== null && (
         <p className="text-muted-foreground inline-flex items-center gap-1.5 text-sm font-semibold">
           <ClockIcon size="sm" className="text-course" />
@@ -142,7 +140,7 @@ export function PlaceBlock({
             {tag}
           </Badge>
         </div>
-        <Meta stayMin={stayMin} verify={place.verify} />
+        <Meta stayMin={stayMin} />
       </header>
       <PlacePhoto
         url={place.photoUrl}
@@ -178,7 +176,7 @@ export function SparePlace({
       </summary>
       <div className="grid gap-3 px-4 pb-4 sm:grid-cols-5 sm:gap-4">
         <div className="sm:col-span-5">
-          <Meta stayMin={place.stayMin} verify={place.verify} />
+          <Meta stayMin={place.stayMin} />
         </div>
         <PlacePhoto
           url={place.photoUrl}

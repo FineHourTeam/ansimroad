@@ -79,6 +79,6 @@ export function track(event: AnalyticsEvent, params?: Record<string, string>): v
 export function failReason(e: unknown): string {
   if (typeof e === "object" && e !== null && "code" in e && typeof e.code === "string")
     return e.code;
-  if (e instanceof Error) return e.message === "timeout" ? "timeout" : e.name;
+  if (e instanceof Error) return e.name === "Error" ? e.message || "Error" : e.name;
   return "unknown";
 }

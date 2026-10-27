@@ -134,7 +134,7 @@ export function MemoryBook({
             ANSIMROAD · 여행 추억
           </p>
           <h1 className="text-4xl leading-tight font-extrabold tracking-tight @lg:text-5xl">
-            목포 여행
+            목포에서 보낸 하루
           </h1>
           <p className="text-muted-foreground text-base font-semibold tabular-nums @lg:text-lg">
             <span className="whitespace-nowrap">{longDate(date)}</span> ·{" "}
