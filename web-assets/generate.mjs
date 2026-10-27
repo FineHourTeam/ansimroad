@@ -11,7 +11,7 @@ const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const appIcon = readFileSync(join(ROOT, "web-assets/logo-source/logo.svg"), "utf8");
 // 브라우저 탭(16~48px)은 둥근 사각형 없이 심볼만 — 작은 크기에서 핀이 가장 크게 보인다
 const mark = readFileSync(join(ROOT, "public/brand/mark.svg"), "utf8");
-const BRAND = "#0F766E"; // tokens.css --primary
+const ICON_BG = "#F6F2EA"; // 앱 아이콘(logo-source/logo.svg)의 크림 바탕과 같은 색 — 모서리 · 여백도 이 색으로
 const og = JSON.parse(readFileSync(join(ROOT, "web-assets/og.json"), "utf8"));
 
 const browser = await chromium.launch();
@@ -31,11 +31,11 @@ mkdirSync(join(ROOT, "public/icons"), { recursive: true });
 const out = (p, buf) => writeFileSync(join(ROOT, "public", p), buf);
 
 // iOS는 투명한 모서리를 검게 채우므로 바탕을 꽉 채운다 (모서리는 iOS가 직접 둥글린다)
-out("apple-touch-icon.png", await renderLogo(180, 0, BRAND));
+out("apple-touch-icon.png", await renderLogo(180, 0, ICON_BG));
 out("icons/icon-192.png", await renderLogo(192));
 out("icons/icon-512.png", await renderLogo(512));
-// maskable: 로고를 80%로 줄이고 브랜드색 바탕 (Android 원형 마스크 안전영역)
-out("icons/icon-maskable-512.png", await renderLogo(512, 0.2, BRAND));
+// maskable: 로고를 80%로 줄이고 아이콘 바탕색 (Android 원형 마스크 안전영역)
+out("icons/icon-maskable-512.png", await renderLogo(512, 0.2, ICON_BG));
 
 // favicon.ico — PNG 엔트리 3개(16·32·48)를 ICO 컨테이너로 묶는다
 const pngs = [16, 32, 48];
