@@ -144,7 +144,7 @@ export function TripFields({
           className="bg-background-subtle rounded-lg px-3 py-2 text-base"
           hidden={!helpOpen}
         >
-          쉬지 않고 천천히 걸을 수 있는 시간
+          잘 모르시면 더 짧은 쪽을 골라 주세요.
         </p>
         <ChoiceGroup
           options={WALK_OPTIONS}
