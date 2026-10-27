@@ -1,12 +1,11 @@
-// S1 ①~③ 청록 히어로(배경은 장소 사진 슬라이드): 로고 · 한 줄 소개 · 이용 순서 · 확인한 장소 수 (로딩 중에도 자리를 잡아 둔다)
+// S1 ①~③ 청록 히어로(배경은 장소 사진 슬라이드): 로고 · 한 줄 소개 · 이용 순서 · 장소 정보 안내 (장소 데이터를 못 읽으면 다시 시도)
 import { useEffect, useState } from "react";
 import { BrandLogo } from "@/components/brand/BrandLogo";
-import { SuccessIcon } from "@/components/icons";
+import { InfoIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { usePlaceData } from "@/features/places";
 import { cn } from "@/lib/utils";
-import { countVerified, isTourApiPhoto } from "@/shared/data/placeSchema";
+import { isTourApiPhoto } from "@/shared/data/placeSchema";
 
 const STEPS = ["조건 입력", "코스 추천", "부모님께 링크"]; // 대표 코스가 붙으면 3개가 아닐 수 있다
 const MAX_SLIDES = 6;
@@ -105,21 +104,14 @@ export function HomeIntro({
             </li>
           ))}
         </ol>
-        {/* ③ 핵심 가치(안심) + 확인한 장소 수. 데이터를 못 읽으면 숫자 대신 안내 + 팀 연락처 */}
+        {/* ③ 장소 정보 안내 한 줄 (모담 요청 2026-10-27: 확인을 마칠 때까지 '직접 확인' 문구 · 확인한 장소 수 없이). 데이터를 못 읽으면 안내 + 팀 연락처 */}
         <div className="border-primary-foreground/25 dark:border-border min-h-16 border-t pt-5">
-          {placesQ.isPending && <Skeleton className="bg-primary-foreground/25 h-16 w-48" />}
-          {placesQ.data && (
+          {!(placesQ.isError && !placesQ.data) && (
             <p className="flex items-start gap-3">
-              <SuccessIcon className="mt-0.5 size-7 shrink-0" />
-              <span className="flex flex-col gap-1">
-                <strong className="text-lg leading-snug font-extrabold tracking-tight text-balance break-keep">
-                  부모님이 안심하고 걸으실 수 있는 곳만
-                </strong>
-                <span className="text-primary-foreground/80 dark:text-muted-foreground text-sm leading-snug font-medium text-balance break-keep">
-                  걷기·계단·화장실까지 모담팀이 직접 확인한 목포{" "}
-                  <span className="tabular-nums">{countVerified(placesQ.data.places)}</span>곳
-                </span>
-              </span>
+              <InfoIcon className="mt-0.5 size-7 shrink-0" />
+              <strong className="text-lg leading-snug font-extrabold tracking-tight text-balance break-keep">
+                장소마다 걷는 시간·계단·화장실 정보를 함께 보여 드려요
+              </strong>
             </p>
           )}
           {placesQ.isError && !placesQ.data && (

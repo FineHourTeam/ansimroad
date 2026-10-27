@@ -76,7 +76,7 @@ export function ImageCard({
         />
       )}
       <p className="text-muted-foreground text-center text-xs">
-        자료: 한국관광공사 TourAPI · 국립중앙의료원 · 모담 현장·전화 확인 · 안심로드
+        자료: 한국관광공사 TourAPI · 국립중앙의료원 · 모담 장소 정보 · 안심로드
       </p>
     </div>
   );

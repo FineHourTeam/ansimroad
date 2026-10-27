@@ -215,7 +215,7 @@ export function CourseDetail({
 
           {/* D-07 출처 */}
           <p className="text-muted-foreground text-center text-sm">
-            자료: 한국관광공사 TourAPI · 국립중앙의료원 · 모담 현장·전화 확인
+            자료: 한국관광공사 TourAPI · 국립중앙의료원 · 모담 장소 정보
           </p>
         </div>
       </PageBody>

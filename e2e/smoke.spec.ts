@@ -6,7 +6,7 @@ import { resultQuery } from "./support/fixtures";
 // 토큰 화면은 없는 토큰으로 연다 (안내 화면까지 콘솔 에러 없이). 실제 데이터 흐름은 기능별 스펙이 맡는다.
 const NO_TOKEN = "NoSuchToken00";
 const ROUTES: { path: string; expectText: RegExp }[] = [
-  { path: "/", expectText: /직접 확인한 목포/ },
+  { path: "/", expectText: /걷는 시간·계단·화장실 정보/ },
   { path: `/result?${resultQuery()}`, expectText: /코스/ },
   { path: "/result?p=9", expectText: /여행 조건을 다시 골라 주세요/ },
   { path: `/result/no-such-course?${resultQuery()}`, expectText: /코스를 찾을 수 없어요/ },

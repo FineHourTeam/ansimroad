@@ -81,7 +81,7 @@ export function ShortageCard({
       <h2 className="text-xl leading-snug font-extrabold tracking-tight text-balance">
         {again
           ? "이 조건으로 만들 수 있는 코스는 모두 보여 드렸어요"
-          : "조건에 맞는 확인된 장소가 아직 부족해요"}
+          : "조건에 맞는 장소가 아직 부족해요"}
       </h2>
       <p className="text-muted-foreground text-base">
         {again
@@ -137,7 +137,7 @@ export function CuratedSection({
             모담팀 추천 코스
           </h2>
           <p className="text-muted-foreground text-sm">
-            운영진이 직접 짠 코스예요. 이동 조건은 장소마다 정보를 확인해 주세요.
+            운영진이 추천하는 코스예요. 이동 조건은 장소마다 정보를 확인해 주세요.
           </p>
         </div>
       </div>

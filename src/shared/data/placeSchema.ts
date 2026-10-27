@@ -275,11 +275,6 @@ export function parsePlaceRows(rows: string[][]): ParseResult {
   return { places, skipped, missingColumns: [] };
 }
 
-/** S1 ③ '모담팀이 직접 확인한 목포 N곳' — 확인상태가 현장·전화인 장소 수 (F-02) */
-export function countVerified(places: Place[]): number {
-  return places.filter((p) => p.verify === "현장" || p.verify === "전화").length;
-}
-
 export function isTourApiPhoto(url: string | null): boolean {
   return !!url && /visitkorea\.or\.kr/i.test(url);
 }
