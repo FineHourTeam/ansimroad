@@ -29,6 +29,8 @@ export interface StopRowProps {
   nowLabel: string;
   locationOn: boolean;
   upload: "idle" | "sending" | "error";
+  /** 실패 사유 코드 (예: storage/unauthorized) — 기기별 원인을 알려 주려고 화면에 작게 보인다 */
+  uploadReason: string | null;
   busy: boolean;
   onPick: (index: number) => void;
   onStay: (index: number, deltaMin: number) => void;
@@ -153,6 +155,11 @@ function PhotoSlot(p: StopRowProps) {
       {p.upload === "error" && (
         <p role="alert" className="text-destructive text-center text-sm font-bold">
           사진을 올리지 못했어요. 다시 눌러 주세요
+          {p.uploadReason && (
+            <span className="text-muted-foreground block text-xs font-medium">
+              (사유: {p.uploadReason})
+            </span>
+          )}
         </p>
       )}
     </div>

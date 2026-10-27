@@ -7,7 +7,9 @@ import { now } from "@/shared/lib/clock";
 import { prepareUploadImage } from "@/shared/lib/image";
 
 export type UploadState =
-  { kind: "idle" } | { kind: "sending"; stopIndex: number } | { kind: "error"; stopIndex: number };
+  | { kind: "idle" }
+  | { kind: "sending"; stopIndex: number }
+  | { kind: "error"; stopIndex: number; reason: string };
 
 export function usePhotoUpload(tripId: string, maxPx: number) {
   const add = useAddPhoto(tripId, "family");
@@ -33,8 +35,9 @@ export function usePhotoUpload(tripId: string, maxPx: number) {
       setState({ kind: "idle" });
       toast.success(`사진 ${String(files.length)}장을 올렸어요`);
     } catch (err) {
-      track("photo_upload_fail", { by: "family", reason: failReason(err) });
-      setState({ kind: "error", stopIndex });
+      const reason = failReason(err);
+      track("photo_upload_fail", { by: "family", reason });
+      setState({ kind: "error", stopIndex, reason });
     }
   };
 

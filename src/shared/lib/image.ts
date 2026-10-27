@@ -67,7 +67,7 @@ export async function prepareUploadImage(
     const ctx = canvas.getContext("2d");
     if (!ctx) throw new Error("canvas 2d 미지원");
     ctx.drawImage(img.source, 0, 0, width, height);
-    const blob = await new Promise<Blob>((resolve, reject) => {
+    const encoded = await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(
         (b) => {
           if (b) resolve(b);
@@ -77,11 +77,35 @@ export async function prepareUploadImage(
         quality,
       );
     });
+    // iOS 사파리(카카오톡 인앱 포함)는 캔버스로 만든 JPEG 에도 EXIF(방향 · 크기 · 색공간)를 넣는다 — 떼어 낸다
+    const blob = await stripExif(encoded);
     if (await hasExif(blob)) throw new Error("EXIF 제거 실패");
     return { blob, width, height };
   } finally {
     img.close();
   }
+}
+
+/** JPEG 머리(SOS 전)에서 APP1(EXIF · XMP) 구간을 뺀다. 머리가 64KB 를 넘거나 JPEG 가 아니면 그대로 돌려준다 */
+export async function stripExif(blob: Blob): Promise<Blob> {
+  const head = new Uint8Array(await blob.slice(0, 65536).arrayBuffer());
+  if (head[0] !== 0xff || head[1] !== 0xd8) return blob;
+  const keep: Uint8Array<ArrayBuffer>[] = [head.subarray(0, 2)];
+  let i = 2;
+  let dropped = false;
+  while (i + 4 <= head.length && head[i] === 0xff) {
+    const marker = head[i + 1];
+    if (marker === 0xda) {
+      // SOS: 여기부터 압축 데이터 — 그대로 잇는다
+      return dropped ? new Blob([...keep, blob.slice(i)], { type: "image/jpeg" }) : blob;
+    }
+    const end = i + 2 + (((head[i + 2] ?? 0) << 8) | (head[i + 3] ?? 0));
+    if (end > head.length) break;
+    if (marker === 0xe1) dropped = true;
+    else keep.push(head.subarray(i, end));
+    i = end;
+  }
+  return blob;
 }
 
 /** JPEG 앞부분에 EXIF(APP1 'Exif') 블록이 있는지 검사 — 검수용 */

@@ -10,7 +10,10 @@ import { prepareUploadImage } from "@/shared/lib/image";
 import { matchLocation } from "@/shared/engine/timeline";
 
 export type ShootPhase =
-  { kind: "idle" } | { kind: "sending" } | { kind: "sent"; at: string } | { kind: "failed" };
+  | { kind: "idle" }
+  | { kind: "sending" }
+  | { kind: "sent"; at: string }
+  | { kind: "failed"; reason: string };
 
 const SENT_MS = 3000; // '자녀에게 보냈어요'를 보여 주는 시간
 // 연결이 끊기면 SDK 가 오래(최대 10분) 다시 시도한다 — 30초에 끊고 '다시 눌러 주세요'를 보인다
@@ -76,8 +79,9 @@ export function useSeniorPhoto(opts: {
         setPhase({ kind: "idle" });
       }, SENT_MS);
     } catch (err) {
-      track("photo_upload_fail", { by: "senior", reason: failReason(err) });
-      setPhase({ kind: "failed" });
+      const reason = failReason(err);
+      track("photo_upload_fail", { by: "senior", reason });
+      setPhase({ kind: "failed", reason });
     }
   }
 
