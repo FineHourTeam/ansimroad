@@ -15,6 +15,7 @@ import { photosBySlot } from "@/shared/engine/timeline";
 import { diffDays, koreanMonthDay } from "@/shared/lib/date";
 import { useFamilyTrip } from "../hooks/useFamilyTrip";
 import { useLightPrint } from "../hooks/useLightPrint";
+import { isMobileDevice } from "@/shared/lib/share";
 import { canShareFile, imageFileName, renderCardPng, saveBlob } from "../lib/imageExport";
 import { memoryEntries } from "../lib/memories";
 import { FamilyStateView } from "./FamilyStateView";
@@ -39,6 +40,7 @@ function MemoryActions({
   bookRef: RefObject<HTMLElement | null>;
 }) {
   const [busy, setBusy] = useState<Busy>(null);
+  const [mobile] = useState(isMobileDevice);
   const name = imageFileName(trip.input.date, `${trip.course.title}-추억`);
   const head = `${koreanMonthDay(trip.input.date)} 목포 여행 추억`;
 
@@ -85,16 +87,23 @@ function MemoryActions({
   return (
     <StickyActionBar>
       <div className="grid w-full grid-cols-3 gap-2">
-        <Button
-          size="xl"
-          className="col-span-3"
-          disabled={busy !== null}
-          aria-busy={busy === "share"}
-          onClick={() => void run("share")}
-        >
-          {busy === "share" ? spinner : <ShareIcon />}
-          {busy === "share" ? "이미지 만드는 중…" : "이미지로 가족에게 보내기"}
-        </Button>
+        {/* PC 는 공유 창에 카카오톡이 없어서 저장 · 인쇄만 (모담 2026-10-29) */}
+        {mobile ? (
+          <Button
+            size="xl"
+            className="col-span-3"
+            disabled={busy !== null}
+            aria-busy={busy === "share"}
+            onClick={() => void run("share")}
+          >
+            {busy === "share" ? spinner : <ShareIcon />}
+            {busy === "share" ? "이미지 만드는 중…" : "이미지로 가족에게 보내기"}
+          </Button>
+        ) : (
+          <p className="text-muted-foreground col-span-3 text-center text-sm font-semibold text-balance">
+            PC에서는 이미지를 저장해 PC 카카오톡 대화방에 끌어다 놓아 주세요
+          </p>
+        )}
         <Button
           variant="outline"
           size="xl"

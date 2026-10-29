@@ -1,5 +1,6 @@
 // 일정표 이미지 (휴대폰 화면용 카드 → 가로 1080px PNG) 만들기 · 저장 · 공유.
 // DOM → PNG 라이브러리(modern-screenshot)는 누를 때만 불러온다 (첫 화면 번들에 넣지 않는다).
+import { isMobileDevice } from "@/shared/lib/share";
 
 /** 이미지 가로 (px) — 카드는 화면에서 CARD_WIDTH 로 그리고 배율로 키운다 */
 export const IMAGE_WIDTH = 1080;
@@ -53,7 +54,7 @@ export function saveBlob(blob: Blob, name: string): void {
   }, 30_000);
 }
 
-/** 파일 공유가 되는 기기인지 (안 되면 저장으로 대신한다) */
+/** 파일 공유가 되는 휴대폰인지 (안 되면 저장으로 대신한다. PC 는 공유 창에 카카오톡이 없어 저장으로) */
 export function canShareFile(file: File): boolean {
-  return "canShare" in navigator && navigator.canShare({ files: [file] });
+  return isMobileDevice() && "canShare" in navigator && navigator.canShare({ files: [file] });
 }
