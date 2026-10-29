@@ -1,4 +1,4 @@
-// S5 자녀 현황 · S3 링크 모아 보기 · 인쇄용 — 시드한 여행(seedTrip)으로 화면 동작과 저장 결과를 함께 확인한다.
+// S5 자녀 현황(링크 카드 · 추억 페이지 예시) · 인쇄용 — 시드한 여행(seedTrip)으로 화면 동작과 저장 결과를 함께 확인한다.
 import { readFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
 import { hhmm } from "../src/shared/lib/date";
@@ -64,9 +64,11 @@ test("당일 화면: 코스 제목 · 장소 · 지금 줄 · 지금쯤 상태",
   const banner = page.getByRole("status").filter({ hasText: `지금쯤 ${stop.place.name} 일정` });
   await expect(banner).toContainText("아직 사진은 없어요");
   await expect(page.getByRole("heading", { name: "사진 0장" })).toBeVisible();
-  // 당일에는 보내기 카드 대신 바로가기 줄만
-  await expect(page.getByText("부모님께 링크를 보내 주세요")).toHaveCount(0);
-  await expect(page.getByRole("link", { name: "링크 모아 보기" })).toBeVisible();
+  // 링크 카드는 당일에도 늘 · 바로가기는 '여행 일정 한눈에 보기' 한 줄
+  await expect(page.getByRole("region", { name: "부모님 링크" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "여행 일정 한눈에 보기" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "링크 모아 보기" })).toHaveCount(0);
+  await expect(page.getByRole("link", { name: "코스 보기·수정" })).toHaveCount(0);
 });
 
 test("코스 이름 · 출발 시각 · 머무는 시간은 바로 저장되고 새로고침해도 남는다", async ({
@@ -172,33 +174,109 @@ test("부모님이 올린 사진은 찍은 시각의 예정 장소 칸에 실시
   await expect(banner.locator("p").nth(1)).toHaveText(`${hhmm(stop.arriveMin + 5)} 마지막 사진`);
 });
 
-test("여행 전: 보내기 카드와 링크 모아 보기에 부모님 링크가 보인다", async ({ page }) => {
+test("링크 카드: 부모님 링크 · 자녀 링크 주소와 [링크 복사] [공유], 바로가기 · [수정하기]", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "share", {
+      configurable: true,
+      value: () => Promise.resolve(),
+    });
+  });
   const trip = await seedTrip();
   await page.goto(`/f/${trip.familyToken}`);
   await waitReady(page, trip.course.title);
-  const card = page.getByRole("region", { name: "부모님께 링크를 보내 주세요" });
-  await expect(card.getByText(`/t/${trip.seniorToken}`)).toBeVisible();
-  await expect(card.getByRole("button", { name: "부모님 링크 복사" })).toBeVisible();
+  const senior = page.getByRole("region", { name: "부모님 링크" });
+  await expect(senior.getByText(`/t/${trip.seniorToken}`)).toBeVisible();
+  await expect(
+    senior.getByText("부모님은 이 링크로 일정을 보고 사진만 찍으시면 돼요."),
+  ).toBeVisible();
+  await expect(senior.getByRole("button", { name: "부모님 링크 복사" })).toBeVisible();
+  await expect(senior.getByRole("button", { name: "부모님 링크 공유" })).toBeVisible();
+  const family = page.getByRole("region", { name: "자녀 링크 (이 화면)" });
+  await expect(family.getByText(`/f/${trip.familyToken}`)).toBeVisible();
+  await expect(family.getByRole("button", { name: "자녀 링크 복사" })).toBeVisible();
+  await expect(family.getByRole("button", { name: "자녀 링크 공유" })).toBeVisible();
+  await expect(family.getByText("카카오톡 '나와의 채팅'에 보내 두면")).toBeVisible();
 
-  // 바로가기 한 줄(코스 보기·수정 · 링크 모아 보기 · 인쇄 · 이미지)은 보내기 카드 바로 아래
-  await page
-    .getByRole("navigation", { name: "코스 바로가기" })
-    .getByRole("link", { name: "링크 모아 보기" })
-    .click();
-  await expect(page).toHaveURL(new RegExp(`/f/${trip.familyToken}/share$`));
-  await expect(page.getByText(`/t/${trip.seniorToken}`)).toBeVisible();
-  await expect(page.getByRole("button", { name: /부모님.*링크.*복사/ })).toHaveCount(1);
-  await expect(page.getByText(`/f/${trip.familyToken}`, { exact: false }).first()).toBeVisible();
-  await expect(page.getByRole("link", { name: /코스 자세히 보기/ })).toHaveAttribute(
+  // 날짜 줄 [수정하기] → 코스 보기·수정
+  await expect(page.getByRole("link", { name: "수정하기" })).toHaveAttribute(
     "href",
     `/f/${trip.familyToken}/course`,
   );
-  await expect(page.getByRole("link", { name: "다른 코스 다시 고르기" })).toHaveAttribute(
-    "href",
-    `/result?p=2&a=70&m=none&w=20&d=${TRIP_DATE}&s=600&t=car`,
-  );
-  await page.getByRole("link", { name: "인쇄 · 이미지로 보기" }).click();
+  await page.getByRole("link", { name: "여행 일정 한눈에 보기" }).click();
   await expect(page).toHaveURL(new RegExp(`/f/${trip.familyToken}/print$`));
+});
+
+test("없앤 '링크 모아 보기' 옛 주소(/f/{token}/share)는 자녀 현황으로 보낸다", async ({ page }) => {
+  const trip = await seedTrip();
+  await page.goto(`/f/${trip.familyToken}/share`);
+  await expect(page).toHaveURL(new RegExp(`/f/${trip.familyToken}$`));
+  await waitReady(page, trip.course.title);
+});
+
+test("추억 페이지 예시: [예시 보기]로 예시 그림을 열고, 여행을 마치면 안내를 숨긴다", async ({
+  page,
+}) => {
+  const trip = await seedTrip();
+  await page.goto(`/f/${trip.familyToken}`);
+  await waitReady(page, trip.course.title);
+  await expect(page.getByText("여행이 끝나면 추억 페이지를 만들어 드려요")).toBeVisible();
+  await page.getByRole("button", { name: "예시 보기" }).click();
+  const dialog = page.getByRole("dialog", { name: "추억 페이지 예시" });
+  await expect(
+    dialog.getByText("예시 화면이에요. 여행 날 올린 사진과 멘트로 만들어져요"),
+  ).toBeVisible();
+  const img = dialog.getByRole("img", { name: /추억 페이지 예시/ });
+  await expect
+    .poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth))
+    .toBe(720);
+  await dialog.getByRole("button", { name: "닫기" }).first().click();
+  await expect(dialog).toHaveCount(0);
+
+  // 여행 완료(completedAt) — 추억 페이지 카드가 뜬다
+  const done = await seedTrip();
+  const expiresOn = ymdFromToday(37);
+  await writeDocs([
+    {
+      path: `trips/${done.tripId}`,
+      data: {
+        ownerUid: "e2e-seed",
+        createdAt: new Date().toISOString(),
+        input: done.input,
+        course: JSON.parse(JSON.stringify(done.course)) as Record<string, unknown>,
+        memos: {},
+        expiresOn,
+        expiresAt: new Date(`${expiresOn}T23:59:59+09:00`),
+        completedAt: new Date().toISOString(),
+      },
+    },
+  ]);
+  await page.goto(`/f/${done.familyToken}`);
+  await expect(page.getByRole("link", { name: /추억 페이지 보기·인쇄/ })).toBeVisible();
+  await expect(page.getByText("여행이 끝나면 추억 페이지를 만들어 드려요")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "예시 보기" })).toHaveCount(0);
+});
+
+test("일정 타임라인: 휴대폰 폭은 예정 카드 아래 실제 사진 칸, 넓은 화면은 좌우", async ({
+  page,
+}) => {
+  const trip = await seedTrip();
+  const name = trip.course.stops[0]?.place.name ?? "?";
+  await page.setViewportSize({ width: 375, height: 800 });
+  await page.goto(`/f/${trip.familyToken}`);
+  await waitReady(page, trip.course.title);
+  const plan = page.getByRole("button", { name: `${name} 10분 늘리기` });
+  const slot = page.getByRole("group", { name: `${name} 실제 사진` });
+  const a = await plan.boundingBox();
+  const b = await slot.boundingBox();
+  expect(b?.y ?? 0).toBeGreaterThan((a?.y ?? Infinity) + (a?.height ?? 0));
+  expect(b?.width ?? 0).toBeGreaterThan(300);
+
+  await page.setViewportSize({ width: 1280, height: 800 });
+  const c = await plan.boundingBox();
+  const d = await slot.boundingBox();
+  expect(d?.x ?? 0).toBeGreaterThan((c?.x ?? Infinity) + (c?.width ?? 0));
 });
 
 test("공유 창이 없는 기기(카카오톡 인앱 등)는 카카오 버튼 대신 '일정 글 복사'가 일정 글째 복사한다", async ({
@@ -212,8 +290,12 @@ test("공유 창이 없는 기기(카카오톡 인앱 등)는 카카오 버튼 �
   const trip = await seedTrip();
   await page.goto(`/f/${trip.familyToken}`);
   await waitReady(page, trip.course.title);
-  const card = page.getByRole("region", { name: "부모님께 링크를 보내 주세요" });
-  await expect(card.getByRole("button", { name: "카카오톡으로 보내기" })).toHaveCount(0);
+  const card = page.getByRole("region", { name: "부모님 링크" });
+  await expect(card.getByRole("button", { name: "부모님 링크 공유" })).toHaveCount(0);
+  // 자녀 쪽은 [링크 복사] 하나만
+  const family = page.getByRole("region", { name: "자녀 링크 (이 화면)" });
+  await expect(family.getByRole("button")).toHaveCount(1);
+  await expect(family.getByRole("button", { name: "자녀 링크 복사" })).toBeVisible();
   await card.getByRole("button", { name: "일정 글 복사" }).click();
   await expect(
     page.getByText("일정과 부모님 링크를 복사했어요. 카카오톡에 붙여 넣어 주세요"),
@@ -247,16 +329,16 @@ test("인쇄용: 이미지 공유가 안 되는 기기는 저장하고, 일정 �
   expect(copied).toContain(trip.course.title);
 });
 
-test("여행 당일에 확정하면 부모님 사진이 오기 전까지 보내기 카드를 보여 준다", async ({ page }) => {
+test("링크 카드는 여행 당일 부모님 사진이 온 뒤에도 그대로 있다", async ({ page }) => {
   const today = ymdFromToday(0);
   const trip = await seedTrip({ input: { ...INPUT, date: today } }); // 오늘 확정한 오늘 여행
   await page.goto(`/f/${trip.familyToken}?now=${encodeURIComponent(demoNow(today, "10:05"))}`);
   await waitReady(page, trip.course.title);
-  const card = page.getByRole("region", { name: "부모님께 링크를 보내 주세요" });
+  const card = page.getByRole("region", { name: "부모님 링크" });
   await expect(card.getByText(`/t/${trip.seniorToken}`)).toBeVisible();
   await expect(card.getByRole("button", { name: "부모님 링크 복사" })).toBeVisible();
 
-  // 부모님 사진이 오면 링크가 간 것이니 당일 화면대로 카드를 접는다
+  // 부모님 사진이 와도 링크 카드는 접지 않는다 (링크를 다시 찾을 곳)
   const takenAt = new Date(`${today}T10:03:00+09:00`).toISOString();
   const data = { takenAt, url: "/icons/icon-192.png", width: 192, height: 192, by: "senior" };
   await writeDocs([
@@ -266,7 +348,7 @@ test("여행 당일에 확정하면 부모님 사진이 오기 전까지 보내�
     },
   ]);
   await expect(page.getByRole("heading", { name: "사진 1장" })).toBeVisible();
-  await expect(card).toHaveCount(0);
+  await expect(card).toBeVisible();
 });
 
 test("인쇄용: 코스 · 시각 · 메모 · 두 링크와 QR을 싣고 인쇄할 때 도구 막대는 숨긴다", async ({

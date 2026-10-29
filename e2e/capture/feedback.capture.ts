@@ -200,9 +200,9 @@ test("피드백 반영 화면", async ({ page }) => {
 
   // F. 공유 글 (부모님 링크 · 일정표)
   await recordShares(page);
-  await page.goto(`/f/${trip.familyToken}/share`);
+  await page.goto(`/f/${trip.familyToken}`);
   await settle(page);
-  await page.getByRole("button", { name: "카카오톡으로 보내기" }).first().click();
+  await page.getByRole("button", { name: "부모님 링크 공유" }).click();
   writeFileSync(join(DIR, "f1-senior-share.txt"), (await lastShare(page)).text ?? "");
   await page.goto(`/f/${trip.familyToken}/print`);
   await shot(page, "d3-print", true);

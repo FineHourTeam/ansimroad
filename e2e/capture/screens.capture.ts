@@ -141,8 +141,6 @@ test("휴대폰 화면", async ({ page }) => {
   await page.goto(`/f/${trip.familyToken}${now}`);
   await shot(page, "04-family");
   await shot(page, "04-family-full", true);
-  await page.goto(`/f/${trip.familyToken}/share`);
-  await shot(page, "05-share", true);
   await page.goto(`/f/${trip.familyToken}/print`);
   await shot(page, "06-print", true);
   await page.goto(`/f/${trip.familyToken}/course`);
