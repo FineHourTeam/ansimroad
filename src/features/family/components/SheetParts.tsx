@@ -1,4 +1,4 @@
-// 인쇄용 한 장(PrintSheet)과 휴대폰 이미지 카드(ImageCard)가 함께 쓰는 조각: 머리띠 · 장소 정보 줄 · 꼬리표 · 안전 정보 · QR · 링크 주소
+// 여행 일정 한눈에 보기(PrintSheet)의 조각: 머리띠 · 장소 정보 줄 · 꼬리표 · 안전 정보 · QR · 링크 주소
 import { Fragment, type ReactNode } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { BrandLogo } from "@/components/brand/BrandLogo";
