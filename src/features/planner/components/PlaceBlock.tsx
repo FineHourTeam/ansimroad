@@ -63,12 +63,13 @@ function Body({
           ))}
         </ul>
       )}
-      <div className="flex gap-2">
+      {/* 칸이 좁으면(여유가 있으면 카드 · 375px) 줄을 바꾼다. 버튼은 글자 폭보다 줄지 않고 한 줄 안에서 똑같이 늘어난다 */}
+      <div className="flex flex-wrap gap-2">
         {address && (
           <Button
             variant="outline"
             size="xl"
-            className="flex-1 px-2"
+            className="min-w-fit flex-1 px-2"
             aria-label={`${place.name} 주소 복사`}
             onClick={() =>
               void copyText(address).then((ok) => {
@@ -82,7 +83,7 @@ function Body({
           </Button>
         )}
         {/* 네이버 지도 길찾기: 장소 좌표로 연결 (휴대폰은 네이버 지도 앱으로) */}
-        <Button variant="outline" size="xl" className="flex-1 px-2" asChild>
+        <Button variant="outline" size="xl" className="min-w-fit flex-1 px-2" asChild>
           <a
             href={naverDirectionsLink(place, transport)}
             target="_blank"
@@ -94,7 +95,7 @@ function Body({
           </a>
         </Button>
         {phone && (
-          <Button variant="outline" size="xl" className="flex-1 px-2" asChild>
+          <Button variant="outline" size="xl" className="min-w-fit flex-1 px-2" asChild>
             <a href={telHref(phone)} aria-label={`${place.name} 전화 걸기 ${phone}`}>
               <PhoneIcon />
               전화
