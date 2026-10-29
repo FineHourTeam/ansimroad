@@ -1,4 +1,5 @@
-// ③ 타임라인 한 줄: 왼쪽 예정(번호 · 시각 · 장소 · 주소 복사 · 지도로 보기 · 길찾기 · 머무는 시간 조정) | 가운데 점 | 오른쪽 실제 사진 칸
+// ③ 타임라인 한 줄: 왼쪽 예정(번호 · 시각 · 장소 · 주소 복사 · 지도로 보기 · 길찾기 · 머무는 시간 조정) | 가운데 점 | 오른쪽 실제 사진 칸.
+// 휴대폰 폭(sm 미만)은 위아래로: 예정 카드 아래 그 장소의 실제 사진 칸 (점 · 가운데 선 없이)
 import { AddIcon, CameraIcon, CopyIcon, MapIcon, MapPinIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,9 +12,9 @@ import { copyLink } from "../lib/links";
 import { PhotoCard } from "./PhotoCard";
 import { NowLine } from "./StatusBanner";
 
-/** 예정 | 점 | 사진 — 가운데 칸 폭은 DOT_COL 이 정한다 */
-export const ROW_GRID = "grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] gap-x-1.5 sm:gap-x-0";
-export const DOT_COL = "w-5 sm:w-10";
+/** sm 이상: 예정 | 점 | 사진 — 가운데 칸 폭은 DOT_COL 이 정한다. 휴대폰 폭은 한 칸에 위아래로 */
+export const ROW_GRID = "grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:gap-0";
+export const DOT_COL = "w-10";
 
 export interface StopRowProps {
   course: Course;
@@ -132,6 +133,10 @@ function PhotoSlot(p: StopRowProps) {
   };
   return (
     <div role="group" aria-label={`${name} 실제 사진`} className="flex min-w-0 flex-col gap-2">
+      {/* 휴대폰 폭은 위 머리글(예정 | 실제) 대신 칸마다 */}
+      <p aria-hidden="true" className="text-muted-foreground pl-1 text-sm font-bold sm:hidden">
+        실제 (사진)
+      </p>
       {p.photos.length > 0 ? (
         <>
           {p.photos.map((photo) => (
@@ -225,7 +230,7 @@ export function StopRow(p: StopRowProps) {
         )}
       </div>
       {/* 점은 번호 · 시각 줄 높이에 (가운데에 두면 사진이 많은 줄에서 떠 보인다) */}
-      <span aria-hidden="true" className={cn("flex justify-center pt-4 sm:pt-5", DOT_COL)}>
+      <span aria-hidden="true" className={cn("hidden justify-center pt-5 sm:flex", DOT_COL)}>
         <span
           className={cn(
             "ring-background-subtle z-10 size-3.5 rounded-full ring-4",

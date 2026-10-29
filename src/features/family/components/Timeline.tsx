@@ -1,4 +1,4 @@
-// ③ 예정과 실제(사진)를 나란히: 휴대폰도 2열 그대로. 여행 당일에는 지금 시각을 빨간 선으로 보여 준다.
+// ③ 예정과 실제(사진)를 나란히 (휴대폰 폭은 위아래로). 여행 당일에는 지금 시각을 빨간 선으로 보여 준다.
 import { Fragment } from "react";
 import type { Course, PhotoRecord, Transport } from "@/shared/domain/types";
 import type { NowPos } from "@/shared/engine/timeline";
@@ -35,12 +35,15 @@ export function Timeline({
   const busy = upload.kind === "sending";
   return (
     <section aria-label="예정과 실제 사진" className="flex flex-col gap-2">
-      <div aria-hidden="true" className={`${ROW_GRID} text-muted-foreground text-sm font-bold`}>
+      <div
+        aria-hidden="true"
+        className={`${ROW_GRID} text-muted-foreground hidden text-sm font-bold sm:grid`}
+      >
         <span className="pl-1">예정</span>
         <span className={DOT_COL} />
         <span className="pl-1">실제 (사진)</span>
       </div>
-      <ol className="before:bg-border relative flex flex-col gap-3 before:absolute before:inset-y-0 before:left-1/2 before:w-0.5 before:-translate-x-1/2 before:rounded-full">
+      <ol className="sm:before:bg-border relative flex flex-col gap-6 sm:gap-3 sm:before:absolute sm:before:inset-y-0 sm:before:left-1/2 sm:before:w-0.5 sm:before:-translate-x-1/2 sm:before:rounded-full">
         {course.stops.map((stop, i) => (
           <Fragment key={stop.place.id}>
             {nowPos?.kind === "before" && nowPos.index === i && (
