@@ -4,7 +4,7 @@ import type { TripSnapshot } from "@/shared/domain/types";
 import { track } from "@/shared/lib/analytics";
 import { koreanMonthDay } from "@/shared/lib/date";
 import { canWebShare, copyText, shareLink } from "@/shared/lib/share";
-import { seniorShareText } from "./shareText";
+import { familySelfText, seniorShareText } from "./shareText";
 
 /** 화면 경로 → 전체 주소 */
 export const absoluteUrl = (path: string) => `${window.location.origin}${path}`;
@@ -30,5 +30,22 @@ export async function sendSeniorLink(trip: TripSnapshot, url: string): Promise<v
   if (r !== "failed") return;
   if (await copyText(text))
     toast.success("일정과 부모님 링크를 복사했어요. 카카오톡에 붙여 넣어 주세요");
+  else toast.error("복사하지 못했어요. 다시 눌러 주세요");
+}
+
+/** 보내 두기 버튼 아래 안내 */
+export const SELF_LINK_HINT =
+  "카카오톡 '나와의 채팅'에 보내 두면 링크를 잃어버려도 다시 찾을 수 있어요.";
+
+/**
+ * 내 카톡·문자로 보내 두기 (모담 제안 2026-10-29): 휴대폰 공유 창으로 자녀용 링크를 자기에게 보낸다(받는 곳은 사용자가 고른다).
+ * 공유 창이 없거나 PC 면 같은 글을 복사해 '나와의 채팅'에 붙여 넣게 한다
+ */
+export async function sendFamilyLinkToSelf(trip: TripSnapshot, url: string): Promise<void> {
+  const text = familySelfText(trip, url);
+  const r = canWebShare() ? await shareLink({ title: "안심로드 자녀용 링크", text }) : "failed";
+  if (r !== "failed") return;
+  if (await copyText(text))
+    toast.success("자녀용 링크를 복사했어요. 카카오톡 '나와의 채팅'에 붙여 넣어 두세요");
   else toast.error("복사하지 못했어요. 다시 눌러 주세요");
 }

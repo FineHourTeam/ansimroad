@@ -116,7 +116,7 @@ export function FamilyDashboard({
       )}
 
       {!trip.reportToken && showSend && access.seniorToken && (
-        <SendCard trip={trip} seniorToken={access.seniorToken} />
+        <SendCard trip={trip} seniorToken={access.seniorToken} familyToken={token} />
       )}
       <FamilyLinks token={token} printOn={settings.printViewEnabled} />
 
