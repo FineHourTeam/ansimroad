@@ -206,10 +206,10 @@ test("피드백 반영 화면", async ({ page }) => {
   writeFileSync(join(DIR, "f1-senior-share.txt"), (await lastShare(page)).text ?? "");
   await page.goto(`/f/${trip.familyToken}/print`);
   await shot(page, "d3-print", true);
-  // 진단: 가로 넘침 · 아래 띠 단추가 실제로 눌리는 자리인지 (E2E '이미지로 저장하기' 클릭이 main 에 가로막히는 문제)
+  // 진단: 가로 넘침 · 아래 띠 단추가 실제로 눌리는 자리인지 (E2E '이미지 저장' 클릭이 main 에 가로막히는 문제)
   const diag = await page.evaluate(() => {
     const btn = [...document.querySelectorAll("button")].find((b) =>
-      b.textContent.includes("이미지로 저장하기"),
+      b.textContent.includes("이미지 저장"),
     );
     const r = btn?.getBoundingClientRect();
     const hit = r ? document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2) : null;

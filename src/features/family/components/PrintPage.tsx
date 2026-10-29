@@ -36,11 +36,12 @@ export function PrintPage() {
         }
       </style>
       <TopBar title="인쇄 · 이미지" back={back} />
-      <PageBody className="flex flex-col gap-4 print:max-w-none print:p-0">
+      {/* 휴대폰 폭에선 바깥 여백 없이 일정표를 화면 가득 (모담 대표 요청 2026-10-29) */}
+      <PageBody className="flex flex-col gap-4 px-0 pt-0 sm:px-4 sm:pt-5 print:max-w-none print:p-0">
         {state.status === "ready" && reviews.isError && (
           <div
             role="alert"
-            className="bg-card flex flex-wrap items-center justify-between gap-2 rounded-2xl border p-4 print:hidden"
+            className="bg-card mx-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border p-4 sm:mx-0 print:hidden"
           >
             <p className="font-bold">후기를 불러오지 못했어요. 후기 없이 인쇄돼요</p>
             <Button variant="outline" size="xl" onClick={() => void reviews.refetch()}>

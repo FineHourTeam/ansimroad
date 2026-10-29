@@ -117,7 +117,7 @@ export function PrintSheet({
   return (
     <article
       data-course={courseTone(course.theme)}
-      className="bg-card text-card-foreground mx-auto flex w-full max-w-3xl flex-col gap-5 rounded-2xl border p-4 leading-relaxed shadow-sm [-webkit-print-color-adjust:exact] [print-color-adjust:exact] sm:p-8 print:min-h-[270mm] print:max-w-none print:gap-2.5 print:rounded-none print:border-0 print:p-0 print:shadow-none"
+      className="bg-card text-card-foreground mx-auto flex w-full max-w-3xl flex-col gap-5 p-3 leading-relaxed [-webkit-print-color-adjust:exact] [print-color-adjust:exact] sm:rounded-2xl sm:border sm:p-8 sm:shadow-sm print:min-h-[270mm] print:max-w-none print:gap-2.5 print:rounded-none print:border-0 print:p-0 print:shadow-none"
     >
       <SheetHeader
         date={input.date}
