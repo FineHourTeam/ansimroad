@@ -28,6 +28,7 @@ function toPhoto(tripId: string, id: string, d: DocumentData): PhotoRecord {
     lng: typeof d.lng === "number" ? d.lng : null,
     locationStatus: (d.locationStatus ?? "off") as PhotoRecord["locationStatus"],
     ...(typeof d.stopIndex === "number" ? { stopIndex: d.stopIndex } : {}),
+    ...(typeof d.placeId === "string" ? { placeId: d.placeId } : {}),
     by: d.by === "family" ? "family" : "senior",
   };
 }
@@ -51,6 +52,7 @@ export async function addPhoto(
     lng: photo.lng,
     locationStatus: photo.locationStatus,
     ...(photo.stopIndex !== undefined ? { stopIndex: photo.stopIndex } : {}),
+    ...(photo.placeId !== undefined ? { placeId: photo.placeId } : {}),
     by,
   };
   await setDoc(metaRef, meta);

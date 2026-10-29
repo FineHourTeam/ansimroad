@@ -14,9 +14,6 @@ const ResultDetailPage = lazy(() =>
   import("@/features/planner").then((m) => ({ default: m.ResultDetailPage })),
 );
 const FamilyPage = lazy(() => import("@/features/family").then((m) => ({ default: m.FamilyPage })));
-const FamilyCoursePage = lazy(() =>
-  import("@/features/planner").then((m) => ({ default: m.FamilyCoursePage })),
-);
 const PrintPage = lazy(() => import("@/features/family").then((m) => ({ default: m.PrintPage })));
 const MemoriesPage = lazy(() =>
   import("@/features/family").then((m) => ({ default: m.MemoriesPage })),
@@ -69,9 +66,12 @@ export const router = createBrowserRouter([
       { path: paths.result, element: <ResultsPage /> },
       { path: paths.resultDetail, element: <ResultDetailPage /> },
       { path: paths.familyPattern, element: <FamilyPage /> },
-      { path: paths.familyCoursePattern, element: <FamilyCoursePage /> },
       {
         path: paths.legacySharePattern,
+        loader: ({ params }) => redirect(paths.family(params.token ?? "")),
+      },
+      {
+        path: paths.legacyCoursePattern,
         loader: ({ params }) => redirect(paths.family(params.token ?? "")),
       },
       { path: paths.printPattern, element: <PrintPage /> },

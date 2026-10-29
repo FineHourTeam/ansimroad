@@ -143,8 +143,6 @@ test("휴대폰 화면", async ({ page }) => {
   await shot(page, "04-family-full", true);
   await page.goto(`/f/${trip.familyToken}/print`);
   await shot(page, "06-print", true);
-  await page.goto(`/f/${trip.familyToken}/course`);
-  await shot(page, "07-family-course", true);
 
   await page.addInitScript((t) => {
     localStorage.setItem(`sr.consent.${t}`, "agree");

@@ -68,13 +68,23 @@ export function matchLocation(
 }
 
 /** 사진을 타임라인 칸(예정 장소 순번)에 배정한다. 위치 OFF면 시각 기준, ON이면 위치 매칭 → 실패 시 시각 기준. */
+/** 자녀가 장소를 골라 올린 사진의 칸: 장소 ID 로 먼저 찾고(빼거나 넣어도 그 장소에), 옛 사진 · 뺀 장소는 순번 */
+export function pickedStopIndex(course: Course, photo: PhotoRecord): number | undefined {
+  if (photo.placeId !== undefined) {
+    const i = course.stops.findIndex((s) => s.place.id === photo.placeId);
+    if (i >= 0) return i;
+  }
+  return photo.stopIndex;
+}
+
 export function slotForPhoto(
   course: Course,
   photo: PhotoRecord,
   minuteOfDay: number,
   locationOn: boolean,
 ): number {
-  if (photo.stopIndex !== undefined) return photo.stopIndex; // 자녀가 장소를 직접 골라 올린 사진
+  const picked = pickedStopIndex(course, photo); // 자녀가 장소를 직접 골라 올린 사진
+  if (picked !== undefined) return picked;
   if (locationOn) {
     const m = matchLocation(course, photo);
     if (m.kind === "matched") return m.index;

@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { changeStay, moveStop, removeStop, shiftStart } from "@/shared/lib/courseEdit";
+import { changeStay, insertPlaceAt, removeStop, shiftStart } from "@/shared/lib/courseEdit";
 import { parseCsv } from "@/shared/data/csv";
 import { parsePlaceRows } from "@/shared/data/placeSchema";
 import type { TripInput } from "@/shared/domain/types";
@@ -29,15 +29,6 @@ const T1: TripInput = {
 const course = at(generateCourses(places, T1, { emergencyByRegion: {} }).courses, 0);
 
 describe("확정 후 코스 수정", () => {
-  it("순서를 바꾸면 두 장소 자리가 바뀌고 시간표를 다시 계산한다 · 끝에서는 그대로", () => {
-    const next = moveStop(course, 1, -1);
-    expect(at(next.stops, 0).place.id).toBe(at(course.stops, 1).place.id);
-    expect(at(next.stops, 1).place.id).toBe(at(course.stops, 0).place.id);
-    expect(at(next.stops, 0).arriveMin).toBe(course.startMin);
-    expect(moveStop(course, 0, -1)).toBe(course);
-    expect(moveStop(course, course.stops.length - 1, 1)).toBe(course);
-  });
-
   it("머무는 시간을 늘리면 뒤 일정이 같이 밀린다", () => {
     const next = changeStay(course, 0, 10);
     expect(at(next.stops, 0).stayMin).toBe(at(course.stops, 0).stayMin + 10);
@@ -77,5 +68,18 @@ describe("지금 시각 빨간 선 위치", () => {
   });
   it("일정이 끝났으면 맨 뒤", () => {
     expect(nowLinePosition(course, course.endMin + 30)).toEqual({ kind: "after" });
+  });
+});
+
+describe("정한 자리에 장소 넣기", () => {
+  it("고른 자리에 들어가고 그 뒤 시간표를 다시 계산한다 · 자리 밖이면 맨 끝", () => {
+    const extra = places.find((p) => !course.stops.some((s) => s.place.id === p.id));
+    if (!extra) throw new Error("넣을 장소가 없어요");
+    const next = insertPlaceAt(course, 1, extra);
+    expect(next.stops).toHaveLength(course.stops.length + 1);
+    expect(at(next.stops, 1).place.id).toBe(extra.id);
+    expect(at(next.stops, 2).arriveMin).toBeGreaterThan(at(next.stops, 1).arriveMin);
+    const last = insertPlaceAt(course, 99, extra);
+    expect(at(last.stops, last.stops.length - 1).place.id).toBe(extra.id);
   });
 });

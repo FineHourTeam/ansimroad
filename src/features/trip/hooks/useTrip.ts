@@ -9,9 +9,11 @@ import {
   fetchTrip,
   joinTrip,
   recordLocationEvent,
+  saveMemo,
   subscribeReport,
   subscribeTrip,
   updateCourse,
+  updateTripDate,
 } from "../api/trips";
 import type {
   Course,
@@ -140,6 +142,16 @@ export function useCreateTrip() {
  */
 export function useUpdateCourse(tripId: string, completed = false) {
   return useMutation({ mutationFn: (course: Course) => updateCourse(tripId, course, completed) });
+}
+
+export function useUpdateTripDate(tripId: string) {
+  return useMutation({ mutationFn: (date: string) => updateTripDate(tripId, date) });
+}
+
+export function useSaveMemo(tripId: string) {
+  return useMutation({
+    mutationFn: (v: { placeId: string; text: string }) => saveMemo(tripId, v.placeId, v.text),
+  });
 }
 
 /** 리포트 공유 링크(/r) 화면: 공개본만 읽는다 (메모 · 조건 제외) */

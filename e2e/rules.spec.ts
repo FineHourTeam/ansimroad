@@ -170,6 +170,15 @@ test("확정 → 어르신 · 자녀 · 리포트 권한이 화면 설계대로 
   // 자녀: 코스 수정 · 후기 · 여행 완료
   await updateDoc(doc(owner.db, "trips", tripId), { course: { ...course, title: "고친 코스" } });
   await denied(updateDoc(doc(owner.db, "trips", tripId), { course: { stops: "nope" } })); // 깨진 코스
+  // 자녀: 장소 메모 · 여행 날짜(날짜 칸만, 보관 기한까지) 고치기 — 어르신은 못 고친다
+  await updateDoc(doc(owner.db, "trips", tripId), { "memos.A0018": "예약했어요" });
+  await denied(updateDoc(doc(senior.db, "trips", tripId), { "memos.A0018": "어르신" }));
+  const expiresOn = String((await getDoc(doc(owner.db, "trips", tripId))).data()?.expiresOn);
+  await updateDoc(doc(owner.db, "trips", tripId), { "input.date": expiresOn });
+  await denied(updateDoc(doc(owner.db, "trips", tripId), { "input.date": "9999-12-31" }));
+  await denied(updateDoc(doc(owner.db, "trips", tripId), { "input.transport": "bus" }));
+  await denied(updateDoc(doc(owner.db, "trips", tripId), { expiresOn: "2098-01-01" })); // 보관 기한은 못 바꾼다
+  await updateDoc(doc(owner.db, "trips", tripId), { "input.date": INPUT.date });
   const b = writeBatch(owner.db);
   b.set(doc(owner.db, "trips", tripId, "reviews", "A0018"), {
     rating: 5,
@@ -220,10 +229,11 @@ test("확정 → 어르신 · 자녀 · 리포트 권한이 화면 설계대로 
     completedAt: new Date().toISOString(),
   });
   await done.commit();
-  // 리포트 토큰은 다시 바꿀 수 없다
+  // 리포트 토큰은 다시 바꿀 수 없다 · 마친 여행은 날짜를 못 바꾼다 (리포트 날짜와 어긋나지 않게)
   await denied(
     setDoc(doc(owner.db, "trips", tripId), { reportToken: `R${rand()}` }, { merge: true }),
   );
+  await denied(updateDoc(doc(owner.db, "trips", tripId), { "input.date": expiresOn }));
 
   // 리포트: 읽기만, 공개 후기만
   await join(reportViewer, tripId, reportToken, "report");

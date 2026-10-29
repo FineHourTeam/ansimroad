@@ -1,15 +1,30 @@
 // S5 자녀 현황: 예정 vs 실제(사진)를 나란히 보고 '지금 어디쯤인지' 3초 안에 안다.
 // F-21 타임라인 · F-22 현황 카드(실시간) · F-24 위치 설정(기본 OFF) · D-08 위치 제공 기록
 // 순서: 코스 이름 → 현황 카드 → 링크 카드(늘) → 추억 페이지 칸([예시] · [여행 완료]) → 일정 한눈에 보기 → 지도 → 출발 시각 → 일정 · 사진
+// 코스 수정 화면 없이 여기서 바로 고친다 (2026-10-29): 날짜 · 출발 시각 · 이름 · 장소 카드 ⋮(다음에 경로 추가 · 메모 · 삭제하기) · 머무는 시간
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { usePhotos, useRecordLocationEvent, useReviews, useUpdateCourse } from "@/features/trip";
+import {
+  usePhotos,
+  useRecordLocationEvent,
+  useReviews,
+  useSaveMemo,
+  useUpdateCourse,
+  useUpdateTripDate,
+} from "@/features/trip";
 import { EmergencyLine, LegalLinks, Loading } from "@/shared/components/common";
 import { MapView } from "@/shared/components/MapView";
 import type { Course, Settings, TripAccess, TripSnapshot } from "@/shared/domain/types";
+import { isClosedOn } from "@/shared/engine/rules";
 import { nowLinePosition, photosBySlot } from "@/shared/engine/timeline";
-import { changeStay } from "@/shared/lib/courseEdit";
+import {
+  changeStay,
+  insertPlaceAt,
+  MAX_STOPS,
+  MAX_STOPS_MESSAGE,
+  removeStop,
+} from "@/shared/lib/courseEdit";
 import { courseTone } from "@/shared/lib/courseTheme";
 import { hhmm, koreanMonthDay, minutesOfDay, toLocalYmd } from "@/shared/lib/date";
 import { courseMapPoints } from "@/shared/lib/mapPoints";
@@ -27,6 +42,7 @@ import {
   ReportCard,
 } from "./SendCard";
 import { StatusBanner, type TripPhase } from "./StatusBanner";
+import { AddPlaceDialog } from "./StopActions";
 import { Timeline } from "./Timeline";
 
 export function FamilyDashboard({
@@ -44,6 +60,9 @@ export function FamilyDashboard({
   const photosQ = usePhotos(tripId);
   const reviewsQ = useReviews(tripId, false);
   const update = useUpdateCourse(tripId, !!trip.completedAt);
+  const updateDate = useUpdateTripDate(tripId);
+  const saveMemo = useSaveMemo(tripId);
+  const [addAfter, setAddAfter] = useState<number | null>(null);
   const { mutate: recordLocation } = useRecordLocationEvent(tripId);
   const { state: upload, upload: uploadFiles } = usePhotoUpload(tripId, settings.photoMaxPx);
   const [picker, setPicker] = useState({ open: false, index: 0 });
@@ -73,6 +92,38 @@ export function FamilyDashboard({
     });
   };
 
+  const changeDate = (next: string) => {
+    const closed = course.stops.filter((s) => isClosedOn(s.place, next)).map((s) => s.place.name);
+    updateDate.mutate(next, {
+      onSuccess: () => {
+        const done = `여행 날짜를 ${koreanMonthDay(next)}로 바꿨어요`;
+        if (closed.length > 0) {
+          toast.warning(done, { description: `그날 쉬는 곳이 있어요: ${closed.join(", ")}` });
+        } else toast.success(done);
+      },
+      onError: () => {
+        toast.error("날짜를 저장하지 못했어요. 다시 골라 주세요");
+      },
+    });
+  };
+
+  const removeAt = (i: number) => {
+    const name = course.stops[i]?.place.name ?? "";
+    if (course.stops.length <= 1) {
+      toast.error("장소가 하나뿐이라 뺄 수 없어요");
+      return;
+    }
+    apply(removeStop(course, i));
+    toast(`${name} 일정을 뺐어요`, {
+      action: {
+        label: "되돌리기",
+        onClick: () => {
+          apply(course);
+        },
+      },
+    });
+  };
+
   const ended = !!trip.completedAt || today > date || (today === date && nowMin >= course.endMin);
   const phase: TripPhase = ended ? "done" : today < date ? "before" : "today";
   // 사진이 없어도 여행 날부터 마칠 수 있다 (사진이 먼저 올라왔으면 그때부터)
@@ -83,7 +134,14 @@ export function FamilyDashboard({
     <div className="flex flex-col gap-4" data-course={courseTone(course.theme)}>
       {trip.reportToken && <ReportCard reportToken={trip.reportToken} />}
       {trip.completedAt && <MemoriesCard token={token} />}
-      <CourseHeader date={date} course={course} token={token} onChange={apply} />
+      <CourseHeader
+        date={date}
+        today={today}
+        expiresOn={trip.expiresOn}
+        course={course}
+        onChange={apply}
+        onDate={trip.completedAt ? undefined : changeDate}
+      />
 
       {photosQ.isPending ? (
         <Loading text="사진을 확인하는 중이에요" />
@@ -130,17 +188,6 @@ export function FamilyDashboard({
       <MapView points={points} className="border-border/80 isolate rounded-2xl shadow-sm" />
       <StartAdjust course={course} onChange={apply} />
 
-      {photosQ.isSuccess && (
-        <div className="mt-2 flex items-baseline justify-between gap-2">
-          <h2 className="text-lg font-bold tracking-tight">사진 {photos.length}장</h2>
-          <p className="text-muted-foreground text-sm">새 사진은 바로 보여요</p>
-        </div>
-      )}
-      {photosQ.isSuccess && photos.length === 0 && (
-        <p className="bg-card text-muted-foreground rounded-xl border border-dashed px-4 py-3 text-center text-sm">
-          아직 올라온 사진이 없어요. 장소 칸을 눌러 사진을 올려 보세요.
-        </p>
-      )}
       <Timeline
         course={course}
         transport={trip.input.transport}
@@ -157,6 +204,33 @@ export function FamilyDashboard({
         onStay={(i, delta) => {
           apply(changeStay(course, i, delta));
         }}
+        onAddNext={(i) => {
+          if (course.stops.length >= MAX_STOPS) toast.error(MAX_STOPS_MESSAGE);
+          else setAddAfter(i);
+        }}
+        onRemove={removeAt}
+        onMemo={async (placeId, text) => {
+          try {
+            await saveMemo.mutateAsync({ placeId, text });
+          } catch (err) {
+            toast.error("메모를 저장하지 못했어요. 다시 눌러 주세요");
+            throw err;
+          }
+        }}
+      />
+      <AddPlaceDialog
+        course={course}
+        after={addAfter}
+        date={date}
+        onOpenChange={(open) => {
+          if (!open) setAddAfter(null);
+        }}
+        onPick={(place) => {
+          if (addAfter === null) return;
+          apply(insertPlaceAt(course, addAfter + 1, place));
+          setAddAfter(null);
+          toast.success(`${place.name} 일정을 넣었어요`);
+        }}
       />
       <PhotoPicker
         open={picker.open}
@@ -164,7 +238,9 @@ export function FamilyDashboard({
         onOpenChange={(open) => {
           setPicker((p) => ({ ...p, open }));
         }}
-        onFiles={(files) => void uploadFiles(files, picker.index)}
+        onFiles={(files) =>
+          void uploadFiles(files, picker.index, course.stops[picker.index]?.place.id)
+        }
       />
       <p className="text-muted-foreground text-center text-sm">
         사진과 링크를 볼 수 있는 마지막 날 · {koreanMonthDay(trip.expiresOn)}

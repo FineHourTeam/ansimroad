@@ -6,7 +6,7 @@ import { parsePlaceRows } from "@/shared/data/placeSchema";
 import type { PhotoRecord, TripInput } from "@/shared/domain/types";
 import { generateCourses } from "@/shared/engine/generate";
 import { photosBySlot } from "@/shared/engine/timeline";
-import { changeStay, removeStop } from "@/shared/lib/courseEdit";
+import { changeStay, insertPlaceAt, removeStop } from "@/shared/lib/courseEdit";
 import { bannerText, isPast, photoWhere } from "./familyView";
 
 const places = parsePlaceRows(
@@ -72,6 +72,17 @@ describe("photosBySlot", () => {
     const shorter = removeStop(course, 3);
     const slots = photosBySlot(shorter, [photo(600, { stopIndex: 3 })], false);
     expect(slots[shorter.stops.length - 1]).toHaveLength(1);
+  });
+
+  it("장소 ID 가 있는 사진은 앞 장소를 빼거나 넣어도 그 장소 칸에 남는다", () => {
+    const pick = photo(600, { stopIndex: 2, placeId: stop(2).place.id, by: "family" });
+    const removed = removeStop(course, 0);
+    expect(photosBySlot(removed, [pick], false)[1]).toEqual([pick]);
+    const extra = places.find((p) => !course.stops.some((s) => s.place.id === p.id));
+    if (!extra) throw new Error("넣을 장소가 없어요");
+    const inserted = insertPlaceAt(course, 0, extra);
+    expect(photosBySlot(inserted, [pick], false)[3]).toEqual([pick]);
+    expect(photoWhere(removed, pick, false)).toEqual({ kind: "picked", name: stop(2).place.name });
   });
 });
 

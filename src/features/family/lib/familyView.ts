@@ -1,6 +1,6 @@
 // 자녀 화면(S5) 계산: 예정 시각 지남 · 현황 배너 문구 · 사진 위치 줄 (F-21 · F-22)
 import type { Course, PhotoRecord } from "@/shared/domain/types";
-import { matchLocation, scheduledStopIndex } from "@/shared/engine/timeline";
+import { matchLocation, pickedStopIndex, scheduledStopIndex } from "@/shared/engine/timeline";
 import { diffDays, hhmm, isoToHhmm, koreanMonthDay, minutesOfDay } from "@/shared/lib/date";
 
 export const photoMin = (p: PhotoRecord) => minutesOfDay(new Date(p.takenAt));
@@ -92,9 +92,10 @@ export type PhotoWhere =
 
 /** ④ 사진 카드의 위치 줄: 자녀가 고른 칸이 먼저, 위치 OFF면 찍은 시각의 예정 장소, ON이면 300m 매칭 결과 */
 export function photoWhere(course: Course, photo: PhotoRecord, locationOn: boolean): PhotoWhere {
-  if (photo.stopIndex !== undefined) {
+  const picked = pickedStopIndex(course, photo);
+  if (picked !== undefined) {
     const last = Math.max(0, course.stops.length - 1);
-    return { kind: "picked", name: stopName(course, Math.min(Math.max(0, photo.stopIndex), last)) };
+    return { kind: "picked", name: stopName(course, Math.min(Math.max(0, picked), last)) };
   }
   if (!locationOn) {
     return {

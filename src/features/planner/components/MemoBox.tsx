@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { getMemo, setMemo, type Memo } from "@/shared/lib/memo";
 
-export function MemoBox({ placeId, readOnly }: { placeId: string; readOnly: boolean }) {
+export function MemoBox({ placeId }: { placeId: string }) {
   const [memo, setLocal] = useState<Memo>(() => getMemo(placeId));
   const [open, setOpen] = useState(false);
   const id = useId();
@@ -16,13 +16,6 @@ export function MemoBox({ placeId, readOnly }: { placeId: string; readOnly: bool
     setMemo(placeId, m);
   };
 
-  if (readOnly) {
-    return memo.text ? (
-      <p className="bg-background-subtle rounded-xl px-3.5 py-3 text-base">
-        <strong className="font-bold">메모{memo.priv ? " (나만 보기)" : ""}:</strong> {memo.text}
-      </p>
-    ) : null;
-  }
   if (!open && !memo.text) {
     return (
       <Button

@@ -1,15 +1,11 @@
-// S2-1 ① 코스 헤더 (카드 틀 없음 · 휴대폰에서는 사진이 화면 좌우 끝까지): 첫 장소 사진 · 코스 이름(수정 중이면 입력칸) · 날짜 · 시간 · 걷는 시간 · [코스 수정]
+// S2-1 ① 코스 헤더 (카드 틀 없음 · 휴대폰에서는 사진이 화면 좌우 끝까지): 첫 장소 사진 · 코스 이름 · 날짜 · 시간 · 걷는 시간
 import { useState } from "react";
-import { CalendarIcon, CheckIcon, ClockIcon, EditIcon, WalkIcon } from "@/components/icons";
+import { CalendarIcon, ClockIcon, WalkIcon } from "@/components/icons";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { isTourApiPhoto } from "@/shared/data/placeSchema";
 import type { Course } from "@/shared/domain/types";
 import { CourseThemeIcon } from "@/shared/components/CourseThemeIcon";
-import { renameCourse } from "@/shared/lib/courseEdit";
 import { themeTitle } from "@/shared/lib/courseTheme";
 import { hhmm, shortDate } from "@/shared/lib/date";
 
@@ -41,15 +37,10 @@ function Cover({ url }: { url: string }) {
 export function CourseHeader({
   course,
   date,
-  readOnly,
-  edit,
   className,
 }: {
   course: Course;
   date: string;
-  readOnly: boolean;
-  /** 확정한 코스만: 수정 켜고 끄기 · 이름 바꾸기 */
-  edit?: { editing: boolean; onToggle: () => void; onChange: (next: Course) => void };
   className?: string;
 }) {
   const cover = course.stops[0]?.place.photoUrl ?? null;
@@ -59,48 +50,19 @@ export function CourseHeader({
       {cover && <Cover key={cover} url={cover} />}
       <header className="flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          {edit?.editing ? (
-            <div className="flex w-full flex-col gap-1.5">
-              <Label htmlFor="course-title" className="text-base">
-                코스 이름
-              </Label>
-              <Input
-                key={course.title}
-                id="course-title"
-                defaultValue={course.title}
-                maxLength={30}
-                className="h-12 text-xl font-extrabold"
-                onBlur={(e) => {
-                  const next = renameCourse(course, e.target.value);
-                  if (next !== course) edit.onChange(next);
-                  else e.target.value = course.title;
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") e.currentTarget.blur();
-                }}
-              />
-            </div>
-          ) : (
-            <h2 className="flex items-center gap-2 text-2xl leading-tight font-extrabold tracking-tight text-balance">
-              {theme && (
-                <span className="bg-course text-course-foreground grid size-9 shrink-0 place-items-center rounded-full">
-                  <CourseThemeIcon theme={course.theme} />
-                </span>
-              )}
-              {course.title}
-            </h2>
-          )}
+          <h2 className="flex items-center gap-2 text-2xl leading-tight font-extrabold tracking-tight text-balance">
+            {theme && (
+              <span className="bg-course text-course-foreground grid size-9 shrink-0 place-items-center rounded-full">
+                <CourseThemeIcon theme={course.theme} />
+              </span>
+            )}
+            {course.title}
+          </h2>
           {/* 이름을 바꾼 코스도 테마를 글자로 (색만으로 구분하지 않게) */}
           {theme && theme !== course.title && (
             <Badge className="bg-course-soft text-course-soft-foreground border-transparent">
               <CourseThemeIcon theme={course.theme} />
               {theme}
-            </Badge>
-          )}
-          {readOnly && (
-            <Badge variant="outline" className="border-success text-success">
-              <CheckIcon />
-              확정한 코스
             </Badge>
           )}
         </div>
@@ -117,17 +79,6 @@ export function CourseHeader({
             <WalkIcon size="sm" className="text-course" />총 걷는 시간 약 {course.totalWalkMin}분
           </li>
         </ul>
-        {edit && (
-          <Button
-            variant={edit.editing ? "default" : "outline"}
-            size="xl"
-            className="w-full sm:w-fit"
-            onClick={edit.onToggle}
-          >
-            <EditIcon />
-            {edit.editing ? "수정 끝내기" : "코스 수정"}
-          </Button>
-        )}
       </header>
     </section>
   );

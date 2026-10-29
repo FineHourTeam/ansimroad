@@ -14,6 +14,7 @@ export {
   DeleteIcon,
   EditIcon,
   SearchIcon,
+  MoreVerticalIcon,
 } from "./action-icons";
 export {
   PhoneIcon,

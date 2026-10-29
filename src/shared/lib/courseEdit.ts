@@ -1,7 +1,7 @@
-// 확정한 코스 수정: 장소 빼기 · 순서 바꾸기 · 머무는 시간 조정 · 장소 넣기. 바꾼 뒤 시간표(도착·출발·이동)를 앞에서부터 다시 계산한다.
+// 확정한 코스 수정: 장소 빼기 · 머무는 시간 조정 · 정한 자리에 장소 넣기. 바꾼 뒤 시간표(도착·출발·이동)를 앞에서부터 다시 계산한다.
 // 점심 11:30 고정은 수정 후에는 적용하지 않는다 (직접 조정이므로 시간이 순서대로 이어진다).
 import type { Course, Place, Stop, StopRole } from "@/shared/domain/types";
-import { distanceMeters, travelMinutes } from "@/shared/lib/geo";
+import { travelMinutes } from "@/shared/lib/geo";
 
 export function rebuild(
   course: Course,
@@ -43,18 +43,6 @@ export function removeStop(course: Course, index: number): Course {
   );
 }
 
-/** 순서 바꾸기: dir = -1 이면 한 칸 앞으로, 1 이면 한 칸 뒤로 (끝에서는 그대로) */
-export function moveStop(course: Course, index: number, dir: -1 | 1): Course {
-  const list = base(course);
-  const to = index + dir;
-  const a = list[index];
-  const b = list[to];
-  if (!a || !b) return course;
-  list[index] = b;
-  list[to] = a;
-  return rebuild(course, list);
-}
-
 export function changeStay(course: Course, index: number, deltaMin: number): Course {
   return rebuild(
     course,
@@ -82,21 +70,16 @@ export function shiftStart(course: Course, deltaMin: number): Course {
   );
 }
 
-/** 가장 가까운 장소 바로 뒤에 넣는다 */
-export function addPlace(course: Course, place: Place): Course {
+/** 정한 자리에 넣는다 (index = 넣은 뒤 그 장소의 순번, 0 이면 맨 앞) */
+export function insertPlaceAt(course: Course, index: number, place: Place): Course {
   const list = base(course);
-  let near = 0;
-  let nearM = Infinity;
-  course.stops.forEach((s, i) => {
-    const m = distanceMeters(s.place, place);
-    if (m < nearM) {
-      near = i;
-      nearM = m;
-    }
-  });
   const role: StopRole =
     place.type === "식당" ? "lunch" : place.type === "카페휴식" ? "cafe" : "pm";
-  list.splice(near + 1, 0, { place, role, stayMin: place.stayMin ?? 40 });
+  list.splice(Math.min(Math.max(0, index), list.length), 0, {
+    place,
+    role,
+    stayMin: place.stayMin ?? 40,
+  });
   const next = rebuild(course, list);
   return course.spare?.id === place.id ? { ...next, spare: null } : next;
 }

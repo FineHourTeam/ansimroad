@@ -1,8 +1,8 @@
 // S5 자녀 현황(링크 카드 · 추억 페이지 예시) · 인쇄용 — 시드한 여행(seedTrip)으로 화면 동작과 저장 결과를 함께 확인한다.
 import { readFile } from "node:fs/promises";
 import { expect, test, type Page } from "@playwright/test";
-import { hhmm } from "../src/shared/lib/date";
-import { getDoc, listDocs, writeDocs } from "./support/emulator";
+import { addDays, hhmm } from "../src/shared/lib/date";
+import { deleteDoc, getDoc, listDocs, writeDocs } from "./support/emulator";
 import {
   demoNow,
   firstCourse,
@@ -35,6 +35,7 @@ async function savedCourse(tripId: string) {
   return {
     startMin: num(course.startMin),
     stays: arr(course.stops).map((s) => num(mapFields(s).stayMin)),
+    names: arr(course.stops).map((s) => str(mapFields(mapFields(s).place).name)),
     title: str(course.title),
   };
 }
@@ -63,7 +64,8 @@ test("당일 화면: 코스 제목 · 장소 · 지금 줄 · 지금쯤 상태",
   await expect(page.getByText("예정 시각 기준")).toHaveCount(0);
   const banner = page.getByRole("status").filter({ hasText: `지금쯤 ${stop.place.name} 일정` });
   await expect(banner).toContainText("아직 사진은 없어요");
-  await expect(page.getByRole("heading", { name: "사진 0장" })).toBeVisible();
+  // '사진 N장' 줄은 없앴다 (대표 요청 2026-10-29) — 사진은 장소 칸마다
+  await expect(page.getByRole("heading", { name: /^사진 \d+장$/ })).toHaveCount(0);
   // 링크 카드는 당일에도 늘 · 바로가기는 '여행 일정 한눈에 보기' 한 줄
   await expect(page.getByRole("region", { name: "부모님 링크" })).toBeVisible();
   await expect(page.getByRole("link", { name: "여행 일정 한눈에 보기" })).toBeVisible();
@@ -124,7 +126,6 @@ test("장소 칸을 눌러 올린 사진은 그 칸에 붙고 저장된다", asy
 
   const slot = page.getByRole("group", { name: `${target} 실제 사진` });
   await expect(slot.getByText("내가 올린 사진")).toBeVisible();
-  await expect(page.getByRole("heading", { name: "사진 1장" })).toBeVisible();
   await expect(
     page.getByRole("group", { name: `${other} 실제 사진` }).getByText("내가 올린 사진"),
   ).toHaveCount(0);
@@ -158,7 +159,6 @@ test("부모님이 올린 사진은 찍은 시각의 예정 장소 칸에 실시
   if (!stop) throw new Error("세 번째 장소 없음");
   await page.goto(onTripDay(trip.familyToken));
   await waitReady(page, trip.course.title);
-  await expect(page.getByRole("heading", { name: "사진 0장" })).toBeVisible();
 
   const takenAt = new Date(`${TRIP_DATE}T${hhmm(stop.arriveMin + 5)}:00+09:00`).toISOString();
   const data = { takenAt, url: "/icons/icon-192.png", width: 192, height: 192, by: "senior" };
@@ -168,15 +168,12 @@ test("부모님이 올린 사진은 찍은 시각의 예정 장소 칸에 실시
   await expect(slot.getByText("부모님 사진")).toBeVisible();
   await expect(slot.getByText(`${hhmm(stop.arriveMin + 5)} 사진`)).toBeVisible();
   await expect(slot.getByText(`${stop.place.name} 일정 중에 찍었어요`)).toBeVisible();
-  await expect(page.getByRole("heading", { name: "사진 1장" })).toBeVisible();
   const banner = page.getByRole("status").filter({ hasText: "마지막 사진" });
   await expect(banner.locator("p").first()).toHaveText(`지금쯤 ${stop.place.name} 일정`);
   await expect(banner.locator("p").nth(1)).toHaveText(`${hhmm(stop.arriveMin + 5)} 마지막 사진`);
 });
 
-test("링크 카드: 부모님 링크 · 자녀 링크 주소와 [링크 복사] [공유], 바로가기 · [수정하기]", async ({
-  page,
-}) => {
+test("링크 카드: 부모님 링크 · 자녀 링크 주소와 [링크 복사] [공유], 바로가기", async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "share", {
       configurable: true,
@@ -199,13 +196,91 @@ test("링크 카드: 부모님 링크 · 자녀 링크 주소와 [링크 복사]
   await expect(family.getByRole("button", { name: "자녀 링크 공유" })).toBeVisible();
   await expect(family.getByText("카카오톡 '나와의 채팅'에 보내 두면")).toBeVisible();
 
-  // 날짜 줄 [수정하기] → 코스 보기·수정
-  await expect(page.getByRole("link", { name: "수정하기" })).toHaveAttribute(
-    "href",
-    `/f/${trip.familyToken}/course`,
-  );
+  // [수정하기] · 코스 수정 화면은 없앴다 — 이 화면에서 바로 고친다
+  await expect(page.getByRole("link", { name: "수정하기" })).toHaveCount(0);
   await page.getByRole("link", { name: "여행 일정 한눈에 보기" }).click();
   await expect(page).toHaveURL(new RegExp(`/f/${trip.familyToken}/print$`));
+});
+
+test("없앤 '코스 보기·수정' 옛 주소(/f/{token}/course)는 자녀 현황으로 보낸다", async ({
+  page,
+}) => {
+  const trip = await seedTrip();
+  await page.goto(`/f/${trip.familyToken}/course`);
+  await expect(page).toHaveURL(new RegExp(`/f/${trip.familyToken}$`));
+  await waitReady(page, trip.course.title);
+});
+
+test("장소 카드 ⋮ 메뉴(다음에 경로 추가 · 메모 · 삭제하기 + 되돌리기)와 날짜 · 출발 시각을 이 화면에서 바로 고친다", async ({
+  page,
+}) => {
+  const trip = await seedTrip();
+  const [a, b] = trip.course.stops;
+  if (!a || !b) throw new Error("코스에 장소가 모자라요");
+  await page.goto(`/f/${trip.familyToken}`);
+  await waitReady(page, trip.course.title);
+
+  // 다음에 경로 추가: 첫 장소 바로 다음(2번째)에 들어간다. 그날 쉬는 곳은 고를 수 없다
+  await page.getByRole("button", { name: `${a.place.name} 더 보기` }).click();
+  await page.getByRole("menuitem", { name: "다음에 경로 추가" }).click();
+  const dialog = page.getByRole("dialog", { name: `${a.place.name} 다음에 갈 곳` });
+  const pick = dialog.getByRole("button", { name: /^.+ 넣기$/ }).first();
+  const added = ((await pick.getAttribute("aria-label")) ?? "").replace(/ 넣기$/, "");
+  expect(added).not.toBe("");
+  await pick.click();
+  await expect(dialog).toHaveCount(0);
+  await expect.poll(async () => (await savedCourse(trip.tripId)).names[1]).toBe(added);
+  await expect(page.getByRole("group", { name: `${added} 실제 사진` })).toBeVisible();
+
+  // 메모: 카드에 보이고 여행 문서(부모님 화면도 읽는 곳)에 남는다
+  await page.getByRole("button", { name: `${b.place.name} 더 보기` }).click();
+  await page.getByRole("menuitem", { name: "메모 쓰기" }).click();
+  await page.getByRole("textbox", { name: `${b.place.name} 메모` }).fill("입구에서 만나요");
+  await page.getByRole("button", { name: "저장" }).click();
+  await expect(page.getByText("메모: 입구에서 만나요")).toBeVisible();
+  await expect
+    .poll(async () =>
+      str(mapFields(fieldsOf(await getDoc(`trips/${trip.tripId}`)).memos)[b.place.id]),
+    )
+    .toBe("입구에서 만나요");
+
+  // 삭제하기 → 토스트 [되돌리기]
+  await page.getByRole("button", { name: `${b.place.name} 더 보기` }).click();
+  await page.getByRole("menuitem", { name: "삭제하기" }).click();
+  await expect.poll(async () => (await savedCourse(trip.tripId)).names).not.toContain(b.place.name);
+  await page.getByRole("button", { name: "되돌리기" }).click();
+  await expect.poll(async () => (await savedCourse(trip.tripId)).names).toContain(b.place.name);
+
+  // 날짜 · 출발 시각: 날짜 줄을 누르면 기기 달력 · 시계 (보관 기한은 그대로)
+  const moved = addDays(TRIP_DATE, 1);
+  await page.getByLabel(/^여행 날짜 .+ \(눌러서 바꾸기\)$/).fill(moved);
+  await expect
+    .poll(async () => str(mapFields(fieldsOf(await getDoc(`trips/${trip.tripId}`)).input).date))
+    .toBe(moved);
+  await page.getByLabel(/^출발 시각 .+ \(눌러서 바꾸기\)$/).fill("10:30");
+  await expect.poll(async () => (await savedCourse(trip.tripId)).startMin).toBe(10 * 60 + 30);
+});
+
+test("장소 카드 별점: 다녀온 가족 평균 · 수를 보여 주고 누르면 후기 팝업", async ({ page }) => {
+  const trip = await seedTrip();
+  // planner.spec 의 S2-1 후기 테스트가 쓰는 두 곳 · 여행 완료 테스트가 후기를 남기는 A0018 은 피한다
+  const rv = trip.course.stops.slice(1).filter((s) => s.place.id !== "A0018")[2];
+  if (!rv) throw new Error("후기를 볼 장소가 모자라요");
+  const path = `placeReviews/${rv.place.id}/items/e2e-family-rv1`;
+  await writeDocs([{ path, data: { rating: 4, text: "E2E 가족 후기", at: new Date() } }]);
+  try {
+    await page.goto(`/f/${trip.familyToken}`);
+    await waitReady(page, trip.course.title);
+    await page
+      .getByRole("button", {
+        name: new RegExp(`^${rv.place.name} 별점 [0-9.]+점, 다녀온 가족 \\d+명 후기 보기$`),
+      })
+      .click();
+    const dialog = page.getByRole("dialog", { name: `${rv.place.name} 후기` });
+    await expect(dialog.getByText("“E2E 가족 후기”")).toBeVisible();
+  } finally {
+    await deleteDoc(path);
+  }
 });
 
 test("없앤 '링크 모아 보기' 옛 주소(/f/{token}/share)는 자녀 현황으로 보낸다", async ({ page }) => {
@@ -223,8 +298,20 @@ test("추억 페이지 칸: [예시]로 예시 그림을 열고, 여행 날 전�
   await waitReady(page, trip.course.title);
   await expect(page.getByText("여행이 끝나면 추억 페이지를 만들어 드려요")).toBeVisible();
   // 여행 날 전(시드 = 일주일 뒤): 실수로 마치지 않게 막고 이유를 보여 준다
-  await expect(page.getByRole("button", { name: "여행 완료" })).toBeDisabled();
-  await expect(page.getByText("[여행 완료]는 여행 날부터 누를 수 있어요.")).toBeVisible();
+  const completeButton = page.getByRole("button", { name: "여행 완료" });
+  await expect(completeButton).toBeDisabled();
+  // 휴대폰에서 누르면 말풍선 (aria-disabled 라 force — 막힌 단추도 눌림 이벤트는 받는다).
+  // 후기를 불러오기 전엔 진짜 disabled 라 눌림을 받지 않으니 aria-disabled 로 바뀐 뒤 누른다
+  await expect(completeButton).toHaveAttribute("aria-disabled", "true");
+  // 말풍선은 화면을 움직이면 닫힌다 (Radix) — 먼저 보이게 둔 뒤, 늦게 끝난 스크롤에 닫히면 다시 누른다
+  await completeButton.scrollIntoViewIfNeeded();
+  await expect(async () => {
+    await completeButton.tap({ force: true });
+    await expect(page.getByRole("tooltip")).toContainText("여행 날 이후부터 누를 수 있어요", {
+      timeout: 2000,
+    });
+  }).toPass();
+  await expect(page.getByText("오늘 다녀온 곳은 어떠셨어요?")).toHaveCount(0);
   await page.getByRole("button", { name: "예시", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "추억 페이지 예시" });
   await expect(
@@ -350,7 +437,7 @@ test("링크 카드는 여행 당일 부모님 사진이 온 뒤에도 그대로
       data: { ...data, lat: null, lng: null, locationStatus: "off" },
     },
   ]);
-  await expect(page.getByRole("heading", { name: "사진 1장" })).toBeVisible();
+  await expect(page.getByRole("status").filter({ hasText: "마지막 사진" })).toBeVisible();
   await expect(card).toBeVisible();
 });
 

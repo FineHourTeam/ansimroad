@@ -15,7 +15,7 @@ export function usePhotoUpload(tripId: string, maxPx: number) {
   const add = useAddPhoto(tripId, "family");
   const [state, setState] = useState<UploadState>({ kind: "idle" });
 
-  const upload = async (files: File[], stopIndex: number) => {
+  const upload = async (files: File[], stopIndex: number, placeId: string | undefined) => {
     if (files.length === 0) return;
     setState({ kind: "sending", stopIndex });
     try {
@@ -30,6 +30,7 @@ export function usePhotoUpload(tripId: string, maxPx: number) {
           lng: null,
           locationStatus: "off",
           stopIndex,
+          ...(placeId ? { placeId } : {}),
         });
       }
       setState({ kind: "idle" });
