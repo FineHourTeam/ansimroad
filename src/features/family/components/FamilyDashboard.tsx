@@ -76,7 +76,7 @@ export function FamilyDashboard({
     <div className="flex flex-col gap-4" data-course={courseTone(course.theme)}>
       {trip.reportToken && <ReportCard reportToken={trip.reportToken} />}
       {trip.completedAt && <MemoriesCard token={token} />}
-      <CourseHeader date={date} course={course} onChange={apply} />
+      <CourseHeader date={date} course={course} token={token} onChange={apply} />
 
       {photosQ.isPending ? (
         <Loading text="사진을 확인하는 중이에요" />
