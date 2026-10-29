@@ -59,22 +59,25 @@ function Polaroid({ entry, tilt }: { entry: MemoryEntry; tilt: boolean }) {
       />
       {photos.length > 0 && (
         <div className={cn("grid gap-1.5", photos.length > 1 && "grid-cols-2")}>
-          {photos.map((p, i) => (
-            <img
-              key={p.id}
-              src={p.url}
-              alt={`${name}에서 남긴 사진 ${String(i + 1)}`}
-              decoding="async"
-              referrerPolicy="no-referrer"
-              className={cn(
-                "bg-background-subtle w-full object-cover",
-                // 종이에서는 조금 납작하게: 장소 네 곳이 A4 한 장에 들어가게
-                photos.length > 1
-                  ? "aspect-3/4 print:aspect-square"
-                  : "aspect-4/3 print:aspect-video",
-              )}
-            />
-          ))}
+          {photos.map((p, i) => {
+            // 올린 사진은 전부 싣는다. 홀수 장이면 첫 사진을 넓게 써서 빈칸이 생기지 않게
+            const wide = photos.length === 1 || (photos.length % 2 === 1 && i === 0);
+            return (
+              <img
+                key={p.id}
+                src={p.url}
+                alt={`${name}에서 남긴 사진 ${String(i + 1)}`}
+                decoding="async"
+                referrerPolicy="no-referrer"
+                className={cn(
+                  "bg-background-subtle w-full object-cover",
+                  // 종이에서는 조금 납작하게: 장소 네 곳이 A4 한 장에 들어가게
+                  wide ? "aspect-4/3 print:aspect-video" : "aspect-3/4 print:aspect-square",
+                  wide && photos.length > 1 && "col-span-2",
+                )}
+              />
+            );
+          })}
         </div>
       )}
       <div className={cn("flex items-center gap-2", photos.length > 0 && "mt-3")}>

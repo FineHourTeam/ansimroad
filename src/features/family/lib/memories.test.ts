@@ -41,9 +41,9 @@ describe("memoryEntries", () => {
     ]);
   });
 
-  it("사진은 앞 2장까지, 촬영 시각은 첫 사진", () => {
+  it("올린 사진은 전부 싣고, 촬영 시각은 첫 사진", () => {
     const [a] = memoryEntries(course, [[p1, p2, p3]], {});
-    expect(a?.photos.map((p) => p.id)).toEqual(["p1", "p2"]);
+    expect(a?.photos.map((p) => p.id)).toEqual(["p1", "p2", "p3"]);
     expect(a?.takenAt).toBe("10:25");
   });
 
