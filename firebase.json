@@ -12,6 +12,13 @@
         }
       },
       {
+        "source": "/api/img",
+        "function": {
+          "functionId": "imgProxy",
+          "region": "asia-northeast3"
+        }
+      },
+      {
         "source": "/t/**",
         "function": {
           "functionId": "linkPreview",
@@ -56,7 +63,7 @@
           },
           {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self'; script-src 'self' 'sha256-4lZnPFMtS7WWdwH/SFyq4zpXgUwq3DruWT9kBFM+oR4=' https://www.gstatic.com https://apis.google.com https://www.googletagmanager.com https://oapi.map.naver.com https://*.map.naver.net https://*.map.naver.com https://*.pstatic.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data: https://cdn.jsdelivr.net; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net wss://*.firebaseio.com https://firebasestorage.googleapis.com https://*.google-analytics.com https://*.analytics.google.com https://*.map.naver.net https://*.map.naver.com https://*.navercorp.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io; frame-src 'self' https://*.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'"
+            "value": "default-src 'self'; script-src 'self' 'sha256-4lZnPFMtS7WWdwH/SFyq4zpXgUwq3DruWT9kBFM+oR4=' https://www.gstatic.com https://apis.google.com https://www.googletagmanager.com https://oapi.map.naver.com https://*.map.naver.net https://*.map.naver.com https://*.pstatic.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data: https://cdn.jsdelivr.net; connect-src 'self' https://maps.apigw.ntruss.com https://*.googleapis.com https://*.firebaseio.com https://*.cloudfunctions.net wss://*.firebaseio.com https://firebasestorage.googleapis.com https://*.google-analytics.com https://*.analytics.google.com https://*.map.naver.net https://*.map.naver.com https://*.navercorp.com https://*.ingest.sentry.io https://*.ingest.us.sentry.io; frame-src 'self' https://*.firebaseapp.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'"
           }
         ]
       },

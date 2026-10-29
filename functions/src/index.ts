@@ -5,6 +5,7 @@
 //  - cleanupExpiredTrips: 매일 03:00(서울) 만료 여행 정리
 //  - linkPreview: 부모님 링크(/t/{token}) · 자녀 링크(/f/{token}) 카카오톡 미리보기 카드 — Hosting rewrite /t/** · /f/* → 이 함수가
 //    앱 HTML 에 여행별 og 제목을 넣는다
+//  - imgProxy: '여행 일정 한눈에 보기' 이미지 저장 때 관광공사 장소 사진을 같은 출처로 받아 준다 — Hosting rewrite /api/img
 import { initializeApp } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { FieldValue, getFirestore, Timestamp } from "firebase-admin/firestore";
@@ -14,6 +15,7 @@ import { logger } from "firebase-functions/v2";
 import { onRequest } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import { htmlOrigin, injectMeta, linkToken, previewTitle, SITE, SLOGAN } from "./linkPreview.js";
+import { MAX_IMG_BYTES, proxyTarget } from "./imgProxy.js";
 import { apiPath, upstreamUrl } from "./tourapi.js";
 
 initializeApp();
@@ -58,6 +60,39 @@ export const tourapi = onRequest(
         .send(await upstream.text());
     } catch {
       res.status(502).send("TourAPI 에 연결하지 못했어요");
+    }
+  },
+);
+
+// 장소 사진 중계 (허용한 사진 서버만, 사진 형식 · 크기 확인). 하루 캐시해 같은 사진은 다시 받지 않는다
+export const imgProxy = onRequest(
+  { region: "asia-northeast3", maxInstances: 5, timeoutSeconds: 15, memory: "256MiB" },
+  async (req, res) => {
+    if (req.method !== "GET") {
+      res.status(405).send("GET only");
+      return;
+    }
+    const url = proxyTarget(req.query.u);
+    if (!url) {
+      res.status(403).send("허용하지 않은 주소예요");
+      return;
+    }
+    try {
+      const upstream = await fetch(url, { signal: AbortSignal.timeout(8000) });
+      const type = upstream.headers.get("content-type") ?? "";
+      if (!upstream.ok || !type.startsWith("image/")) {
+        res.status(502).send("사진을 받지 못했어요");
+        return;
+      }
+      const body = Buffer.from(await upstream.arrayBuffer());
+      if (body.length > MAX_IMG_BYTES) {
+        res.status(413).send("사진이 너무 커요");
+        return;
+      }
+      res.status(200).type(type).set("Cache-Control", "public, max-age=86400").send(body);
+    } catch (e) {
+      logger.warn("사진 중계 실패", url.toString(), e);
+      res.status(502).send("사진을 받지 못했어요");
     }
   },
 );
