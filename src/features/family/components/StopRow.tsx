@@ -1,11 +1,11 @@
-// ③ 타임라인 한 줄: 왼쪽 예정(번호 · 시각 · 장소 · 주소 복사 · 길찾기 · 머무는 시간 조정) | 가운데 점 | 오른쪽 실제 사진 칸
-import { AddIcon, CameraIcon, CopyIcon, MapPinIcon } from "@/components/icons";
+// ③ 타임라인 한 줄: 왼쪽 예정(번호 · 시각 · 장소 · 주소 복사 · 지도로 보기 · 길찾기 · 머무는 시간 조정) | 가운데 점 | 오른쪽 실제 사진 칸
+import { AddIcon, CameraIcon, CopyIcon, MapIcon, MapPinIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { PlacePhoto } from "@/shared/components/PlacePhoto";
 import type { Course, PhotoRecord, Stop, Transport } from "@/shared/domain/types";
 import { hhmm } from "@/shared/lib/date";
-import { naverDirectionsLink } from "@/shared/lib/format";
+import { naverDirectionsLink, naverMapLink } from "@/shared/lib/format";
 import { ROLE_LABEL } from "@/shared/lib/placeFacts";
 import { copyLink } from "../lib/links";
 import { PhotoCard } from "./PhotoCard";
@@ -69,27 +69,46 @@ function StayAdjust({ stop, index, onStay }: Pick<StopRowProps, "stop" | "index"
   );
 }
 
-/** 주소 글자(길게 눌러 고를 수 있다) + [주소 복사] [길찾기] — 네이버 지도 길찾기는 장소 좌표로 연결한다 */
+/** 주소 글자 + 복사 아이콘, 아래 [지도로 보기] [길찾기] — 네이버 지도 길찾기는 장소 좌표로 연결한다 */
 function PlaceAddress({ stop, transport }: Pick<StopRowProps, "stop" | "transport">) {
   const { place } = stop;
   const address = place.address.trim();
   return (
     <div className="flex flex-col gap-1.5">
-      {address && <p className="text-muted-foreground text-sm leading-snug">{address}</p>}
-      <div className={address ? "grid grid-cols-2 gap-1.5" : "grid"}>
-        {address && (
+      {address && (
+        <p className="text-muted-foreground flex items-center gap-1 text-sm leading-snug">
+          <span className="min-w-0">{address}</span>
+          {/* 누르는 자리는 44px, 위아래 음수 여백으로 주소 줄 높이는 그대로 */}
           <Button
-            variant="outline"
-            size="xl"
-            className="px-1 text-sm"
+            variant="ghost"
+            size="icon"
+            className="hover:text-primary -my-3 size-11 shrink-0 rounded-full"
             aria-label={`${place.name} 주소 복사`}
             onClick={() => void copyLink(address, "주소를 복사했어요")}
           >
-            {/* 휴대폰 반 칸은 좁아서 글자만 (아이콘은 넓은 화면에서) */}
-            <CopyIcon size="sm" className="hidden sm:block" />
-            주소 복사
+            <CopyIcon size="sm" />
           </Button>
-        )}
+        </p>
+      )}
+      <div className="grid grid-cols-2 gap-1.5">
+        {/* 휴대폰 반 칸에선 '지도로 / 보기' 두 줄로 접힌다 */}
+        <Button
+          variant="outline"
+          size="xl"
+          className="px-1 text-center text-sm leading-tight whitespace-normal"
+          asChild
+        >
+          <a
+            href={naverMapLink(place.name, address)}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={`${place.name} 네이버 지도로 보기 (새 창)`}
+          >
+            {/* 휴대폰 반 칸은 좁아서 글자만 (아이콘은 넓은 화면에서) */}
+            <MapIcon size="sm" className="hidden sm:block" />
+            지도로 보기
+          </a>
+        </Button>
         <Button variant="outline" size="xl" className="px-1 text-sm" asChild>
           <a
             href={naverDirectionsLink(place, transport)}
