@@ -1,13 +1,27 @@
-// 확정 직후 자녀가 할 일: 부모님께 링크 보내기 (여행 전에만 크게. 당일에 확정했으면 부모님 사진이 오기 전까지). 보조 기능(코스 수정 · 링크 · 인쇄 · 이미지)은 한 줄 메뉴로.
-// 여행을 마치면 맨 위에 리포트 링크가 뜬다.
-import type { ReactNode } from "react";
+// 링크 카드(부모님 링크 · 자녀 링크, 여행 전후 늘): 주소 칸 + [링크 복사] [공유]. PC 처럼 공유 창이 안 되는 곳은
+// [공유] 대신 부모님 쪽은 [일정 글 복사], 자녀 쪽은 [링크 복사]만. 그 아래 '여행 일정 한눈에 보기' · 추억 페이지 예시.
+// 여행을 마치면 맨 위에 리포트 · 추억 페이지 링크가 뜬다.
 import { Link } from "react-router";
 import { paths } from "@/app/paths";
-import { ChevronRightIcon, ImageIcon, MapPinIcon, PrintIcon, ShareIcon } from "@/components/icons";
+import { ChevronRightIcon, CopyIcon, ImageIcon, PrintIcon, ShareIcon } from "@/components/icons";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import type { TripSnapshot } from "@/shared/domain/types";
-import { absoluteUrl, SELF_LINK_HINT } from "../lib/links";
-import { SelfLinkButton } from "./SelfLinkButton";
-import { SeniorShareButtons } from "./SeniorShareButtons";
+import { canWebShare } from "@/shared/lib/share";
+import {
+  absoluteUrl,
+  copyLink,
+  SELF_LINK_HINT,
+  sendFamilyLinkToSelf,
+  sendSeniorLink,
+} from "../lib/links";
 import { UrlPill } from "./SheetParts";
 
 /** 여행을 마친 뒤: 올린 사진과 남긴 멘트로 만든 추억 페이지 (인쇄 · PDF · 이미지) */
@@ -49,65 +63,159 @@ export function ReportCard({ reportToken }: { reportToken: string }) {
   );
 }
 
-/** 코스 보기·수정 · 링크 모아 보기 · 인쇄 · 이미지 — 아이콘 칸 한 줄 */
-export function FamilyLinks({ token, printOn }: { token: string; printOn: boolean }) {
-  const links: { to: string; label: string; icon: ReactNode }[] = [
-    { to: paths.familyCourse(token), label: "코스 보기·수정", icon: <MapPinIcon /> },
-    { to: paths.share(token), label: "링크 모아 보기", icon: <ShareIcon /> },
-    ...(printOn ? [{ to: paths.print(token), label: "인쇄 · 이미지", icon: <PrintIcon /> }] : []),
-  ];
+/** [링크 복사] + [공유] (공유 창이 안 되면 [공유] 대신 fallback, 없으면 복사 하나만) */
+function LinkButtons({
+  who,
+  url,
+  onShare,
+  fallback,
+}: {
+  who: "부모님" | "자녀";
+  url: string;
+  onShare: () => Promise<void>;
+  fallback?: string;
+}) {
+  const shareable = canWebShare();
+  const second = shareable ? "공유" : fallback;
   return (
-    <nav
-      aria-label="코스 바로가기"
-      className="bg-card text-card-foreground grid auto-cols-fr grid-flow-col divide-x overflow-hidden rounded-2xl border shadow-sm"
-    >
-      {links.map((l) => (
-        <Link
-          key={l.to}
-          to={l.to}
-          className="hover:bg-accent/60 focus-visible:ring-ring/50 flex min-h-20 flex-col items-center justify-center gap-1.5 px-1 py-3 text-center text-sm font-semibold outline-none focus-visible:ring-3 focus-visible:ring-inset"
+    <div className={second ? "grid grid-cols-2 gap-2" : "grid"}>
+      <Button
+        variant="outline"
+        size="xl"
+        aria-label={`${who} 링크 복사`}
+        onClick={() => void copyLink(url, `${who} 링크를 복사했어요`)}
+      >
+        <CopyIcon />
+        링크 복사
+      </Button>
+      {second && (
+        <Button
+          variant="outline"
+          size="xl"
+          aria-label={shareable ? `${who} 링크 공유` : undefined}
+          onClick={() => void onShare()}
         >
-          <span className="bg-accent text-primary grid size-9 place-items-center rounded-full">
-            {l.icon}
-          </span>
-          {l.label}
-        </Link>
-      ))}
-    </nav>
+          {shareable ? <ShareIcon /> : <CopyIcon />}
+          {second}
+        </Button>
+      )}
+    </div>
   );
 }
 
-export function SendCard({
+export function LinksCard({
   trip,
   seniorToken,
   familyToken,
 }: {
   trip: TripSnapshot;
-  seniorToken: string;
+  seniorToken: string | null;
   familyToken: string;
 }) {
-  const url = absoluteUrl(paths.senior(seniorToken));
+  const seniorUrl = seniorToken ? absoluteUrl(paths.senior(seniorToken)) : null;
+  const familyUrl = absoluteUrl(paths.family(familyToken));
   return (
-    <section
-      aria-labelledby="family-send-title"
-      className="bg-card text-card-foreground border-primary/40 flex flex-col gap-3 rounded-2xl border p-5 shadow-sm"
-    >
-      <div className="flex flex-col gap-1">
-        <h2 id="family-send-title" className="text-lg font-bold tracking-tight">
-          부모님께 링크를 보내 주세요
-        </h2>
-        <p className="text-muted-foreground">
-          부모님은 이 링크 하나로 일정을 보고 사진만 찍으시면 돼요.
-        </p>
-      </div>
-      <UrlPill url={url} />
-      <SeniorShareButtons trip={trip} url={url} />
+    <div className="bg-card text-card-foreground border-primary/40 flex flex-col gap-4 rounded-2xl border p-5 shadow-sm">
+      {seniorUrl && (
+        <section aria-labelledby="links-senior" className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1">
+            <h2 id="links-senior" className="text-lg font-bold tracking-tight">
+              부모님 링크
+            </h2>
+            <p className="text-muted-foreground">
+              부모님은 이 링크로 일정을 보고 사진만 찍으시면 돼요.
+            </p>
+          </div>
+          <UrlPill url={seniorUrl} />
+          <LinkButtons
+            who="부모님"
+            url={seniorUrl}
+            onShare={() => sendSeniorLink(trip, seniorUrl)}
+            fallback="일정 글 복사"
+          />
+        </section>
+      )}
       {/* 자녀용 링크는 부모님께 보내지 않고 나에게 보관해 둔다 (모담 제안 2026-10-29) */}
-      <div className="border-border/70 flex flex-col gap-2 border-t pt-3">
-        <p className="font-bold">이 화면(자녀용) 링크는 나에게 보내 두세요</p>
-        <SelfLinkButton trip={trip} url={absoluteUrl(paths.family(familyToken))} />
+      <section
+        aria-labelledby="links-family"
+        className="border-border/70 flex flex-col gap-3 not-first:border-t not-first:pt-4"
+      >
+        <h2 id="links-family" className="text-lg font-bold tracking-tight">
+          자녀 링크 (이 화면)
+        </h2>
+        <UrlPill url={familyUrl} />
+        <LinkButtons
+          who="자녀"
+          url={familyUrl}
+          onShare={() => sendFamilyLinkToSelf(trip, familyUrl)}
+        />
         <p className="text-muted-foreground text-sm">{SELF_LINK_HINT}</p>
-      </div>
-    </section>
+      </section>
+    </div>
+  );
+}
+
+/** 추억 페이지 예시 그림 (e2e/capture/feedback.capture.ts 의 '이미지 저장' 결과를 줄인 것) */
+const MEMORIES_EXAMPLE = "/content/memories-example.webp";
+
+function MemoriesExample() {
+  return (
+    <div className="flex items-center justify-between gap-3 px-4 py-3">
+      <p className="font-semibold">여행이 끝나면 추억 페이지를 만들어 드려요</p>
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="xl" className="px-3">
+            예시 보기
+          </Button>
+        </DialogTrigger>
+        <DialogContent aria-describedby={undefined} className="flex max-h-dvh flex-col">
+          <DialogTitle>추억 페이지 예시</DialogTitle>
+          <div className="min-h-0 overflow-y-auto rounded-lg border">
+            <img
+              src={MEMORIES_EXAMPLE}
+              alt="추억 페이지 예시: 장소마다 사진과 남긴 멘트"
+              className="w-full"
+            />
+          </div>
+          <p className="text-muted-foreground">
+            예시 화면이에요. 여행 날 올린 사진과 멘트로 만들어져요
+          </p>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline" size="xl">
+                닫기
+              </Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+/** 링크 카드 아래: '여행 일정 한눈에 보기 ›' 한 줄 + (여행을 마치기 전) 추억 페이지 예시 */
+export function FamilyLinks({
+  token,
+  printOn,
+  memoriesExample,
+}: {
+  token: string;
+  printOn: boolean;
+  memoriesExample: boolean;
+}) {
+  if (!printOn && !memoriesExample) return null;
+  return (
+    <div className="bg-card text-card-foreground flex flex-col divide-y rounded-2xl border shadow-sm">
+      {printOn && (
+        <Link
+          to={paths.print(token)}
+          className="text-primary hover:bg-accent/60 focus-visible:ring-ring/50 flex min-h-14 items-center gap-1 rounded-t-2xl px-4 font-bold outline-none last:rounded-b-2xl focus-visible:ring-3 focus-visible:ring-inset"
+        >
+          여행 일정 한눈에 보기
+          <ChevronRightIcon size="sm" />
+        </Link>
+      )}
+      {memoriesExample && <MemoriesExample />}
+    </div>
   );
 }

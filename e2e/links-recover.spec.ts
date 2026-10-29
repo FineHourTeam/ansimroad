@@ -1,4 +1,4 @@
-// 모담 10/29 메일: 자녀용 링크 다시 찾기(최근 만든 여행 · 내 카톡·문자로 보내 두기) · PC 공유 · 장소 카드 버튼 넘침
+// 모담 10/29 메일: 자녀용 링크 다시 찾기(최근 만든 여행 · 자녀 링크 [공유]로 나에게 보내 두기) · PC 공유 · 장소 카드 버튼 넘침
 import { devices, expect, test, type Page } from "@playwright/test";
 import { firstCourse, resultQuery, seedTrip } from "./support/fixtures";
 
@@ -50,7 +50,7 @@ test("부모님 링크 · 자녀 링크로 연 화면은 '최근 만든 여행'�
   await page.getByRole("button", { name: "동의하고 시작" }).click();
   await expect(page.getByRole("list", { name: "오늘 일정" })).toBeVisible();
   await page.goto(`/f/${trip.familyToken}`);
-  await expect(page.getByRole("heading", { name: "부모님께 링크를 보내 주세요" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "부모님 링크" })).toBeVisible();
   await page.goto("/");
   await expect(
     page.getByRole("heading", { name: "여행하실 분의 조건을 골라 주세요" }),
@@ -59,24 +59,27 @@ test("부모님 링크 · 자녀 링크로 연 화면은 '최근 만든 여행'�
   expect(await page.evaluate(() => localStorage.getItem("sr.recentTrips"))).toBeNull();
 });
 
-test("내 카톡·문자로 보내 두기: 자녀용 링크와 '부모님께는 보내지 마세요'만 보낸다", async ({
-  page,
-}) => {
+test("자녀 링크 [공유]: 자녀용 링크와 '부모님께는 보내지 마세요'만 보낸다", async ({ page }) => {
   const trip = await seedTrip();
   await recordShares(page);
   await page.goto(`/f/${trip.familyToken}`);
-  await page.getByRole("button", { name: "내 카톡·문자로 보내 두기" }).click();
-  let text = await lastShare(page);
+  await expect(page.getByText("카카오톡 '나와의 채팅'에 보내 두면")).toBeVisible();
+  await page.getByRole("button", { name: "자녀 링크 공유" }).click();
+  const text = await lastShare(page);
   expect(text).toContain("자녀용 링크(부모님께는 보내지 마세요)");
   expect(text).toContain(`/f/${trip.familyToken}`);
   expect(text).not.toContain(trip.seniorToken);
+});
 
-  await page.goto(`/f/${trip.familyToken}/share`);
-  await expect(page.getByText("카카오톡 '나와의 채팅'에 보내 두면")).toBeVisible();
-  await expect(page.getByText("다시 만들어야")).toHaveCount(0);
-  await page.getByRole("button", { name: "내 카톡·문자로 보내 두기" }).click();
-  text = await lastShare(page);
-  expect(text).toContain(`/f/${trip.familyToken}`);
+test("부모님 링크 [공유]: 일정 글 + 부모님 링크를 공유 창으로 보낸다", async ({ page }) => {
+  const trip = await seedTrip();
+  await recordShares(page);
+  await page.goto(`/f/${trip.familyToken}`);
+  await page.getByRole("button", { name: "부모님 링크 공유" }).click();
+  const text = await lastShare(page);
+  expect(text).toContain(trip.course.title);
+  expect(text.trimEnd()).toMatch(new RegExp(`/t/${trip.seniorToken}$`));
+  expect(text).not.toContain(trip.familyToken);
 });
 
 test.describe("PC", () => {
@@ -94,10 +97,14 @@ test.describe("PC", () => {
     await expect(page.getByRole("button", { name: "글 복사" })).toBeVisible();
     await expect(page.getByRole("button", { name: "이미지로 공유하기" })).toHaveCount(0);
 
-    // 링크 보내기도 공유 창 대신 복사
+    // 링크 카드도 공유 창 대신 복사: 부모님 [링크 복사][일정 글 복사] · 자녀 [링크 복사]만
     await page.goto(`/f/${trip.familyToken}`);
     await expect(page.getByRole("button", { name: "일정 글 복사" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "자녀용 링크 복사해 두기" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "부모님 링크 복사" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "자녀 링크 복사" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /링크 공유$/ })).toHaveCount(0);
+    // 넓은 화면은 예정 | 실제 머리글
+    await expect(page.getByText("실제 (사진)").first()).toBeVisible();
   });
 });
 

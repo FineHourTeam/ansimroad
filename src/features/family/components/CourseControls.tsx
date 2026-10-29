@@ -1,5 +1,7 @@
 // 당일에도 보면서 바로 고친다: 코스 이름 · 출발 시각 (부모님 화면에 바로 반영, 저장 버튼 없음)
 import { useId } from "react";
+import { Link } from "react-router";
+import { paths } from "@/app/paths";
 import { CalendarIcon, ClockIcon, EditIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,23 +10,31 @@ import type { Course } from "@/shared/domain/types";
 import { renameCourse, shiftStart } from "@/shared/lib/courseEdit";
 import { hhmm, shortDate } from "@/shared/lib/date";
 
-/** 화면 머리: 날짜 줄 + 코스 이름(제목처럼 보이고, 누르면 그 자리에서 고친다) */
+/** 화면 머리: 날짜 줄(+ 오른쪽 [수정하기] → 코스 보기·수정) + 코스 이름(제목처럼 보이고, 누르면 그 자리에서 고친다) */
 export function CourseHeader({
   date,
   course,
+  token,
   onChange,
 }: {
   date: string;
   course: Course;
+  token: string;
   onChange: (next: Course) => void;
 }) {
   const id = useId();
   return (
     <div className="flex flex-col gap-0.5">
-      <p className="text-muted-foreground flex items-center gap-1.5 text-sm font-semibold tabular-nums">
-        <CalendarIcon size="sm" />
-        {shortDate(date)} · {hhmm(course.startMin)} ~ {hhmm(course.endMin)}
-      </p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-muted-foreground flex items-center gap-1.5 text-sm font-semibold tabular-nums">
+          <CalendarIcon size="sm" />
+          {shortDate(date)} · {hhmm(course.startMin)} ~ {hhmm(course.endMin)}
+        </p>
+        {/* 누르는 자리는 44px, 위아래 음수 여백으로 날짜 줄 높이는 그대로 */}
+        <Button asChild variant="link" className="-my-3 h-11 px-2 text-sm font-bold">
+          <Link to={paths.familyCourse(token)}>수정하기</Link>
+        </Button>
+      </div>
       <div className="-mx-2 flex items-center">
         <Input
           id={id}

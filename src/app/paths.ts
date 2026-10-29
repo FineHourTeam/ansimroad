@@ -14,8 +14,7 @@ export const paths = {
   familyPattern: "/f/:token",
   familyCourse: (token: string) => `/f/${token}/course`, // 확정 후 코스 보기·수정 (S2-1 스냅샷)
   familyCoursePattern: "/f/:token/course",
-  share: (token: string) => `/f/${token}/share`, // S3 링크 모아 보기
-  sharePattern: "/f/:token/share",
+  legacySharePattern: "/f/:token/share", // 없앤 '링크 모아 보기' 옛 주소 → 자녀 현황으로 보낸다
   print: (token: string) => `/f/${token}/print`, // S3 인쇄용
   printPattern: "/f/:token/print",
   memories: (token: string) => `/f/${token}/memories`, // 여행 추억 페이지 (사진 · 멘트 인쇄 · 저장)
