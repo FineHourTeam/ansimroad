@@ -215,14 +215,17 @@ test("없앤 '링크 모아 보기' 옛 주소(/f/{token}/share)는 자녀 현�
   await waitReady(page, trip.course.title);
 });
 
-test("추억 페이지 예시: [예시 보기]로 예시 그림을 열고, 여행을 마치면 안내를 숨긴다", async ({
+test("추억 페이지 칸: [예시]로 예시 그림을 열고, 여행 날 전엔 [여행 완료]를 막고, 여행을 마치면 칸을 숨긴다", async ({
   page,
 }) => {
   const trip = await seedTrip();
   await page.goto(`/f/${trip.familyToken}`);
   await waitReady(page, trip.course.title);
   await expect(page.getByText("여행이 끝나면 추억 페이지를 만들어 드려요")).toBeVisible();
-  await page.getByRole("button", { name: "예시 보기" }).click();
+  // 여행 날 전(시드 = 일주일 뒤): 실수로 마치지 않게 막고 이유를 보여 준다
+  await expect(page.getByRole("button", { name: "여행 완료" })).toBeDisabled();
+  await expect(page.getByText("[여행 완료]는 여행 날부터 누를 수 있어요.")).toBeVisible();
+  await page.getByRole("button", { name: "예시", exact: true }).click();
   const dialog = page.getByRole("dialog", { name: "추억 페이지 예시" });
   await expect(
     dialog.getByText("예시 화면이에요. 여행 날 올린 사진과 멘트로 만들어져요"),
@@ -255,7 +258,7 @@ test("추억 페이지 예시: [예시 보기]로 예시 그림을 열고, 여�
   await page.goto(`/f/${done.familyToken}`);
   await expect(page.getByRole("link", { name: /추억 페이지 보기·인쇄/ })).toBeVisible();
   await expect(page.getByText("여행이 끝나면 추억 페이지를 만들어 드려요")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "예시 보기" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "예시", exact: true })).toHaveCount(0);
 });
 
 test("일정 타임라인: 휴대폰 폭은 예정 카드 아래 실제 사진 칸, 넓은 화면은 좌우", async ({
@@ -453,6 +456,8 @@ test("여행 완료: 별점 · 후기 저장 → 리포트로 이동", async ({ 
   await page.goto(onTripDay(trip.familyToken));
   await waitReady(page, trip.course.title);
 
+  // 사진이 한 장도 없어도 여행 날이면 마칠 수 있다
+  await expect(page.getByText("사진이 없어도 마칠 수 있어요.", { exact: false })).toBeVisible();
   await page.getByRole("button", { name: "여행 완료" }).click();
   const five = page
     .getByRole("radiogroup", { name: `${a.place.name} 별점` })
