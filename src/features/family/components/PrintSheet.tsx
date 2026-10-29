@@ -1,7 +1,7 @@
 // 인쇄용 한 장 (A4 · 여백 12mm): 머리띠(오른쪽에 코스 지도) · 시간 줄 일정(장소마다 정사각형 사진) · 메모 · 공개 후기 · 안전 정보 · 두 링크 QR.
 // 꼬리표는 어르신이 읽기 좋게 종이에서 한 단계 크게 — 대신 여유 장소는 꼬리표 없이 (한 장에 들어가게).
 // 화면에서는 모래빛 위 흰 종이, 인쇄할 때는 한 쪽을 꽉 채운다 (QR 은 쪽 아래에 붙는다).
-import { useMemo } from "react";
+import { useMemo, type Ref } from "react";
 import { paths } from "@/app/paths";
 import { StarIcon } from "@/components/icons";
 import { MapView } from "@/shared/components/MapView";
@@ -105,10 +105,13 @@ export function PrintSheet({
   trip,
   access,
   reviews,
+  ref,
 }: {
   trip: TripSnapshot;
   access: TripAccess;
   reviews: Record<string, PlaceReview>;
+  /** '이미지 저장'이 이 일정표를 화면 그대로 굽는다 */
+  ref?: Ref<HTMLElement>;
 }) {
   const { course, input } = trip;
   const spare = course.spare;
@@ -116,8 +119,9 @@ export function PrintSheet({
   const points = useMemo(() => courseMapPoints(course, { emergencyRooms: [] }), [course]);
   return (
     <article
+      ref={ref}
       data-course={courseTone(course.theme)}
-      className="bg-card text-card-foreground mx-auto flex w-full max-w-3xl flex-col gap-5 rounded-2xl border p-4 leading-relaxed shadow-sm [-webkit-print-color-adjust:exact] [print-color-adjust:exact] sm:p-8 print:min-h-[270mm] print:max-w-none print:gap-2.5 print:rounded-none print:border-0 print:p-0 print:shadow-none"
+      className="bg-card text-card-foreground mx-auto flex w-full max-w-3xl flex-col gap-5 p-3 leading-relaxed [-webkit-print-color-adjust:exact] [print-color-adjust:exact] sm:rounded-2xl sm:border sm:p-8 sm:shadow-sm print:min-h-[270mm] print:max-w-none print:gap-2.5 print:rounded-none print:border-0 print:p-0 print:shadow-none"
     >
       <SheetHeader
         date={input.date}

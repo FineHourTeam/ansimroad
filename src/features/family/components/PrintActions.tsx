@@ -1,6 +1,6 @@
-// 인쇄용 화면 아래 고정 띠: 이미지로 공유하기 · 이미지로 저장하기 · 인쇄하기
-// 이미지는 화면 밖 카드(ImageCard)를 누를 때 PNG 로 굽는다. 파일 공유가 안 되는 기기는 저장으로 대신하고 알려 준다.
-// PC 는 공유 창에 카카오톡이 없어서(모담 2026-10-29) 공유 대신 [이미지로 저장하기] · [글 복사] · [인쇄하기]와 보내는 방법 안내.
+// 인쇄용 화면 아래 고정 띠: 이미지로 공유하기 · 이미지 저장 · 인쇄하기
+// 이미지는 화면의 일정표(PrintSheet)를 그대로 PNG 로 굽는다(지도는 정적 지도 그림, 장소 사진은 /api/img 로). 파일 공유가 안 되는 기기는 저장으로 대신하고 알려 준다.
+// PC 는 공유 창에 카카오톡이 없어서(모담 2026-10-29) 공유 대신 [이미지 저장] · [글 복사] · [인쇄하기]. 보내는 방법은 저장 뒤 알림으로만 안내.
 import { useState, type RefObject } from "react";
 import { toast } from "sonner";
 import { CopyIcon, DownloadIcon, LoadingIcon, PrintIcon, ShareIcon } from "@/components/icons";
@@ -25,7 +25,7 @@ export function PrintActions({
   trip: TripSnapshot;
   /** 공유 글 맨 끝의 '사진 남기기' 링크 (부모님용만) */
   seniorUrl: string | null;
-  cardRef: RefObject<HTMLDivElement | null>;
+  cardRef: RefObject<HTMLElement | null>;
   /** 후기를 다 불러온 뒤에 인쇄 (후기도 싣는다) */
   printReady: boolean;
 }) {
@@ -56,7 +56,7 @@ export function PrintActions({
     if (busy || !node) return;
     setBusy(kind);
     try {
-      const blob = await renderCardPng(node);
+      const blob = await renderCardPng(node, { width: node.offsetWidth });
       const file = new File([blob], name, { type: "image/png" });
       // 공유가 안 되면 이미지는 저장하고, 일정 글은 '글 복사'로 따로 붙여 넣게 한다
       const saveInstead = () => {
@@ -111,38 +111,32 @@ export function PrintActions({
   if (!mobile)
     return (
       <StickyActionBar>
-        <div className="flex w-full flex-col gap-2">
-          <p className="text-muted-foreground text-center text-sm font-semibold text-balance">
-            PC에서는 이미지를 저장해 PC 카카오톡 대화방에 끌어다 놓고, 일정 글은 [글 복사]로 붙여
-            넣어 주세요
-          </p>
-          <div className="grid w-full grid-cols-3 gap-2">
-            <Button
-              size="xl"
-              className="px-2"
-              disabled={busy !== null}
-              aria-busy={busy === "save"}
-              onClick={() => void run("save")}
-            >
-              {busy === "save" ? spinner : <DownloadIcon />}
-              {busy === "save" ? "만드는 중…" : "이미지로 저장하기"}
-            </Button>
-            <Button variant="outline" size="xl" className="px-2" onClick={copyAction.onClick}>
-              <CopyIcon />글 복사
-            </Button>
-            <Button
-              variant="outline"
-              size="xl"
-              className="px-2"
-              disabled={!printReady}
-              onClick={() => {
-                window.print();
-              }}
-            >
-              <PrintIcon />
-              인쇄하기
-            </Button>
-          </div>
+        <div className="grid w-full grid-cols-3 gap-2">
+          <Button
+            size="xl"
+            className="px-2"
+            disabled={busy !== null}
+            aria-busy={busy === "save"}
+            onClick={() => void run("save")}
+          >
+            {busy === "save" ? spinner : <DownloadIcon />}
+            {busy === "save" ? "만드는 중…" : "이미지 저장"}
+          </Button>
+          <Button variant="outline" size="xl" className="px-2" onClick={copyAction.onClick}>
+            <CopyIcon />글 복사
+          </Button>
+          <Button
+            variant="outline"
+            size="xl"
+            className="px-2"
+            disabled={!printReady}
+            onClick={() => {
+              window.print();
+            }}
+          >
+            <PrintIcon />
+            인쇄하기
+          </Button>
         </div>
       </StickyActionBar>
     );
@@ -168,7 +162,7 @@ export function PrintActions({
           onClick={() => void run("save")}
         >
           {busy === "save" ? spinner : <DownloadIcon />}
-          {busy === "save" ? "만드는 중…" : "이미지로 저장하기"}
+          {busy === "save" ? "만드는 중…" : "이미지 저장"}
         </Button>
         <Button
           variant="outline"

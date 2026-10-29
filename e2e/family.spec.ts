@@ -417,7 +417,7 @@ test("인쇄용: 이미지로 저장하면 가로 1080px PNG 를 받고, 공유�
   const name = `안심로드-${TRIP_DATE}-${trip.course.title.replace(/\s+/g, "-")}.png`;
 
   const download = page.waitForEvent("download");
-  await page.getByRole("button", { name: "이미지로 저장하기" }).click();
+  await page.getByRole("button", { name: "이미지 저장" }).click();
   const file = await download;
   // 안내는 4초 뒤 사라진다: 파일을 읽기 전에 먼저 확인한다 (병렬 실행 때 읽기가 느려 놓치지 않게)
   await expect(page.getByText("일정표 이미지를 저장했어요")).toBeVisible();

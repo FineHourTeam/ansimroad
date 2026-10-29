@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { layoutMarkers } from "./mapLayout";
 import { MARKER_CLASS, markerName, type MapPoint, type MapProps } from "./mapMarker";
 import { SketchMap } from "./SketchMap";
+import { StaticRouteMap } from "./StaticRouteMap";
 import { env } from "@/lib/env";
 import { cn } from "@/lib/utils";
 
@@ -221,7 +222,7 @@ export function MapView({
 }: {
   points: MapPoint[];
   className?: string;
-  /** 인쇄용: 확대 단추 없이 움직이지 않는 지도 */
+  /** 인쇄 · 이미지 저장용: 네이버 정적 지도 그림 위에 경로 · 번호를 그린다 (못 받으면 약도) */
   still?: boolean;
   /** 관리자: 지도 빈 곳을 눌러 새 장소 좌표를 얻는다 */
   onMapClick?: (lat: number, lng: number) => void;
@@ -243,7 +244,10 @@ export function MapView({
       className={cn("relative isolate overflow-hidden rounded-lg border", className)}
       data-testid="map-view"
     >
-      {useNaver ? (
+      {useNaver && still ? (
+        // 인쇄 · 이미지 저장: 네이버 정적 지도 그림 + 겹쳐 그린 경로 (이미지에 그대로 담긴다)
+        <StaticRouteMap points={points} onError={onError} />
+      ) : useNaver ? (
         <div className="aspect-[20/13] w-full">
           <NaverMap
             points={points}

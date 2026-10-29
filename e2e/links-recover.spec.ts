@@ -90,15 +90,12 @@ test.describe("PC", () => {
     hasTouch: false,
   });
 
-  test("인쇄 · 이미지: 공유 창 대신 [이미지로 저장하기] · [글 복사]와 PC 카카오톡 안내", async ({
-    page,
-  }) => {
+  test("인쇄 · 이미지: 공유 창 대신 [이미지 저장] · [글 복사]", async ({ page }) => {
     const trip = await seedTrip();
     await page.goto(`/f/${trip.familyToken}/print`);
-    await expect(page.getByRole("button", { name: "이미지로 저장하기" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "이미지 저장" })).toBeVisible();
     await expect(page.getByRole("button", { name: "글 복사" })).toBeVisible();
     await expect(page.getByRole("button", { name: "이미지로 공유하기" })).toHaveCount(0);
-    await expect(page.getByText("PC 카카오톡 대화방에 끌어다 놓고")).toBeVisible();
 
     // 링크 카드도 공유 창 대신 복사: 부모님 [링크 복사][일정 글 복사] · 자녀 [링크 복사]만
     await page.goto(`/f/${trip.familyToken}`);
