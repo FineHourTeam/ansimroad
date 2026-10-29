@@ -29,6 +29,8 @@ npx shadcn@latest add button dialog input card sonner
 | Toggle · ToggleGroup | toggle.tsx · toggle-group.tsx | 단일 선택 칩 (S1 조건 입력) | `variant="choice" size="xl"` |
 | Sheet | sheet.tsx | 옆에서 열리는 편집 패널 (운영진 장소 편집) | |
 | Carousel | carousel.tsx | 사진 넘겨 보기 (shared/components/PlacePhoto) | embla |
+| Tooltip | tooltip.tsx | 막힌 단추의 이유 말풍선 (자녀 현황 [여행 완료]) | `TooltipProvider` 로 감싼다 |
+| DropdownMenu | dropdown-menu.tsx | ⋮ 더 보기 메뉴 (자녀 현황 장소 카드: 다음에 경로 추가 · 메모 · 삭제) | |
 
 ### 이 프로젝트에서 추가한 variant · size
 

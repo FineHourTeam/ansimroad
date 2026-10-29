@@ -10,9 +10,11 @@ export {
   usePlaceReviews,
   useCreateTrip,
   useUpdateCourse,
+  useUpdateTripDate,
+  useSaveMemo,
   useSaveReview,
   useCompleteTrip,
   useAddPhoto,
   useRecordLocationEvent,
 } from "./hooks/useTrip";
-export type { CreatedTrip } from "./api/trips";
+export { MEMO_MAX, type CreatedTrip } from "./api/trips";

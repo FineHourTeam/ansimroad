@@ -4,11 +4,14 @@ import { signInAnonymously } from "firebase/auth";
 import {
   addDoc,
   collection,
+  deleteField,
   doc,
+  FieldPath,
   getDoc,
   onSnapshot,
   setDoc,
   Timestamp,
+  updateDoc,
   writeBatch,
   type DocumentData,
 } from "firebase/firestore";
@@ -159,6 +162,24 @@ export async function updateCourse(
   if (completed) batch.set(reportDoc(tripId), { course: plain(course) }, { merge: true });
   await batch.commit();
 }
+
+/** 여행 날짜만 바꾼다. 보관 기한(expiresOn)은 그대로라 그날까지만 고를 수 있다 (firestore.rules) */
+export async function updateTripDate(tripId: string, date: string): Promise<void> {
+  await updateDoc(doc(db, "trips", tripId), { "input.date": date });
+}
+
+/** 장소 메모 (부모님 화면에도 보인다). 빈 글이면 지운다 */
+export async function saveMemo(tripId: string, placeId: string, text: string): Promise<void> {
+  const t = text.trim();
+  await updateDoc(
+    doc(db, "trips", tripId),
+    new FieldPath("memos", placeId),
+    t ? t.slice(0, MEMO_MAX) : deleteField(),
+  );
+}
+
+/** 장소 메모 최대 글자 수 (firestore.rules 는 메모 칸 수만 본다) */
+export const MEMO_MAX = 200;
 
 function toReport(tripId: string, d: DocumentData): ReportSnapshot {
   return {

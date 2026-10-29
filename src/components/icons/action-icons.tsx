@@ -57,3 +57,13 @@ export const ChevronLeftIcon = createIcon(
   "ChevronLeftIcon",
   <path d="M14.5 6.5l-5.5 5.5 5.5 5.5" />,
 );
+
+/** 세로 점 세 개 (⋮) — 더 보기 메뉴 */
+export const MoreVerticalIcon = createIcon(
+  "MoreVerticalIcon",
+  <>
+    <circle cx="12" cy="5.5" r="1.25" fill="currentColor" />
+    <circle cx="12" cy="12" r="1.25" fill="currentColor" />
+    <circle cx="12" cy="18.5" r="1.25" fill="currentColor" />
+  </>,
+);

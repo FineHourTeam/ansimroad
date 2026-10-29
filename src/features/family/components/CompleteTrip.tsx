@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useCompleteTrip, useSaveReview } from "@/features/trip";
 import type { PlaceReview, TripSnapshot } from "@/shared/domain/types";
@@ -191,6 +192,9 @@ export function CompleteTrip({
   example: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  // 여행 날 전: 막힌 [여행 완료]를 누르거나 올리면 이유를 말풍선으로 (대표 요청 2026-10-29)
+  const [hint, setHint] = useState(false);
+  const locked = !canComplete;
   if (open) return <CompleteSheet trip={trip} initial={reviews} />;
   return (
     <section
@@ -201,23 +205,37 @@ export function CompleteTrip({
         <p className="font-semibold">여행이 끝나면 추억 페이지를 만들어 드려요</p>
         <div className="flex shrink-0 gap-2">
           {example}
-          <Button
-            size="xl"
-            className="px-4"
-            disabled={!reviewsReady || !canComplete}
-            onClick={() => {
-              setOpen(true);
-            }}
-          >
-            여행 완료
-          </Button>
+          <TooltipProvider>
+            <Tooltip open={locked && hint} onOpenChange={setHint}>
+              <TooltipTrigger asChild>
+                {/* disabled 는 hover · 클릭을 받지 않아 aria-disabled 로 막는다 */}
+                <Button
+                  size="xl"
+                  className="px-4 aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
+                  disabled={!reviewsReady}
+                  aria-disabled={locked || undefined}
+                  onClick={(e) => {
+                    if (locked) {
+                      e.preventDefault(); // 말풍선이 클릭에 닫히지 않게
+                      setHint(true);
+                      return;
+                    }
+                    setOpen(true);
+                  }}
+                >
+                  여행 완료
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="text-sm">여행 날 이후부터 누를 수 있어요</TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </div>
-      <p className="text-muted-foreground text-sm">
-        {canComplete
-          ? "사진이 없어도 마칠 수 있어요. 별점을 남기면 여행 리포트와 추억 페이지를 만들어 드려요."
-          : "[여행 완료]는 여행 날부터 누를 수 있어요."}
-      </p>
+      {canComplete && (
+        <p className="text-muted-foreground text-sm">
+          사진이 없어도 마칠 수 있어요. 별점을 남기면 여행 리포트와 추억 페이지를 만들어 드려요.
+        </p>
+      )}
     </section>
   );
 }

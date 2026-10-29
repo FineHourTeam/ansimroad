@@ -1,5 +1,6 @@
-// ③ 타임라인 한 줄: 왼쪽 예정(번호 · 시각 · 장소 · 주소 복사 · 지도로 보기 · 길찾기 · 머무는 시간 조정) | 가운데 점 | 오른쪽 실제 사진 칸.
-// 휴대폰 폭(sm 미만)은 위아래로: 예정 카드 아래 그 장소의 실제 사진 칸 (점 · 가운데 선 없이)
+// ③ 타임라인 한 줄: 왼쪽 예정(번호 · 시각 · 전화 · ⋮ 메뉴 · 장소 · 별점 · 주소 복사 · 지도로 보기 · 길찾기 · 메모 · 머무는 시간 조정)
+// | 가운데 점 | 오른쪽 실제 사진 칸. 휴대폰 폭(sm 미만)은 위아래로: 예정 카드 아래 그 장소의 실제 사진 칸 (점 · 가운데 선 없이)
+import { useState } from "react";
 import { AddIcon, CameraIcon, CopyIcon, MapIcon, MapPinIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -11,6 +12,7 @@ import { ROLE_LABEL } from "@/shared/lib/placeFacts";
 import { copyLink } from "../lib/links";
 import { PhotoCard } from "./PhotoCard";
 import { NowLine } from "./StatusBanner";
+import { CallButton, MemoEditor, PlaceRating, StopMenu } from "./StopActions";
 
 /** sm 이상: 예정 | 점 | 사진 — 가운데 칸 폭은 DOT_COL 이 정한다. 휴대폰 폭은 한 칸에 위아래로 */
 export const ROW_GRID = "grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] sm:gap-0";
@@ -35,6 +37,11 @@ export interface StopRowProps {
   busy: boolean;
   onPick: (index: number) => void;
   onStay: (index: number, deltaMin: number) => void;
+  /** ⋮ 메뉴: 이 장소 다음에 넣을 곳 고르기 · 일정에서 빼기 */
+  onAddNext: (index: number) => void;
+  onRemove: (index: number) => void;
+  /** 메모 저장 (실패하면 거부 — 칸을 열어 둔다) */
+  onMemo: (placeId: string, text: string) => Promise<void>;
 }
 
 function StayAdjust({ stop, index, onStay }: Pick<StopRowProps, "stop" | "index" | "onStay">) {
@@ -192,19 +199,38 @@ function PhotoSlot(p: StopRowProps) {
 
 export function StopRow(p: StopRowProps) {
   const { stop } = p;
+  const { place } = stop;
   const has = p.photos.length > 0;
+  const [memoOpen, setMemoOpen] = useState(false);
+  const phone = place.phones[0];
   return (
     <li className={ROW_GRID}>
       {/* self-start: 사진이 여러 장이어도 예정 카드는 제 내용 높이만 */}
       <div className="bg-card text-card-foreground border-border/80 flex flex-col gap-2 self-start rounded-2xl border p-3 shadow-sm sm:p-4">
-        <p className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5">
           <span className="bg-course text-course-foreground grid size-6 shrink-0 place-items-center rounded-full text-xs font-bold">
             {p.index + 1}
           </span>
           <strong className="text-lg leading-none font-extrabold tabular-nums">
             {hhmm(stop.arriveMin)}
           </strong>
-        </p>
+          <span className="-mr-1.5 ml-auto flex items-center">
+            {phone && <CallButton name={place.name} phone={phone} />}
+            <StopMenu
+              name={place.name}
+              hasMemo={!!p.memo}
+              onAddNext={() => {
+                p.onAddNext(p.index);
+              }}
+              onMemo={() => {
+                setMemoOpen(true);
+              }}
+              onRemove={() => {
+                p.onRemove(p.index);
+              }}
+            />
+          </span>
+        </div>
         {/* 역할(오전 · 점심 · 쉬어 가기)은 늘 이름 위 한 줄 — 좁은 칸에서도 네 카드의 머리 모양이 같다 */}
         <p className="flex flex-col gap-0.5">
           <span className="text-muted-foreground text-sm font-semibold">
@@ -212,11 +238,23 @@ export function StopRow(p: StopRowProps) {
           </span>
           <span className="text-base leading-snug font-bold">{stop.place.name}</span>
         </p>
+        <PlaceRating placeId={place.id} name={place.name} />
         <PlaceAddress stop={stop} transport={p.transport} />
-        {p.memo && (
-          <p className="bg-highlight/25 text-highlight-foreground dark:bg-highlight/15 dark:text-highlight rounded-lg px-2 py-1 text-sm font-medium">
-            메모: {p.memo}
-          </p>
+        {memoOpen ? (
+          <MemoEditor
+            name={place.name}
+            initial={p.memo ?? ""}
+            onSave={(text) => p.onMemo(place.id, text)}
+            onClose={() => {
+              setMemoOpen(false);
+            }}
+          />
+        ) : (
+          p.memo && (
+            <p className="bg-highlight/25 text-highlight-foreground dark:bg-highlight/15 dark:text-highlight rounded-lg px-2 py-1 text-sm font-medium">
+              메모: {p.memo}
+            </p>
+          )
         )}
         <StayAdjust stop={stop} index={p.index} onStay={p.onStay} />
         {/* 지금 선은 제 줄을 따로 둔다: 글자 · 버튼 · 장소 사진을 가로지르지 않게 */}

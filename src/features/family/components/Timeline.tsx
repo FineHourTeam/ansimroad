@@ -18,6 +18,9 @@ export function Timeline({
   upload,
   onPick,
   onStay,
+  onAddNext,
+  onRemove,
+  onMemo,
 }: {
   course: Course;
   transport: Transport;
@@ -31,6 +34,9 @@ export function Timeline({
   upload: UploadState;
   onPick: (index: number) => void;
   onStay: (index: number, deltaMin: number) => void;
+  onAddNext: (index: number) => void;
+  onRemove: (index: number) => void;
+  onMemo: (placeId: string, text: string) => Promise<void>;
 }) {
   const busy = upload.kind === "sending";
   return (
@@ -69,6 +75,9 @@ export function Timeline({
               busy={busy}
               onPick={onPick}
               onStay={onStay}
+              onAddNext={onAddNext}
+              onRemove={onRemove}
+              onMemo={onMemo}
             />
           </Fragment>
         ))}

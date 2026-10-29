@@ -26,15 +26,7 @@ function Meta({ stayMin }: { stayMin: number | null }) {
   );
 }
 
-function Body({
-  place,
-  readOnly,
-  transport,
-}: {
-  place: Place;
-  readOnly: boolean;
-  transport: Transport;
-}) {
+function Body({ place, transport }: { place: Place; transport: Transport }) {
   const facts = placeFacts(place);
   const [phone, phone2] = place.phones;
   const address = place.address.trim();
@@ -108,7 +100,7 @@ function Body({
         <p className="text-muted-foreground text-right text-sm tabular-nums">다른 번호 {phone2}</p>
       )}
       <PlaceReviews placeId={place.id} />
-      <MemoBox placeId={place.id} readOnly={readOnly} />
+      <MemoBox placeId={place.id} />
     </div>
   );
 }
@@ -118,13 +110,11 @@ export function PlaceBlock({
   place,
   stayMin,
   tag,
-  readOnly,
   transport,
 }: {
   place: Place;
   stayMin: number | null;
   tag: string;
-  readOnly: boolean;
   transport: Transport;
 }) {
   return (
@@ -149,7 +139,7 @@ export function PlaceBlock({
         alt={place.name}
         className="sm:col-span-2"
       />
-      <Body place={place} readOnly={readOnly} transport={transport} />
+      <Body place={place} transport={transport} />
     </article>
   );
 }
@@ -157,12 +147,10 @@ export function PlaceBlock({
 /** ④ 시간 남으면 들를 곳 (접힘) */
 export function SparePlace({
   place,
-  readOnly,
   transport,
   className,
 }: {
   place: Place;
-  readOnly: boolean;
   transport: Transport;
   className?: string;
 }) {
@@ -185,7 +173,7 @@ export function SparePlace({
           alt={place.name}
           className="sm:col-span-2"
         />
-        <Body place={place} readOnly={readOnly} transport={transport} />
+        <Body place={place} transport={transport} />
       </div>
     </details>
   );

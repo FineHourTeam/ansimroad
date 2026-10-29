@@ -1,10 +1,10 @@
-// 코스 짜기 — S1 조건 입력 · S2 코스 제안 · S2-1 상세(메모 · 확정) · 확정 후 코스 수정(/f/:token/course)
+// 코스 짜기 — S1 조건 입력 · S2 코스 제안 · S2-1 상세(메모 · 확정). 확정한 코스 고치기는 family.spec (자녀 현황에서 바로)
 import { readFileSync } from "node:fs";
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { parseCsv } from "../src/shared/data/csv";
 import { recordsToPlaces, toRecords } from "../src/shared/data/placeRecords";
 import { longDate } from "../src/shared/lib/date";
-import { getDoc, PROJECT, writeDocs } from "./support/emulator";
+import { deleteDoc, getDoc, writeDocs } from "./support/emulator";
 import {
   CURATED_TITLE,
   INPUT,
@@ -33,13 +33,6 @@ async function savedCourse(tripId: string) {
     stays: stops.map((s) => num(field(stop(s), "stayMin"))),
     startMin: num(field(course, "startMin")),
   };
-}
-
-/** 테스트가 넣은 문서를 지운다 (에뮬레이터 관리자 토큰) */
-async function deleteDoc(path: string): Promise<void> {
-  const url = `http://127.0.0.1:8080/v1/projects/${PROJECT}/databases/(default)/documents/${path}`;
-  const res = await fetch(url, { method: "DELETE", headers: { Authorization: "Bearer owner" } });
-  if (!res.ok) throw new Error(`문서 지우기 실패 (${String(res.status)})`);
 }
 
 const demoPlaces = () =>
@@ -324,81 +317,6 @@ test("S2 카드에서 바로 확정해도 자녀 화면으로 간다", async ({ 
   await expect(page).toHaveURL(/\/f\/[A-Za-z0-9]{10,}$/);
   const token = new URL(page.url()).pathname.split("/").pop() ?? "";
   expect(field(await getDoc(`links/${token}`), "fields", "role", "stringValue")).toBe("family");
-});
-
-test("확정 후 코스 수정: 이름 · 머무는 시간 · 빼기 · 출발 시각 · 넣기가 저장되고 새로고침 뒤에도 보인다", async ({
-  page,
-}) => {
-  const seed = await seedTrip();
-  const [a, b] = seed.course.stops;
-  if (!a || !b) throw new Error("코스에 장소가 모자라요");
-  await page.goto(`/f/${seed.familyToken}/course`);
-  await expect(page.getByRole("heading", { name: seed.course.title, level: 2 })).toBeVisible();
-  await expect(page.getByText("확정한 코스")).toBeVisible();
-
-  await page.getByRole("button", { name: "코스 수정" }).click();
-  await page.getByLabel("코스 이름").fill("엄마랑 바다 산책");
-  await page.getByLabel("코스 이름").press("Enter");
-  await expect.poll(async () => (await savedCourse(seed.tripId)).title).toBe("엄마랑 바다 산책");
-
-  // 지도의 번호 점을 누르면 그 장소가 골라진다
-  const map = page.getByTestId("map-view");
-  await map.getByRole("button", { name: a.place.name, exact: true }).click();
-  await expect(page.getByRole("radio", { name: `1 ${a.place.name}` })).toHaveAttribute(
-    "aria-checked",
-    "true",
-  );
-  await page.getByRole("button", { name: /머무는 시간 늘리기/ }).click();
-  await expect.poll(async () => (await savedCourse(seed.tripId)).stays[0]).toBe(a.stayMin + 10);
-
-  await page.getByRole("radio", { name: `2 ${b.place.name}` }).click();
-  await page.getByRole("button", { name: "코스에서 빼기" }).click();
-  await expect
-    .poll(async () => (await savedCourse(seed.tripId)).names)
-    .toEqual(seed.course.stops.filter((s) => s !== b).map((s) => s.place.name));
-
-  await page.getByRole("button", { name: /출발 늦추기/ }).click();
-  await expect
-    .poll(async () => (await savedCourse(seed.tripId)).startMin)
-    .toBe(seed.course.startMin + 10);
-
-  // 지도의 회색 '+' 점(코스에 없는 장소)을 눌러 넣는다
-  const cand = map.getByRole("button").filter({ hasText: "+" }).first();
-  const fromMap = (await cand.getAttribute("aria-label")) ?? "";
-  expect(fromMap).not.toBe("");
-  await cand.click();
-  await page.getByRole("button", { name: "코스에 넣기" }).click();
-  await expect.poll(async () => (await savedCourse(seed.tripId)).names).toContain(fromMap);
-
-  // 같은 목록을 고르는 칸으로도 넣는다
-  await page.getByRole("combobox", { name: "다른 장소 넣기" }).click();
-  const option = page.getByRole("option").first();
-  const added = (await option.textContent()) ?? "";
-  expect(added).not.toBe("");
-  await option.click();
-  await page.getByRole("button", { name: "코스에 넣기" }).click();
-  await expect.poll(async () => (await savedCourse(seed.tripId)).names).toContain(added);
-
-  await page.reload();
-  await expect(page.getByRole("heading", { name: "엄마랑 바다 산책", level: 2 })).toBeVisible();
-  await expect(
-    page
-      .getByRole("article", { name: a.place.name })
-      .getByText(`머무는 시간 ${String(a.stayMin + 10)}분`),
-  ).toBeVisible();
-  await expect(page.getByRole("heading", { name: b.place.name, level: 3 })).toHaveCount(0);
-  await expect(page.getByRole("heading", { name: added, level: 3 })).toBeVisible();
-  await expect(page.getByRole("heading", { name: fromMap, level: 3 })).toBeVisible();
-});
-
-test("확정 후 코스: 어르신용 링크 · 기간이 지난 링크는 안내만 보여 준다", async ({ page }) => {
-  const seed = await seedTrip();
-  await page.goto(`/f/${seed.seniorToken}/course`);
-  await expect(page.getByRole("heading", { name: "링크를 다시 확인해 주세요" })).toBeVisible();
-
-  const old = await seedTrip({ expired: true });
-  await page.goto(`/f/${old.familyToken}/course`);
-  await expect(page.getByRole("heading", { name: "기간이 지난 여행이에요" })).toBeVisible();
 });
 
 test("잘못된 결과 주소는 조건을 다시 고르게 안내한다", async ({ page }) => {

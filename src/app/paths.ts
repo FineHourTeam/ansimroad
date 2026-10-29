@@ -12,9 +12,8 @@ export const paths = {
   // 자녀용 (familyToken이 곧 권한)
   family: (token: string) => `/f/${token}`, // S5
   familyPattern: "/f/:token",
-  familyCourse: (token: string) => `/f/${token}/course`, // 확정 후 코스 보기·수정 (S2-1 스냅샷)
-  familyCoursePattern: "/f/:token/course",
   legacySharePattern: "/f/:token/share", // 없앤 '링크 모아 보기' 옛 주소 → 자녀 현황으로 보낸다
+  legacyCoursePattern: "/f/:token/course", // 없앤 '코스 보기·수정' 옛 주소 → 자녀 현황에서 바로 고친다 (2026-10-29)
   print: (token: string) => `/f/${token}/print`, // S3 인쇄용
   printPattern: "/f/:token/print",
   memories: (token: string) => `/f/${token}/memories`, // 여행 추억 페이지 (사진 · 멘트 인쇄 · 저장)

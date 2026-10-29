@@ -122,11 +122,19 @@ service cloud.firestore {
         && request.resource.data.expiresAt > request.time
         && request.resource.data.expiresAt < request.time + duration.value(400, 'd')
         && existsAfter(memberPath(tripId, 'family'));
-      // 자녀: 코스 수정(F-13 이후 실시간) · 여행 완료(한 번만, 같은 배치에서 만든 리포트 링크와 함께)
+      // 자녀: 코스 · 장소 메모 · 여행 날짜 수정(F-13 이후 실시간) · 여행 완료(한 번만, 같은 배치에서 만든 리포트 링크와 함께)
+      // 날짜는 input.date 만, 보관 기한(expiresOn) 안에서만 — 링크 만료(links.expiresAt)는 고칠 수 없어서 기한은 그대로 둔다
       allow update: if isFamily(tripId)
         && notExpired(tripId)
-        && changedOnly(['course', 'completedAt', 'reportToken'])
+        && changedOnly(['course', 'completedAt', 'reportToken', 'memos', 'input'])
         && validCourse(request.resource.data.course)
+        && request.resource.data.memos is map
+        && request.resource.data.memos.size() <= 12
+        && (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['input'])
+            || (request.resource.data.input.diff(resource.data.input).affectedKeys().hasOnly(['date'])
+                && shortText(request.resource.data.input.date, 10)
+                && request.resource.data.input.date <= resource.data.expiresOn
+                && !('completedAt' in resource.data)))
         && (('reportToken' in resource.data && request.resource.data.reportToken == resource.data.reportToken)
             || (!('reportToken' in resource.data)
                 && (!('reportToken' in request.resource.data)
@@ -185,7 +193,7 @@ service cloud.firestore {
         allow read: if anyMember(tripId) && notExpired(tripId);
         allow create: if canUpload(tripId)
           && notExpired(tripId)
-          && keysOnly(['takenAt', 'url', 'width', 'height', 'lat', 'lng', 'locationStatus', 'stopIndex', 'by'])
+          && keysOnly(['takenAt', 'url', 'width', 'height', 'lat', 'lng', 'locationStatus', 'stopIndex', 'placeId', 'by'])
           && storagePhotoUrl(request.resource.data.url, tripId, photoId)
           && shortText(request.resource.data.takenAt, 40)
           && request.resource.data.width is int && request.resource.data.width > 0 && request.resource.data.width <= 10000
@@ -193,6 +201,7 @@ service cloud.firestore {
           && (request.resource.data.lat == null || request.resource.data.lat is number)
           && (request.resource.data.lng == null || request.resource.data.lng is number)
           && request.resource.data.get('stopIndex', 0) is int
+          && shortText(request.resource.data.get('placeId', ''), 40)
           && request.resource.data.locationStatus in ['off', 'ok', 'skipped', 'denied']
           // 올린 사람 표시는 실제 역할과 같아야 한다
           && ((request.resource.data.by == 'family' && isFamily(tripId))

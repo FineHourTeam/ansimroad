@@ -80,6 +80,11 @@ export async function getDoc(path: string): Promise<Record<string, unknown> | nu
   return (await res.json()) as Record<string, unknown>;
 }
 
+/** 테스트가 넣은 문서를 지운다 */
+export async function deleteDoc(path: string): Promise<void> {
+  await ok(await fetch(`${FS}/${path}`, { method: "DELETE", headers: OWNER }), "문서 지우기");
+}
+
 export async function listDocs(
   collectionPath: string,
 ): Promise<{ name: string; fields: Record<string, unknown> }[]> {

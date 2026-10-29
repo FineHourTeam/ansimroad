@@ -178,17 +178,18 @@ test("자녀가 코스를 고치면 새로 고치지 않아도 바로 바뀐다"
   await expect(heading).toContainText(trip.course.title);
   await expect(stopItem(page, removed.place.name)).toHaveCount(1);
 
-  // 자녀는 다른 기기에서 자녀용 코스 화면으로 고친다 (자녀 권한 · 실제 화면)
+  // 자녀는 다른 기기의 자녀 현황에서 바로 고친다 (자녀 권한 · 실제 화면)
   const familyCtx = await browser.newContext();
   try {
     const family = await familyCtx.newPage();
-    await family.goto(paths.familyCourse(trip.familyToken));
-    await family.getByRole("button", { name: "코스 수정" }).click();
+    await family.goto(paths.family(trip.familyToken));
     const title = "엄마랑 바다 나들이";
-    await family.getByLabel("코스 이름").fill(title);
-    await family.getByLabel("코스 이름").press("Enter");
-    await family.getByRole("radio", { name: `2 ${removed.place.name}` }).click();
-    await family.getByRole("button", { name: "코스에서 빼기" }).click();
+    const name = family.getByLabel("코스 이름 (눌러서 고치기)");
+    await expect(name).toHaveValue(trip.course.title);
+    await name.fill(title);
+    await name.press("Enter");
+    await family.getByRole("button", { name: `${removed.place.name} 더 보기` }).click();
+    await family.getByRole("menuitem", { name: "삭제하기" }).click();
 
     // 어르신 화면은 새로 고치지 않았는데 바뀐다
     await expect(heading).toContainText(title);

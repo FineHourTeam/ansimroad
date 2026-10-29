@@ -69,6 +69,7 @@ import { DeleteIcon } from "@/components/icons";
 | DeleteIcon | 삭제 | 2026-10-03 |
 | EditIcon | 수정 | 2026-10-03 |
 | SearchIcon | 검색 | 2026-10-03 |
+| MoreVerticalIcon | 더 보기 메뉴 (⋮) | 2026-10-29 |
 | ChevronUpIcon | 접기 · 위로 | 2026-10-03 |
 | ChevronLeftIcon | 이전 (캐러셀) | 2026-10-03 |
 | PhoneIcon | 전화 걸기 (응급실·장소) | 2026-10-03 |

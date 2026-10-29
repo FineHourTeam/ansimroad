@@ -236,6 +236,8 @@ export interface PhotoRecord {
   locationStatus: LocationStatus;
   /** 자녀가 카드를 눌러 올린 사진은 고른 장소 순번(0~3)에 바로 붙는다 */
   stopIndex?: number;
+  /** 고른 장소 ID — 코스에서 장소를 빼거나 넣어도 그 장소 칸에 남게 (2026-10-29 이후 사진만) */
+  placeId?: string;
   /** 올린 사람 */
   by: "family" | "senior";
 }
@@ -249,6 +251,7 @@ export interface NewPhoto {
   lng: number | null;
   locationStatus: LocationStatus;
   stopIndex?: number;
+  placeId?: string;
 }
 
 export type TokenRole = "senior" | "family" | "report"; // report = 여행 리포트 공유 (읽기 전용)
