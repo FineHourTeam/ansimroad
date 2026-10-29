@@ -1,5 +1,5 @@
 // 인쇄용 화면 아래 고정 띠: 이미지로 공유하기 · 이미지 저장 · 인쇄하기
-// 이미지는 화면 밖 카드(ImageCard)를 누를 때 PNG 로 굽는다. 파일 공유가 안 되는 기기는 저장으로 대신하고 알려 준다.
+// 이미지는 화면의 일정표(PrintSheet)를 그대로 PNG 로 굽는다(지도는 정적 지도 그림, 장소 사진은 /api/img 로). 파일 공유가 안 되는 기기는 저장으로 대신하고 알려 준다.
 // PC 는 공유 창에 카카오톡이 없어서(모담 2026-10-29) 공유 대신 [이미지 저장] · [글 복사] · [인쇄하기]. 보내는 방법은 저장 뒤 알림으로만 안내.
 import { useState, type RefObject } from "react";
 import { toast } from "sonner";
@@ -25,7 +25,7 @@ export function PrintActions({
   trip: TripSnapshot;
   /** 공유 글 맨 끝의 '사진 남기기' 링크 (부모님용만) */
   seniorUrl: string | null;
-  cardRef: RefObject<HTMLDivElement | null>;
+  cardRef: RefObject<HTMLElement | null>;
   /** 후기를 다 불러온 뒤에 인쇄 (후기도 싣는다) */
   printReady: boolean;
 }) {
@@ -56,7 +56,7 @@ export function PrintActions({
     if (busy || !node) return;
     setBusy(kind);
     try {
-      const blob = await renderCardPng(node);
+      const blob = await renderCardPng(node, { width: node.offsetWidth });
       const file = new File([blob], name, { type: "image/png" });
       // 공유가 안 되면 이미지는 저장하고, 일정 글은 '글 복사'로 따로 붙여 넣게 한다
       const saveInstead = () => {
