@@ -191,15 +191,6 @@ export function UrlText({ url, className }: { url: string; className?: string })
   );
 }
 
-/** 모래빛 주소 칸 (S3 링크 모아 보기 · S5 보내기 카드) — 복사는 바로 아래 버튼으로 */
-export function UrlPill({ url }: { url: string }) {
-  return (
-    <p className="bg-background-subtle rounded-xl px-3.5 py-2.5 text-base font-semibold">
-      <UrlText url={url} />
-    </p>
-  );
-}
-
 /** 링크 한 장: 휴대폰 카메라로 찍으면 바로 열리는 QR + 주소 */
 export function QrCard({
   label,

@@ -1,5 +1,5 @@
-// 여행 완료: 장소마다 별점(+한 줄 · 나만 보기) → 리포트 만들기. 공개 후기는 리포트 · 다른 가족에게도 보인다.
-import { useState } from "react";
+// 추억 페이지 칸 · 여행 완료: 장소마다 별점(+한 줄 · 나만 보기) → 리포트 만들기. 공개 후기는 리포트 · 다른 가족에게도 보인다.
+import { useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { paths } from "@/app/paths";
@@ -171,44 +171,53 @@ function CompleteSheet({
   );
 }
 
+/**
+ * '추억 페이지' 칸 (링크 카드 바로 아래, 대표 요청 2026-10-29): 안내 + [예시] + [여행 완료].
+ * 사진이 없어도 마칠 수 있다. 여행 날 전에는 실수로 마치지 않게 [여행 완료]를 막는다(사진이 먼저 올라왔으면 연다).
+ */
 export function CompleteTrip({
   trip,
   reviews,
   reviewsReady,
+  canComplete,
+  example,
 }: {
   trip: TripSnapshot;
   reviews: Record<string, PlaceReview>;
   /** 이전 별점을 채워 넣을 수 있게 후기를 다 불러온 뒤에만 연다 */
   reviewsReady: boolean;
+  canComplete: boolean;
+  /** [예시] 단추 (추억 페이지 예시 대화상자) */
+  example: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   if (open) return <CompleteSheet trip={trip} initial={reviews} />;
   return (
     <section
-      aria-label="여행 마치기"
-      className="bg-card text-card-foreground flex flex-col gap-3 rounded-2xl border p-5 shadow-sm"
+      aria-label="추억 페이지"
+      className="bg-card text-card-foreground flex flex-col gap-2 rounded-2xl border p-4 shadow-sm"
     >
-      <div className="flex items-center gap-3">
-        <span className="bg-highlight text-highlight-foreground grid size-11 shrink-0 place-items-center rounded-full">
-          <StarIcon fill="currentColor" />
-        </span>
-        <div className="flex flex-col">
-          <p className="text-lg font-bold tracking-tight">여행을 마치셨나요?</p>
-          <p className="text-muted-foreground text-sm">
-            별점을 남기면 사진을 모아 여행 리포트를 만들어 드려요.
-          </p>
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <p className="font-semibold">여행이 끝나면 추억 페이지를 만들어 드려요</p>
+        <div className="flex shrink-0 gap-2">
+          {example}
+          <Button
+            size="xl"
+            className="px-4"
+            disabled={!reviewsReady || !canComplete}
+            onClick={() => {
+              setOpen(true);
+            }}
+          >
+            여행 완료
+          </Button>
         </div>
       </div>
-      <Button
-        size="xl"
-        className="w-full"
-        disabled={!reviewsReady}
-        onClick={() => {
-          setOpen(true);
-        }}
-      >
-        여행 완료
-      </Button>
+      <p className="text-muted-foreground text-sm">
+        {canComplete
+          ? "사진이 없어도 마칠 수 있어요. 별점을 남기면 여행 리포트와 추억 페이지를 만들어 드려요."
+          : "[여행 완료]는 여행 날부터 누를 수 있어요."}
+      </p>
     </section>
   );
 }
