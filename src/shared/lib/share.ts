@@ -1,8 +1,26 @@
 // 카카오톡으로 보내기(F-15): 브라우저 공유 시트(Web Share API)를 쓴다.
 // 미지원 환경에서는 복사로 대신한다 (§0.4).
 
+/**
+ * 휴대폰 · 태블릿인지. PC 크롬도 공유 창은 열지만 목록에 카카오톡이 없어서(모담 2026-10-29)
+ * PC 는 공유 창 대신 저장 · 복사로 안내한다. iPad 사파리는 PC(Macintosh)로 보이므로 터치 지점 수로 가린다.
+ */
+export function isMobileDevice(): boolean {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent;
+  const uaData = (navigator as Navigator & { userAgentData?: { mobile: boolean } }).userAgentData;
+  if (uaData?.mobile) return true;
+  return (
+    /Android|iPhone|iPad|iPod|Mobile/i.test(ua) ||
+    (ua.includes("Macintosh") && navigator.maxTouchPoints > 1)
+  );
+}
+
+/** 휴대폰 공유 창으로 보낼 수 있는지 (PC 는 공유 창이 있어도 아니라고 본다) */
 export function canWebShare(): boolean {
-  return typeof navigator !== "undefined" && typeof navigator.share === "function";
+  return (
+    typeof navigator !== "undefined" && typeof navigator.share === "function" && isMobileDevice()
+  );
 }
 
 /** url 을 빼면 글 안의 주소만 간다 (카카오톡이 글 속 첫 주소로 미리보기 카드를 만든다) */

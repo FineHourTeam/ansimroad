@@ -5,7 +5,8 @@ import { Link } from "react-router";
 import { paths } from "@/app/paths";
 import { ChevronRightIcon, ImageIcon, MapPinIcon, PrintIcon, ShareIcon } from "@/components/icons";
 import type { TripSnapshot } from "@/shared/domain/types";
-import { absoluteUrl } from "../lib/links";
+import { absoluteUrl, SELF_LINK_HINT } from "../lib/links";
+import { SelfLinkButton } from "./SelfLinkButton";
 import { SeniorShareButtons } from "./SeniorShareButtons";
 import { UrlPill } from "./SheetParts";
 
@@ -76,7 +77,15 @@ export function FamilyLinks({ token, printOn }: { token: string; printOn: boolea
   );
 }
 
-export function SendCard({ trip, seniorToken }: { trip: TripSnapshot; seniorToken: string }) {
+export function SendCard({
+  trip,
+  seniorToken,
+  familyToken,
+}: {
+  trip: TripSnapshot;
+  seniorToken: string;
+  familyToken: string;
+}) {
   const url = absoluteUrl(paths.senior(seniorToken));
   return (
     <section
@@ -93,6 +102,12 @@ export function SendCard({ trip, seniorToken }: { trip: TripSnapshot; seniorToke
       </div>
       <UrlPill url={url} />
       <SeniorShareButtons trip={trip} url={url} />
+      {/* 자녀용 링크는 부모님께 보내지 않고 나에게 보관해 둔다 (모담 제안 2026-10-29) */}
+      <div className="border-border/70 flex flex-col gap-2 border-t pt-3">
+        <p className="font-bold">이 화면(자녀용) 링크는 나에게 보내 두세요</p>
+        <SelfLinkButton trip={trip} url={absoluteUrl(paths.family(familyToken))} />
+        <p className="text-muted-foreground text-sm">{SELF_LINK_HINT}</p>
+      </div>
     </section>
   );
 }

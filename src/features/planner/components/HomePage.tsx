@@ -22,6 +22,7 @@ import {
 } from "@/shared/lib/tripInput";
 import { AboutPanel } from "./AboutPanel";
 import { HomeIntro } from "./HomeIntro";
+import { RecentTrips } from "./RecentTrips";
 import { FIELD_SHORT, FIELD_TITLES, type FieldKey } from "../lib/fields";
 import { TripFields } from "./TripFields";
 
@@ -107,6 +108,7 @@ export function HomePage() {
           className="flex-1 px-4 pt-6 pb-10 sm:px-8 sm:pt-12 lg:px-14 lg:pt-16"
         >
           <div className="mx-auto max-w-xl lg:max-w-2xl">
+            <RecentTrips today={today} className="mb-6" />
             <form
               id="trip-form"
               aria-labelledby="trip-form-title"

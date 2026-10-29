@@ -246,11 +246,17 @@ export function CourseCard({
           {confirm === "busy" && (
             <LoadingIcon className="animate-spin motion-reduce:animate-none" />
           )}
-          {confirm === "busy"
-            ? "확정하는 중…"
-            : confirm === "failed"
-              ? "다시 시도하기"
-              : "이 코스로 확정하기"}
+          {confirm === "busy" ? (
+            "확정하는 중…"
+          ) : confirm === "failed" ? (
+            "다시 시도하기"
+          ) : (
+            <>
+              {/* 여러 칸 배치(sm~)에선 카드가 좁아 긴 문구가 넘친다 */}
+              <span className="sm:hidden">이 코스로 확정하기</span>
+              <span className="hidden sm:inline">선택</span>
+            </>
+          )}
         </Button>
       </div>
       {confirm === "failed" && (

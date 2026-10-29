@@ -34,5 +34,6 @@ export {
   LogoutIcon,
   MinusIcon,
   CalendarIcon,
+  MapIcon,
 } from "./travel-icons";
 export { SeaThemeIcon, HistoryThemeIcon, NatureThemeIcon } from "./theme-icons";

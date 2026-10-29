@@ -9,10 +9,12 @@ import { LegalLinks, PageBody, TopBar } from "@/shared/components/common";
 import type { TripAccess, TripSnapshot } from "@/shared/domain/types";
 import { hhmm, shortDate } from "@/shared/lib/date";
 import { ROLE_LABEL } from "@/shared/lib/placeFacts";
+import { canWebShare } from "@/shared/lib/share";
 import { encodeQuery } from "@/shared/lib/tripInput";
 import { useFamilyTrip } from "../hooks/useFamilyTrip";
-import { absoluteUrl, copyLink } from "../lib/links";
+import { absoluteUrl, copyLink, SELF_LINK_HINT } from "../lib/links";
 import { FamilyStateView } from "./FamilyStateView";
+import { SelfLinkButton } from "./SelfLinkButton";
 import { SeniorShareButtons } from "./SeniorShareButtons";
 import { UrlPill } from "./SheetParts";
 
@@ -102,6 +104,8 @@ function ShareBody({
         <p className="text-muted-foreground -mt-1">이 링크에서 부모님 사진과 현황을 봐요.</p>
         {/* 1단계와 같은 모양: 모래빛 주소 칸 + 복사 버튼 */}
         <UrlPill url={familyUrl} />
+        {/* 휴대폰: 공유 창으로 나에게 보내 두기 (PC 는 아래 복사만) — 모담 제안 2026-10-29 */}
+        {canWebShare() && <SelfLinkButton trip={trip} url={familyUrl} />}
         <Button
           variant="outline"
           size="xl"
@@ -110,6 +114,7 @@ function ShareBody({
           <CopyIcon />
           자녀용 링크 복사
         </Button>
+        <p className="text-muted-foreground text-sm">{SELF_LINK_HINT}</p>
         <Link
           to={paths.family(token)}
           className="text-primary inline-flex min-h-11 items-center gap-1 self-start font-bold"
@@ -127,7 +132,10 @@ function ShareBody({
             여행 당일 부모님 화면에서 ‘사진 남기기’를 누르면{" "}
             {locationOn ? "사진과 위치·시각이" : "사진과 찍은 시각이"} 자녀 화면에 바로 보여요.
           </li>
-          <li>링크를 잃어버리면 다시 만들어야 해요. 저장해 두세요.</li>
+          <li>
+            링크를 잃어버리면 카카오톡 ‘나와의 채팅’에 보내 둔 링크를 찾아보세요. 코스를 확정한
+            휴대폰에서는 첫 화면 ‘최근 만든 여행’에서도 열 수 있어요.
+          </li>
           <li>사진에 다른 분 얼굴이 크게 나오지 않게 찍어 주세요. 요청하면 지워 드려요.</li>
         </ul>
       </section>

@@ -183,10 +183,14 @@ test("피드백 반영 화면", async ({ page }) => {
   await page.goto(`/result/nature?${resultQuery()}`);
   await shot(page, "c2-detail-nature");
 
-  // D. 자녀 화면: 장소마다 주소 · 주소 복사 · 길찾기
+  // D. 자녀 화면: 장소마다 주소 · 주소 복사 · 지도로 보기 · 길찾기
   await page.goto(`/f/${trip.familyToken}?now=${encodeURIComponent(demoNow(TRIP_DATE, "12:20"))}`);
   await settle(page);
-  const row = page.getByRole("list").filter({ hasText: "주소 복사" }).getByRole("listitem").first();
+  const row = page
+    .getByRole("list")
+    .filter({ hasText: "지도로 보기" })
+    .getByRole("listitem")
+    .first();
   await row.scrollIntoViewIfNeeded();
   await row.screenshot({ path: join(DIR, "d2-family-row.png") });
   await page
