@@ -1,6 +1,6 @@
 // S5 자녀 현황: 예정 vs 실제(사진)를 나란히 보고 '지금 어디쯤인지' 3초 안에 안다.
 // F-21 타임라인 · F-22 현황 카드(실시간) · F-24 위치 설정(기본 OFF) · D-08 위치 제공 기록
-// 순서: 코스 이름 → 현황 카드 → (여행 전) 보내기 카드 → 바로가기 한 줄 → 지도 → 출발 시각 → 일정 · 사진 → 여행 완료
+// 순서: 코스 이름 → 현황 카드 → 링크 카드(늘) → 일정 한눈에 보기 · 추억 페이지 예시 → 지도 → 출발 시각 → 일정 · 사진 → 여행 완료
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,7 @@ import { bannerText, isPast } from "../lib/familyView";
 import { CompleteTrip } from "./CompleteTrip";
 import { CourseHeader, StartAdjust } from "./CourseControls";
 import { PhotoPicker } from "./PhotoPicker";
-import { FamilyLinks, MemoriesCard, ReportCard, SendCard } from "./SendCard";
+import { FamilyLinks, LinksCard, MemoriesCard, ReportCard } from "./SendCard";
 import { StatusBanner, type TripPhase } from "./StatusBanner";
 import { Timeline } from "./Timeline";
 
@@ -70,15 +70,6 @@ export function FamilyDashboard({
   const ended = !!trip.completedAt || today > date || (today === date && nowMin >= course.endMin);
   const phase: TripPhase = ended ? "done" : today < date ? "before" : "today";
   const showComplete = !trip.completedAt && (today >= date || photos.length > 0);
-  // 보내기 카드는 여행 전에만 크게. 다만 여행 당일에 확정했으면 아직 링크를 안 보냈을 수 있어서 부모님 사진이 오기 전까지 둔다
-  const confirmedToday = toLocalYmd(new Date(trip.createdAt)) === date;
-  // 사진을 다 불러온 뒤에 판단한다 (불러오는 동안 카드가 잠깐 떴다 사라지지 않게)
-  const showSend =
-    today < date ||
-    (phase === "today" &&
-      confirmedToday &&
-      photosQ.isSuccess &&
-      !photos.some((p) => p.by === "senior"));
 
   return (
     // data-course: 번호 원 · 지도 마커 · 경로 선이 코스 테마 색
@@ -115,10 +106,13 @@ export function FamilyDashboard({
         />
       )}
 
-      {!trip.reportToken && showSend && access.seniorToken && (
-        <SendCard trip={trip} seniorToken={access.seniorToken} familyToken={token} />
-      )}
-      <FamilyLinks token={token} printOn={settings.printViewEnabled} />
+      <LinksCard trip={trip} seniorToken={access.seniorToken} familyToken={token} />
+      {/* 추억 페이지 카드가 뜨면(여행 완료) 예시 안내는 숨긴다 */}
+      <FamilyLinks
+        token={token}
+        printOn={settings.printViewEnabled}
+        memoriesExample={!trip.completedAt}
+      />
 
       {/* isolate: 지도 안 네이버 로고 · 확대 단추의 z-index 가 위 고정 막대를 넘지 않게 */}
       <MapView points={points} className="border-border/80 isolate rounded-2xl shadow-sm" />
