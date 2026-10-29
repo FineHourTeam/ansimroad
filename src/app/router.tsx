@@ -1,6 +1,6 @@
 // 모든 라우트는 이 파일 한 곳에 (rules.md § 라우팅). 화면은 기능 단위로 나눠 불러온다 (코드 스플리팅).
 import { lazy, Suspense, useEffect } from "react";
-import { createBrowserRouter, Outlet, useLocation } from "react-router";
+import { createBrowserRouter, Outlet, redirect, useLocation } from "react-router";
 import { Loading } from "@/shared/components/common";
 import { trackPageView } from "@/shared/lib/analytics";
 import { paths } from "./paths";
@@ -17,7 +17,6 @@ const FamilyPage = lazy(() => import("@/features/family").then((m) => ({ default
 const FamilyCoursePage = lazy(() =>
   import("@/features/planner").then((m) => ({ default: m.FamilyCoursePage })),
 );
-const SharePage = lazy(() => import("@/features/family").then((m) => ({ default: m.SharePage })));
 const PrintPage = lazy(() => import("@/features/family").then((m) => ({ default: m.PrintPage })));
 const MemoriesPage = lazy(() =>
   import("@/features/family").then((m) => ({ default: m.MemoriesPage })),
@@ -71,7 +70,10 @@ export const router = createBrowserRouter([
       { path: paths.resultDetail, element: <ResultDetailPage /> },
       { path: paths.familyPattern, element: <FamilyPage /> },
       { path: paths.familyCoursePattern, element: <FamilyCoursePage /> },
-      { path: paths.sharePattern, element: <SharePage /> },
+      {
+        path: paths.legacySharePattern,
+        loader: ({ params }) => redirect(paths.family(params.token ?? "")),
+      },
       { path: paths.printPattern, element: <PrintPage /> },
       { path: paths.memoriesPattern, element: <MemoriesPage /> },
       { path: paths.seniorPattern, element: <SeniorPage /> },
